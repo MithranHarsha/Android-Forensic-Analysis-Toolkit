@@ -81,3 +81,20 @@ parsers already did), so a missing timestamp is absent, not flagged as corrupt.
 exact structure, consistent fields and a plausible timestamp scores 0.82 (MEDIUM) alone; corroboration by another artifact or a
 second location for the same record lifts it to HIGH. A PARTIAL row is capped at MEDIUM unless two independent sources
 corroborate it. The arithmetic is in `confidence/scorer.py`, and each artifact stores the factor list and a sentence.
+
+**D-015 · A carved hit is never anything but a candidate, and the code says so three times.** The `CarvedCandidate` model's
+status is `Literal["CARVED CANDIDATE"]`; the case database has a `CHECK (status = 'CARVED CANDIDATE')`; and a test parses every
+module that names `CarvedCandidate` and fails if the same module names `ArtifactStatus.ACTIVE / RECOVERED / PARTIAL / CORRUPTED /
+CARVED`. The `carving` package imports nothing that can build an artifact. Confidence for a candidate is assigned later, by the
+scorer, with a ceiling of MEDIUM and LOW when nothing corroborates it.
+
+**D-016 · A carve rule reports only what validates.** A ten-digit run in the Android date window is a Unix timestamp; the same run
+outside it is not reported, rather than reported as "low quality". The scorer's `value_validity` factor is therefore always
+satisfied for an emitted candidate, and `context_valid` (the hit is delimited, not glued to more letters or digits) carries the
+variation. A hit inside a database's free space is tagged `container = "sqlite_free_space"`.
+
+**D-017 · Carving skips current data, keeps history.** Inside a database the live cells of the *current* version of each page are
+skipped (the parsers own them), while replaced pages, older / stale / uncommitted WAL frames and journal pages are carved: they
+hold values the database no longer shows, and for a table the recovery engine cannot model they are the only way to reach them.
+The cost is that history often repeats values that are still active; those candidates are corroborated by the active artifact
+during correlation instead of being silently dropped.

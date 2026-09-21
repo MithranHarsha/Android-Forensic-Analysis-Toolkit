@@ -375,7 +375,7 @@ def scan_page_detailed(
                 heads[h] = (f.end, interior)
         if page.type.name == "TABLE_LEAF":
             candidates += _pointer_array_cells(page, models, encoding, owner_hint)
-        live = _live_extents(page, usable_size or len(data))
+        live = live_extents(page, usable_size or len(data))
     elif page is not None:
         return [], page, []  # index pages hold index cells, which this engine does not read
     limit = len(data)
@@ -412,7 +412,7 @@ def scan_page_detailed(
     return kept, page, unparsed
 
 
-def _live_extents(page: BTreePage, usable_size: int) -> list[tuple[int, int]]:
+def live_extents(page: BTreePage, usable_size: int) -> list[tuple[int, int]]:
     """Byte ranges of the page occupied by its live cells (per its own pointer array)."""
     from android_forensics.sqlite.pages import read_cell
 

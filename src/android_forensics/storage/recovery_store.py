@@ -105,7 +105,8 @@ def insert_carved(store: CaseStore, run_id: int, candidates: Iterable[CarvedCand
             ids.append(store.insert("carved_candidates", {
                 "run_id": run_id, "evidence_file_id": c.evidence_file_id, "source_file": c.source_file, "source_sha256": c.source_sha256,
                 "byte_offset": c.offset, "length": c.length, "kind": c.kind.value, "pattern": c.pattern, "matched": c.matched,
-                "encoding": c.encoding, "context_before_hex": c.context_before_hex, "context_after_hex": c.context_after_hex,
+                "encoding": c.encoding, "container": c.container, "context_valid": int(c.context_valid),
+                "context_before_hex": c.context_before_hex, "context_after_hex": c.context_after_hex,
                 "status": c.status, "confidence": c.confidence.value if c.confidence else None,
                 "confidence_factors_json": json.dumps([f.model_dump(mode="json") for f in c.confidence_factors]),
                 "explanation": c.explanation, "corroborated_by_json": json.dumps(c.corroborated_by), "notes_json": json.dumps(c.notes),
@@ -117,7 +118,7 @@ def carved_from_row(r: Any) -> CarvedCandidate:
     return CarvedCandidate(
         id=r["id"], evidence_file_id=r["evidence_file_id"], source_file=r["source_file"], source_sha256=r["source_sha256"],
         offset=r["byte_offset"], length=r["length"], kind=r["kind"], pattern=r["pattern"], matched=r["matched"], encoding=r["encoding"],
-        context_before_hex=r["context_before_hex"], context_after_hex=r["context_after_hex"],
+        container=r["container"], context_valid=bool(r["context_valid"]), context_before_hex=r["context_before_hex"], context_after_hex=r["context_after_hex"],
         confidence=Confidence(r["confidence"]) if r["confidence"] else None,
         confidence_factors=[ConfidenceFactor(**f) for f in json.loads(r["confidence_factors_json"])], explanation=r["explanation"],
         corroborated_by=json.loads(r["corroborated_by_json"]), notes=json.loads(r["notes_json"]),

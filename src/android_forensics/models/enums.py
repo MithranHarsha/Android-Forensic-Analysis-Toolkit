@@ -421,6 +421,7 @@ class CarveKind(StrEnum):
     EMAIL = "email"
     TIMESTAMP_UNIX_SECONDS = "timestamp_unix_seconds"
     TIMESTAMP_UNIX_MILLIS = "timestamp_unix_millis"
+    TIMESTAMP_WEBKIT_MICROS = "timestamp_webkit_micros"  # Chromium: microseconds since 1601-01-01
     TIMESTAMP_TEXT = "timestamp_text"
     SMS_LIKE_TEXT = "sms_like_text"
     SQLITE_RECORD = "sqlite_record"

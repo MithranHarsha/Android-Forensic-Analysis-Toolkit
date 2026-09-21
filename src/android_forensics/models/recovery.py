@@ -162,6 +162,8 @@ class CarvedCandidate(BaseModel):
     pattern: NonBlankStr  # the rule that matched
     matched: str  # the matched text (or a hex rendering for binary hits)
     encoding: Literal["ascii", "utf-16le", "binary"] = "ascii"
+    container: Literal["file", "sqlite_free_space"] = "file"  # loose bytes of a file, or non-record space of a parsed database
+    context_valid: bool = True  # the neighbouring bytes delimit the hit (a whole token, not the middle of a longer one)
     context_before_hex: HexBytes = ""
     context_after_hex: HexBytes = ""
     status: Literal["CARVED CANDIDATE"] = CARVED_CANDIDATE

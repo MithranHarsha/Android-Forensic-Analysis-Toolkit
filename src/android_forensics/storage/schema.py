@@ -354,6 +354,8 @@ CREATE TABLE carved_candidates(
     pattern TEXT NOT NULL,
     matched TEXT NOT NULL,
     encoding TEXT NOT NULL,
+    container TEXT NOT NULL DEFAULT 'file',
+    context_valid INTEGER NOT NULL DEFAULT 1,
     context_before_hex TEXT NOT NULL,
     context_after_hex TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'CARVED CANDIDATE' CHECK (status = 'CARVED CANDIDATE'),
