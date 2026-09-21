@@ -147,23 +147,23 @@ def _numeric_timestamp(fmt: TimestampFormat) -> Validator:
 _MONTHS = {m: i for i, m in enumerate("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(), 1)}
 
 
-def _calendar(year: int, month: int, day: int, hour: int, minute: int, second: int, offset: timedelta | None,
-              now: datetime | None) -> bool:
+def _moment(year: int, month: int, day: int, hour: int, minute: int, second: int, offset: timedelta | None = None) -> datetime | None:
+    """The UTC instant, or None for a date that does not exist (30 February, hour 24 ...)."""
     try:
-        moment = datetime(year, month, day, hour, minute, second, tzinfo=_UTC)
-    except ValueError:  # 30 February, hour 24 ...
-        return False
-    return is_plausible(moment - (offset or timedelta(0)), now)
+        return datetime(year, month, day, hour, minute, second, tzinfo=_UTC) - (offset or timedelta(0))
+    except (ValueError, OverflowError):
+        return None
 
 
 _ISO = re.compile(r"(\d{4})-(\d\d)-(\d\d)[T ](\d\d):(\d\d):(\d\d)(?:\.\d{1,9})?(Z|[+-]\d\d:?\d\d)?")
 _MEDIUM = re.compile(r"([A-Z][a-z]{2}) (\d{1,2}), (\d{4}),? (\d{1,2}):(\d\d)(?::(\d\d))? ?([AP]M)")
 
 
-def valid_iso8601(text: str, now: datetime | None) -> bool:
+def parse_iso8601(text: str) -> datetime | None:
+    """``2024-03-01 08:00:00`` / ``2024-03-01T08:00:00.123+05:30`` as a UTC instant (no zone means UTC), or None."""
     m = _ISO.fullmatch(text)
     if not m:
-        return False
+        return None
     y, mo, d, h, mi, s = (int(g) for g in m.groups()[:6])
     tz = m.group(7)
     offset = None
@@ -171,19 +171,46 @@ def valid_iso8601(text: str, now: datetime | None) -> bool:
         sign = -1 if tz[0] == "-" else 1
         digits = tz[1:].replace(":", "")
         offset = sign * timedelta(hours=int(digits[:2]), minutes=int(digits[2:]))
-    return _calendar(y, mo, d, h, mi, s, offset, now)
+    return _moment(y, mo, d, h, mi, s, offset)
 
 
-def valid_medium_date(text: str, now: datetime | None) -> bool:
+def parse_medium_date(text: str) -> datetime | None:
     """Java's ``DateFormat.MEDIUM`` in the US locale (``Mar 1, 2024 8:00:00 AM``), as some Android apps and exports write it."""
     m = _MEDIUM.fullmatch(text)
     if not m or m.group(1) not in _MONTHS:
-        return False
+        return None
     hour = int(m.group(4))
     if not 1 <= hour <= 12:
-        return False
+        return None
     hour = hour % 12 + (12 if m.group(7) == "PM" else 0)
-    return _calendar(int(m.group(3)), _MONTHS[m.group(1)], int(m.group(2)), hour, int(m.group(5)), int(m.group(6) or 0), None, now)
+    return _moment(int(m.group(3)), _MONTHS[m.group(1)], int(m.group(2)), hour, int(m.group(5)), int(m.group(6) or 0))
+
+
+def _plausible_parse(parse: Callable[[str], "datetime | None"]) -> Validator:
+    def check(text: str, now: datetime | None) -> bool:
+        moment = parse(text)
+        return moment is not None and is_plausible(moment, now)
+
+    return check
+
+
+valid_iso8601 = _plausible_parse(parse_iso8601)
+valid_medium_date = _plausible_parse(parse_medium_date)
+
+_NUMERIC_FORMAT = {
+    CarveKind.TIMESTAMP_UNIX_SECONDS: TimestampFormat.UNIX_S,
+    CarveKind.TIMESTAMP_UNIX_MILLIS: TimestampFormat.UNIX_MS,
+    CarveKind.TIMESTAMP_WEBKIT_MICROS: TimestampFormat.WEBKIT_US,
+}
+
+
+def carved_timestamp(kind: CarveKind, text: str) -> datetime | None:
+    """The UTC instant a carved timestamp hit stands for (the same reading the validator used), or None."""
+    if kind in _NUMERIC_FORMAT:
+        return to_datetime(int(text), _NUMERIC_FORMAT[kind]) if text.isdigit() else None
+    if kind is CarveKind.TIMESTAMP_TEXT:
+        return parse_iso8601(text) or parse_medium_date(text)
+    return None
 
 
 # ------------------------------------------------------------------ the rule table

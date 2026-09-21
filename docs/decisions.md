@@ -98,3 +98,18 @@ skipped (the parsers own them), while replaced pages, older / stale / uncommitte
 hold values the database no longer shows, and for a table the recovery engine cannot model they are the only way to reach them.
 The cost is that history often repeats values that are still active; those candidates are corroborated by the active artifact
 during correlation instead of being silently dropped.
+
+**D-018 · Corroboration means "in a different database".** A live SMS row does not corroborate a phone number carved from that
+database's own `-wal`: it is the same file's data seen twice. A sidecar resolves to its main file for this purpose. Corroboration
+of a recovered record additionally requires an artifact of a *different kind* (a message is corroborated by contacts and the call
+log, not by other messages), so the scorer's "two sources" cap for PARTIAL records counts genuinely different witnesses.
+
+**D-019 · An impossible timestamp cancels corroboration, not the link.** A recovered record whose date is outside the Android
+window is still linked to the artifacts that share its number (that fact is true and useful), but the edge carries
+`corroborated: false` and the record gets no corroboration sentences: a record that is wrong about *when* has not earned credit
+for being right about *who*. A record with no timestamp is judged on the rest.
+
+**D-020 · Correlation runs twice, on purpose.** Recovered records only become artifacts (with ids) after they are scored, and
+scoring needs corroboration. So correlation is a pure function: pass 1 over active artifacts and recovered *drafts* produces the
+sentences; the stage reconstructs and stores the artifacts; pass 2 over the stored artifacts persists the edges with final
+`artifact:<id>` refs. No edge is ever rewritten.
