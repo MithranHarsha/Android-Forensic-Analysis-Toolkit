@@ -18,6 +18,7 @@ from android_forensics.sqlite.recovery import (
     field_types_valid,
     recover_all,
     scan_page,
+    schema_consistent,
     try_clobbered,
     try_full,
 )
@@ -93,6 +94,46 @@ def test_the_number_of_columns_must_match_the_table():
     for c in (fewer, more):
         buf, at = embed(c)
         assert try_full(buf, at, len(buf), SMS, "UTF-8") is None
+
+
+URLS = TableModel.from_sql(parse_create_table(
+    "CREATE TABLE urls(id INTEGER PRIMARY KEY AUTOINCREMENT, url LONGVARCHAR, title LONGVARCHAR, visit_count INTEGER DEFAULT 0 NOT NULL,"
+    " typed_count INTEGER DEFAULT 0 NOT NULL, last_visit_time INTEGER NOT NULL, hidden INTEGER DEFAULT 0 NOT NULL)"))
+
+
+def test_an_all_null_record_is_structure_bytes_followed_by_zeros_not_a_row():
+    """Found on a real Chromium schema: a split b-tree root leaves ``08 0b 08 00 00 00 00 00 00 00`` in its gap -- a payload
+    size, a rowid, a header of seven NULL columns. It parses, but it is not a deleted row and must not be reported as one."""
+    residue = bytes([0x08, 0x0B, 0x08]) + bytes(7)
+    buf, at = embed(residue)
+    assert try_full(buf, at, len(buf), URLS, "UTF-8") is None
+
+
+def test_a_null_in_a_not_null_column_cannot_be_a_row_of_that_table():
+    """SQLite refuses the insert, so no genuine row holds it -- the bytes are something else that happens to parse."""
+    bad = encode_table_leaf_cell(7, encode_record((None, "https://a.example/", None, 1, 0, None, 0)))  # last_visit_time NULL
+    good = encode_table_leaf_cell(7, encode_record((None, "https://a.example/", None, 1, 0, 13_000_000_000_000_000, 0)))
+    for data, expected in ((bad, None), (good, 7)):
+        buf, at = embed(data)
+        found = try_full(buf, at, len(buf), URLS, "UTF-8")
+        assert (found.rowid if found else None) == expected
+
+
+def test_a_row_that_is_mostly_null_but_valid_is_still_recovered():
+    """NULL is a legitimate stored value in a nullable column: the rule removes empty and impossible rows, not sparse ones."""
+    sparse = encode_table_leaf_cell(9, encode_record((None, None, None, None, None, None)))
+    only_body = encode_table_leaf_cell(9, encode_record((None, None, None, None, "only the body survived", None)))
+    buf, at = embed(only_body)
+    assert try_full(buf, at, len(buf), SMS, "UTF-8").values[4] == "only the body survived"
+    buf, at = embed(sparse)
+    assert try_full(buf, at, len(buf), SMS, "UTF-8") is None, "no column holds anything: it says nothing"
+
+
+def test_schema_consistency_ignores_the_rowid_alias_and_undetermined_columns():
+    assert schema_consistent(URLS, [UNKNOWN, "u", None, 1, 0, 5, 0])
+    assert schema_consistent(URLS, [UNKNOWN, UNKNOWN, None, 1, 0, 5, 0]), "an undetermined column is not judged"
+    assert not schema_consistent(URLS, [UNKNOWN, "u", None, None, 0, 5, 0]), "visit_count is NOT NULL"
+    assert not schema_consistent(SMS, [None, None, None, None, None, None]), "all NULL"
 
 
 def test_text_that_is_not_valid_utf8_makes_the_record_corrupted_and_the_value_unknown():

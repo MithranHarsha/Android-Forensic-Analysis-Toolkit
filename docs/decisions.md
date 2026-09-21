@@ -38,3 +38,46 @@ the result is `partial` (structure verified with `quick_check`), never `ok` and 
 **D-007 · The spec is treated as approval to build recovery.** Review 1 was scoped by the user to "no deleted-record recovery
 yet"; the full 18-phase specification was then supplied with the instruction to continue. Recovery (Phase 4B onward) is built
 as new pipeline stages behind the existing seams; the Review 1 stages and their results are unchanged.
+
+**D-008 · Recovery is staged: recover → carve → correlate → reconstruct.** The `Artifact` model requires a confidence level and
+its explanation for every non-active artifact, and the strongest confidence factor is corroboration by *another* artifact. A
+recovered row therefore cannot be an `Artifact` the moment it is found. The recovery stage stores a `RecoveredRecord` (where the
+bytes are, the raw bytes with their digest, the table the record was fitted to, the values the bytes determine); the
+`reconstruct` stage builds the typed artifact once correlation has said what supports it. Nothing downstream reads a
+`RecoveredRecord` as evidence.
+
+**D-009 · Ground truth is derived from the bytes, not from the intention to delete.** "The row was deleted" does not mean "the row
+is recoverable": a delete followed by `VACUUM` or an overwrite leaves nothing. The evaluation re-encodes every deleted row exactly
+as SQLite writes it and searches the file's bytes: the whole cell present → RECOVERED is expected; everything after the first
+four bytes present → PARTIAL; neither → UNRECOVERABLE. Recall is measured against what is physically there, so 100% is
+attainable and every miss is a genuine defect or a documented layout limit (`docs/sqlite_recovery.md` §7).
+
+**D-010 · Recovery limits set by evidence, not by convenience.** Free space is searched only for tables with ≥ 3 stored columns
+(`MIN_SCAN_WIDTH`): a 1–2 column record is too short to be told apart from noise. Rowids longer than 6 varint bytes are not
+attempted (a 7–9 byte rowid would put a 2⁴⁸+ id in an application table; the false-positive risk outweighs the gain).
+`sqlite_*` tables, virtual tables and `WITHOUT ROWID` tables are not modelled (their cells are not table-leaf cells).
+
+**D-011 · A row must be a possible row of its table.** Found while converting recovered rows on a real Chromium schema: the
+residue of a split b-tree root held `08 0b 08 00 00 00 00 00 00 00` — a payload size, a rowid and a header of seven NULL
+columns. It parses, it fitted `urls`, and it was reported as a recovered row although four of that table's columns are
+`NOT NULL`. Two rules now apply to every candidate: a stored NULL in a `NOT NULL` column (other than the rowid alias) cannot be
+a genuine row, since SQLite refuses the insert; and a record in which every column is NULL carries no information and is what
+structure bytes followed by zeros look like. Sparse rows with at least one real value are unaffected. The measured recovery
+matrix (507/511) is unchanged; the case is pinned by regression tests.
+
+**D-012 · Recovered rows use the active-row parsers.** `ArtifactParser.from_row` builds the payload, timestamp and summary; only
+the envelope (status, method, raw bytes, physical location, confidence) differs. A column the bytes did not determine is absent
+from the parser's row, so it reads as `UNKNOWN` and is never a default. A parser is used only for a row that means something on
+its own: SMS and call-log rows, Chromium `urls` (as a URL-level entry), `visits` and `downloads`. A contact is assembled from
+several tables, so a recovered `data` or `raw_contacts` row stays a `GenericRecord` — the values are kept without a claim about
+whose they are. A recovered visit holds only a URL id; its URL text is taken from the *active* `urls` row when one exists and
+the artifact is flagged `url_from_active_urls_table`; when that row is gone too the URL is `UNKNOWN`.
+
+**D-013 · UNKNOWN is not a malformed timestamp.** The browser parser converted timestamps unconditionally; for a column the
+bytes did not determine that produced "non-numeric value". It now converts only when the column is present (as the SMS and call
+parsers already did), so a missing timestamp is absent, not flagged as corrupt.
+
+**D-014 · What lifts a whole-cell row to HIGH.** The scorer's threshold is 0.85. A RECOVERED whole cell with a verified source,
+exact structure, consistent fields and a plausible timestamp scores 0.82 (MEDIUM) alone; corroboration by another artifact or a
+second location for the same record lifts it to HIGH. A PARTIAL row is capped at MEDIUM unless two independent sources
+corroborate it. The arithmetic is in `confidence/scorer.py`, and each artifact stores the factor list and a sentence.

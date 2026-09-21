@@ -177,6 +177,22 @@ def _fit_and_decode(
     return values, (sum(scores) / len(scores) if scores else 0.0), issues, corrupted
 
 
+def schema_consistent(model: TableModel, values: Sequence[Any]) -> bool:
+    """Could ``values`` be a row of ``model``? A stored NULL in a NOT NULL column cannot occur (SQLite refuses the insert), and a
+    record whose every column is NULL says nothing: it is what structure bytes followed by zeros look like, not a row.
+    Undetermined columns (UNKNOWN) and the rowid alias (always stored NULL) are not judged."""
+    informative = False
+    for col, v in zip(model.columns, values):
+        if col.is_rowid_alias or v is UNKNOWN:
+            continue
+        if v is None:
+            if col.not_null:
+                return False
+        else:
+            informative = True
+    return informative
+
+
 def try_full(data: bytes | memoryview, start: int, limit: int, model: TableModel, encoding: str) -> Candidate | None:
     """``[payload size][rowid][record]`` at ``start``, ending no later than ``limit``, and *exactly* filling its payload size."""
     try:
@@ -207,7 +223,7 @@ def try_full(data: bytes | memoryview, start: int, limit: int, model: TableModel
     except RecordError:
         return None
     values, fit, issues, corrupted = _fit_and_decode(model, types, memoryview(data)[pos + header_size:end], encoding)
-    if not values or fit < MIN_FIT:
+    if not values or fit < MIN_FIT or not schema_consistent(model, values):
         return None
     rowid = to_signed64(rowid_raw)
     if model.alias_index is not None:
@@ -294,7 +310,7 @@ def try_clobbered(
                     if types[0] is not None:
                         inferred = f"{model.columns[0].name}: type inferred from its length ({d0} bytes) and declared affinity"
             values, fit, issues, corrupted = _fit_and_decode(model, types, body, encoding, d0)
-            if not values or fit < MIN_FIT:
+            if not values or fit < MIN_FIT or not schema_consistent(model, values):
                 continue
             if inferred:
                 issues.append(inferred)

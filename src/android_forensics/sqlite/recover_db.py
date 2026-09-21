@@ -47,6 +47,9 @@ class RecoveryReport:
     wal: dict[str, Any] | None = None
     journal: dict[str, Any] | None = None
     active_source: str = ""
+    models: list[TableModel] = field(default_factory=list)  # the table definitions the scan used
+    wal_frame_status: dict[int, str] = field(default_factory=dict)  # WAL frame index -> its verification status
+    journal_checksum_ok: dict[int, bool] = field(default_factory=dict)  # journal record index -> its checksum verified
 
 
 def _schema_from_page1(data: bytes, encoding: str) -> list[tuple[str, str]]:
@@ -114,10 +117,13 @@ def recover_database(main: str | Path, sidecars: dict[str, Path | str] | None = 
                 if sidecars.get("-journal") and sidecars["-journal"].stat().st_size else None
             if wal:
                 report.wal = {"frames": len(wal.frames), **wal.summary(), "problems": wal.problems}
+                report.wal_frame_status = {f.index: f.status for f in wal.frames}
             if journal:
                 report.journal = {"kind": journal.kind, "records": len(journal.records), "problems": journal.problems}
+                report.journal_checksum_ok = {r.index: r.checksum_ok for r in journal.records}
 
             models, skipped = _collect_models(db, wal, journal, main, sidecars, scratch_dir, report)
+            report.models = models
             report.tables_attempted = sorted(m.name for m in models)
             report.tables_skipped = skipped
             if not models:

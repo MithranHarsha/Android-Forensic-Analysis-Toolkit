@@ -154,7 +154,7 @@ class BrowserParser(ArtifactParser):
         transition_code: object = UNKNOWN
         qualifiers: list[TransitionQualifier] = []
         if kind == "visit":
-            ts = convert(r.raw("visit_time"), TimestampFormat.WEBKIT_US, ctx.now)
+            ts = convert(r.raw("visit_time"), TimestampFormat.WEBKIT_US, ctx.now) if r.has("visit_time") else None
             code = r.int("transition")
             transition_code = code
             if isinstance(code, int):
@@ -164,10 +164,10 @@ class BrowserParser(ArtifactParser):
             if row.values.get("_dangling"):
                 r.flags.append("dangling_url_reference: visit points to a url id absent from the urls table")
         elif kind == "url":
-            ts = convert(r.raw("last_visit_time"), TimestampFormat.WEBKIT_US, ctx.now)
+            ts = convert(r.raw("last_visit_time"), TimestampFormat.WEBKIT_US, ctx.now) if r.has("last_visit_time") else None
         else:
-            ts = convert(r.raw("date"), TimestampFormat.UNIX_MS, ctx.now)
-        if ts.utc is None and ts.note not in ("NULL",):
+            ts = convert(r.raw("date"), TimestampFormat.UNIX_MS, ctx.now) if r.has("date") else None
+        if ts is not None and ts.utc is None and ts.note not in ("NULL",):
             r.flags.append(f"timestamp: {ts.note}")
         values = {
             "visit_id": r.int("id") if kind == "visit" else UNKNOWN,
@@ -193,9 +193,9 @@ class BrowserParser(ArtifactParser):
         state: object = UNKNOWN
         if state_code is not UNKNOWN:
             state = DownloadState.from_code(state_code)
-        ts = convert(r.raw("start_time"), TimestampFormat.WEBKIT_US, ctx.now)
+        ts = convert(r.raw("start_time"), TimestampFormat.WEBKIT_US, ctx.now) if r.has("start_time") else None
         end = convert(r.raw("end_time"), TimestampFormat.WEBKIT_US, ctx.now) if r.has("end_time") else None
-        if ts.utc is None and ts.note != "NULL":
+        if ts is not None and ts.utc is None and ts.note != "NULL":
             r.flags.append(f"timestamp: {ts.note}")
         target = r.text("target_path")
         values = {
