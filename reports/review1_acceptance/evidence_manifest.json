@@ -1,0 +1,284 @@
+{
+  "manifest_version": 2,
+  "case_id": "d31987b637e34e0882f5a9bbfc25e981",
+  "case_name": "acceptance",
+  "analysis_timestamp": "2026-09-21T18:20:11.861Z",
+  "tool_name": "android-forensics",
+  "tool_version": "0.1.0",
+  "sources": [
+    {
+      "source_id": 1,
+      "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump",
+      "original_name": "android_dump",
+      "source_type": "directory",
+      "container_size": null,
+      "container_md5": null,
+      "container_sha1": null,
+      "container_sha256": null,
+      "acquisition_time": null,
+      "ingested_at": "2026-09-21T18:20:11.845Z",
+      "complete": true,
+      "file_count": 16,
+      "total_bytes": 1398890,
+      "files": [
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/data/com.android.chrome/app_chrome/Default/History",
+          "relative_path": "data/data/com.android.chrome/app_chrome/Default/History",
+          "size": 32768,
+          "md5": "67e2e5bed6acfc1d6c1a32c707502b02",
+          "sha1": "1684770c6d69560053d828542746b7244bd59cf3",
+          "sha256": "c09cca264858e5bffca71c1412d12982f3f670da812a7f80fe08dcf9c6dd7b8e",
+          "kind": "sqlite_db",
+          "times": {
+            "mtime": "2024-06-04T08:00:00.000Z",
+            "atime": "2024-06-04T08:00:00.000Z",
+            "ctime": "2026-09-21T18:04:01.519Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": "evidence/s1/0000000_History"
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/data/com.android.providers.contacts/databases/calllog.db",
+          "relative_path": "data/data/com.android.providers.contacts/databases/calllog.db",
+          "size": 28672,
+          "md5": "57a44762fc641b6b6667ea1e2d03d9c3",
+          "sha1": "a9104f82e59aedfc62c88b6b026e174099674bb7",
+          "sha256": "cb2f416b05fc4d68ff33420ba5d12865f6bd16f30db99361e4e507fee5144ae3",
+          "kind": "sqlite_db",
+          "times": {
+            "mtime": "2024-06-04T08:00:37.000Z",
+            "atime": "2024-06-04T08:00:37.000Z",
+            "ctime": "2026-09-21T18:04:01.519Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": "evidence/s1/0000001_calllog.db"
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/data/com.android.providers.contacts/databases/calllog.db-shm",
+          "relative_path": "data/data/com.android.providers.contacts/databases/calllog.db-shm",
+          "size": 32768,
+          "md5": "1b21c8a9bc2636d4602c7a1dc952fb51",
+          "sha1": "d27efb0bebc7767d8dc0c75bced45c95d1e92df2",
+          "sha256": "fe084dfa141922f354ec872d253188016f409d4532b2ad2344cb30cca5464d8c",
+          "kind": "sqlite_shm",
+          "times": {
+            "mtime": "2024-06-04T08:01:14.000Z",
+            "atime": "2024-06-04T08:01:14.000Z",
+            "ctime": "2026-09-21T18:04:01.519Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": "evidence/s1/0000002_calllog.db-shm"
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/data/com.android.providers.contacts/databases/calllog.db-wal",
+          "relative_path": "data/data/com.android.providers.contacts/databases/calllog.db-wal",
+          "size": 20632,
+          "md5": "b99dbfe6fcf4ef07ceca3fc6eab203e0",
+          "sha1": "7dfe0c06bb1602f08f679af31b49474138ad236b",
+          "sha256": "54a336346c46ba5d6a1fb819fe849fd801fd7ef728ce7a09e00f756bbcfd7311",
+          "kind": "sqlite_wal",
+          "times": {
+            "mtime": "2024-06-04T08:01:51.000Z",
+            "atime": "2024-06-04T08:01:51.000Z",
+            "ctime": "2026-09-21T18:04:01.519Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": "evidence/s1/0000003_calllog.db-wal"
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/data/com.android.providers.contacts/databases/contacts2.db",
+          "relative_path": "data/data/com.android.providers.contacts/databases/contacts2.db",
+          "size": 36864,
+          "md5": "2ac949524488c546c65d1959eba12eef",
+          "sha1": "ea25b6e56dd7c50e3456d1f495908c5bd1224661",
+          "sha256": "3acaf1ab80e5e1452b2c522285a5aad656e8b1bce923ee5fdd0c97f55a330f8f",
+          "kind": "sqlite_db",
+          "times": {
+            "mtime": "2024-06-04T08:02:28.000Z",
+            "atime": "2024-06-04T08:02:28.000Z",
+            "ctime": "2026-09-21T18:04:01.519Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": "evidence/s1/0000004_contacts2.db"
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/data/com.android.providers.telephony/databases/mmssms.db",
+          "relative_path": "data/data/com.android.providers.telephony/databases/mmssms.db",
+          "size": 36864,
+          "md5": "8a0c71f61c6dfc38fe51eaec5ccc8888",
+          "sha1": "a458a6cd95bc874ea9fce3d1803a9ec8d6f40881",
+          "sha256": "0b45e83237da15cbea279e5d71b4acedf70de8dbce29bed3d3882de15972b301",
+          "kind": "sqlite_db",
+          "times": {
+            "mtime": "2024-06-04T08:03:05.000Z",
+            "atime": "2024-06-04T08:03:05.000Z",
+            "ctime": "2026-09-21T18:04:01.519Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": "evidence/s1/0000005_mmssms.db"
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/data/com.example.corrupt/databases/broken.db",
+          "relative_path": "data/data/com.example.corrupt/databases/broken.db",
+          "size": 29437,
+          "md5": "5596ac2caaa470546232f7a493f38a7c",
+          "sha1": "d0d605ef18ee7bcb67ab6aa2b5c79ca46527d6a7",
+          "sha256": "3a7c448a6f7df10337574c2a8ec5fa6c9c24c595dea61ee855ce00976c20bcce",
+          "kind": "sqlite_db",
+          "times": {
+            "mtime": "2024-06-04T08:03:42.000Z",
+            "atime": "2024-06-04T08:03:42.000Z",
+            "ctime": "2026-09-21T18:04:01.519Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": "evidence/s1/0000006_broken.db"
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/data/com.example.notes/databases/notes.db",
+          "relative_path": "data/data/com.example.notes/databases/notes.db",
+          "size": 16384,
+          "md5": "31967852631550623c7516484ecceac4",
+          "sha1": "16f71ffea9d7f45f07b7e4bc2cd741c05af4738a",
+          "sha256": "37116012f68b0ee30748098a1df4ee8c5075b2ff3eca9dd58d756640e091fecc",
+          "kind": "sqlite_db",
+          "times": {
+            "mtime": "2024-06-04T08:04:19.000Z",
+            "atime": "2024-06-04T08:04:19.000Z",
+            "ctime": "2026-09-21T18:04:01.519Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": "evidence/s1/0000007_notes.db"
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/data/com.example.notes/databases/pending.db",
+          "relative_path": "data/data/com.example.notes/databases/pending.db",
+          "size": 573440,
+          "md5": "3273ff95ef48979489f1f7b930568179",
+          "sha1": "c143f5ffa42f9fe12bf1edfc0b62138b4f65b18e",
+          "sha256": "1f43882e4fdea9db27ed0c1cc646bf16640aa92a47b872c81994a1eb8e0babde",
+          "kind": "sqlite_db",
+          "times": {
+            "mtime": "2024-06-04T08:04:56.000Z",
+            "atime": "2024-06-04T08:04:56.000Z",
+            "ctime": "2026-09-21T18:04:01.519Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": "evidence/s1/0000008_pending.db"
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/data/com.example.notes/databases/pending.db-journal",
+          "relative_path": "data/data/com.example.notes/databases/pending.db-journal",
+          "size": 570968,
+          "md5": "3d56e055781108744daf7caceaa6d2e5",
+          "sha1": "750aa9bd282810f37409a81800c109ccc359e043",
+          "sha256": "73e725eeef7353704e7fe229c7fc27f12345ac6582806a3461e63399e4bb8dc8",
+          "kind": "sqlite_journal",
+          "times": {
+            "mtime": "2024-06-04T08:05:33.000Z",
+            "atime": "2024-06-04T08:05:33.000Z",
+            "ctime": "2026-09-21T18:04:01.519Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": "evidence/s1/0000009_pending.db-journal"
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/data/com.example.notes/shared_prefs/com.example.notes_preferences.xml",
+          "relative_path": "data/data/com.example.notes/shared_prefs/com.example.notes_preferences.xml",
+          "size": 266,
+          "md5": "a1255de60d1a4c5b25d35086e89bc09d",
+          "sha1": "d94e0d3b0b2413704df2de1ba6eedd71fde8e866",
+          "sha256": "6b35fd757303fe7c8b4c387968ccda04de46b3df46d054103d62c9edb554e357",
+          "kind": "xml",
+          "times": {
+            "mtime": "2024-06-04T08:06:10.000Z",
+            "atime": "2024-06-04T08:06:10.000Z",
+            "ctime": "2026-09-21T18:04:01.520Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": "evidence/s1/0000010_com.example.notes_preferences.xml"
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/data/com.example.secure/databases/vault.db",
+          "relative_path": "data/data/com.example.secure/databases/vault.db",
+          "size": 16384,
+          "md5": "774472d77b09e1068fbee4735fb676a1",
+          "sha1": "3ccede9136c833eee562414802a83fe1b7efb9e8",
+          "sha256": "946b1e82db5dae2cc206cc2e74c98337ac3bf378bee73222c23c499e4bf12c86",
+          "kind": "encrypted_suspect",
+          "times": {
+            "mtime": "2024-06-04T08:06:47.000Z",
+            "atime": "2024-06-04T08:06:47.000Z",
+            "ctime": "2026-09-21T18:04:01.520Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": null
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/system/packages.xml",
+          "relative_path": "data/system/packages.xml",
+          "size": 260,
+          "md5": "69da3cd7f6750e6cc5371a6e995b6606",
+          "sha1": "d3f1b518d3849a73216b77e0982699bad221acca",
+          "sha256": "e2a17c648f33ff85f736f402d79ac47eae6c7614a38972820c5b8d8a66f97396",
+          "kind": "xml_binary",
+          "times": {
+            "mtime": "2024-06-04T08:07:24.000Z",
+            "atime": "2024-06-04T08:07:24.000Z",
+            "ctime": "2026-09-21T18:04:01.520Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": "evidence/s1/0000012_packages.xml"
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/data/system/users/0.xml",
+          "relative_path": "data/system/users/0.xml",
+          "size": 90,
+          "md5": "29581de32b4400365bd6c4dd2182b2ef",
+          "sha1": "5bc585e4eda837ec73a791304448784579b57bee",
+          "sha256": "4e57224c833274b931d1358de367b27cbf9406356c74947be67a60a97bad0288",
+          "kind": "xml",
+          "times": {
+            "mtime": "2024-06-04T08:08:01.000Z",
+            "atime": "2024-06-04T08:08:01.000Z",
+            "ctime": "2026-09-21T18:04:01.520Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": "evidence/s1/0000013_0.xml"
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/sdcard/DCIM/Camera/IMG_20240301_101500.jpg",
+          "relative_path": "sdcard/DCIM/Camera/IMG_20240301_101500.jpg",
+          "size": 2061,
+          "md5": "564835e14bd17e7c383f5486441dba3b",
+          "sha1": "3ef264bd559f6b5e6cb08daf2de8d7cff47dd214",
+          "sha256": "1431b5a98c2db460749cc62d5cf25b31ba8afc0061e8b3689a92e48bda3d909b",
+          "kind": "image",
+          "times": {
+            "mtime": "2024-06-04T08:08:38.000Z",
+            "atime": "2026-09-21T18:04:03.147Z",
+            "ctime": "2026-09-21T18:04:01.520Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": null
+        },
+        {
+          "original_path": "/Users/harshamithran/Documents/cf/synthetic_evidence/android_dump/storage/emulated/0/Pictures/screenshot.png",
+          "relative_path": "storage/emulated/0/Pictures/screenshot.png",
+          "size": 1032,
+          "md5": "504dc606d696c5cd4c6d1b1fba96cf0d",
+          "sha1": "1c8772b302151f4c517225d142a12e274edeacb3",
+          "sha256": "3ba66c32c8342c21df666d1d1e00a1a94e20e0c135cd529f87118ac148bc4a5b",
+          "kind": "image",
+          "times": {
+            "mtime": "2024-06-04T08:09:15.000Z",
+            "atime": "2026-09-21T18:04:02.419Z",
+            "ctime": "2026-09-21T18:04:01.520Z",
+            "basis": "fs_stat (ctime = inode change time on POSIX)"
+          },
+          "preserved_copy": null
+        }
+      ]
+    }
+  ],
+  "note": "Hashes are computed over the bytes of the original evidence read through a read-only interface. The original evidence is never modified."
+}

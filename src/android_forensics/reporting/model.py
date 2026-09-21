@@ -1,0 +1,242 @@
+"""Assemble the report model from the case store. Every artifact row carries its provenance."""
+
+from __future__ import annotations
+
+import json
+import platform
+import sqlite3
+import sys
+from collections import Counter
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+from android_forensics import TOOL_NAME, __version__
+from android_forensics.config import HTML_ROW_CAP
+from android_forensics.filesystem.android_paths import KNOWN_APPS
+from android_forensics.reporting import text
+from android_forensics.storage.case_store import CaseStore, utcnow
+
+
+class ReportModel(BaseModel):
+    meta: dict[str, Any]
+    at_a_glance: list[dict[str, Any]]
+    sources: list[dict[str, Any]]
+    acquisition: dict[str, Any]
+    evidence_files: list[dict[str, Any]]
+    artifact_summary: dict[str, Any]
+    databases: list[dict[str, Any]]
+    app_directories: list[dict[str, Any]]
+    recovery: dict[str, Any]
+    active: dict[str, dict[str, Any]]
+    timeline: list[dict[str, Any]]
+    validation: dict[str, Any]
+    scan_issues: list[dict[str, Any]]
+    table_catalog: list[dict[str, Any]]
+    custody: dict[str, Any]
+    runs: list[dict[str, Any]]
+    methodology: list[tuple[str, str]]
+    limitations: list[str]
+    disclaimer: str
+    status_glossary: list[tuple[str, str]]
+    html_row_cap: int = HTML_ROW_CAP
+    truncation: dict[str, list[int]] = Field(default_factory=dict)
+
+
+def _short(sha: str | None) -> str:
+    return (sha or "")[:16] + "…" if sha else ""
+
+
+def _prov(r) -> dict[str, Any]:
+    return {
+        "file": r["source_file"], "sha256": r["source_sha256"], "table": r["source_table"], "rowid": r["source_rowid"],
+        "wal": {1: "view: db+WAL", 0: "view: db only", None: "n/a"}[r["view_includes_wal"]],
+        "page": r["page_number"], "offset": r["byte_offset"], "method": r["extraction_method"],
+        "parser": f"{r['parser']} {r['parser_version']}", "variant": r["schema_variant"], "score": r["schema_match_score"],
+    }
+
+
+def _active_section(store: CaseStore) -> dict[str, dict[str, Any]]:
+    layouts = {
+        "sms": ("SMS messages", ["ID", "Time (UTC)", "Direction", "Address", "Body", "Read", "Thread"]),
+        "call": ("Call log", ["ID", "Time (UTC)", "Type", "Number", "Duration (s)", "Cached name", "Presentation"]),
+        "contact": ("Contacts", ["ID", "Last updated (UTC)", "Name", "Phones", "Emails", "Account", "Application flag"]),
+        "browser_visit": ("Browser visits", ["ID", "Time (UTC)", "Title", "URL", "Transition", "Visits"]),
+        "browser_download": ("Browser downloads", ["ID", "Time (UTC)", "File", "Source page", "Bytes", "State"]),
+        "app_summary": ("Application summary", ["ID", "Package", "Application", "Files", "Databases", "Last file change (UTC)", "Preference keys"]),
+    }
+    out: dict[str, dict[str, Any]] = {}
+    for atype, (title, cols) in layouts.items():
+        total = store.scalar("SELECT COUNT(*) FROM artifacts WHERE artifact_type=? AND status='ACTIVE'", (atype,)) or 0
+        rows = []
+        for r in store.q("SELECT * FROM artifacts WHERE artifact_type=? AND status='ACTIVE' ORDER BY COALESCE(ts_utc,'9999'), id", (atype,)):
+            f = json.loads(r["fields_json"])
+            ts = r["ts_utc"] or ""
+            if atype == "sms":
+                cells = [r["id"], ts, f.get("direction"), f.get("address"), f.get("body"), f.get("read"), f.get("thread_id")]
+            elif atype == "call":
+                cells = [r["id"], ts, f.get("call_type"), f.get("number") or "(private/unknown)", f.get("duration_seconds"), f.get("cached_name"), f.get("presentation")]
+            elif atype == "contact":
+                cells = [r["id"], ts, f.get("display_name"), ", ".join(p["number"] for p in f.get("phones", [])),
+                         ", ".join(e["address"] for e in f.get("emails", [])), f.get("account_name"),
+                         "FLAGGED DELETED (still in database)" if r["marked_deleted"] else ""]
+            elif atype == "browser_visit":
+                cells = [r["id"], ts, f.get("title"), f.get("url"), f.get("transition") or ("url-level record" if f.get("url_level_only") else ""), f.get("visit_count")]
+            elif atype == "browser_download":
+                cells = [r["id"], ts, (f.get("target_path") or "").rsplit("/", 1)[-1], f.get("tab_url"), f.get("total_bytes"), f.get("download_state")]
+            else:
+                cells = [r["id"], f["package"], f.get("known_app") or "", f["file_count"], f["database_count"], ts,
+                         sum(len(v) for v in f.get("shared_pref_keys", {}).values())]
+            rows.append({"cells": cells, "prov": _prov(r), "flags": json.loads(r["flags_json"] or "[]"),
+                         "marked_deleted": bool(r["marked_deleted"]), "unknown": json.loads(r["unknown_fields_json"] or "[]")})
+        out[atype] = {"title": title, "columns": cols, "rows": rows, "total": total}
+    return out
+
+
+def build_report_model(store: CaseStore, html_row_cap: int | None = None) -> ReportModel:
+    cap = HTML_ROW_CAP if html_row_cap is None else html_row_cap
+    case = store.case()
+    counts = store.counts()
+    files = [dict(r) for r in store.q(
+        "SELECT f.id, s.original_name AS source, f.path, f.logical_path, f.package, f.kind, f.size, f.md5, f.sha1, f.sha256, "
+        "f.mtime, f.time_basis, f.preserved_copy FROM evidence_files f JOIN evidence_sources s ON s.id=f.source_id ORDER BY f.source_id, f.ordinal")]
+    kinds = Counter(f["kind"] for f in files)
+    issues = [dict(r) for r in store.q("SELECT source_id, path, issue_type, detail, stage FROM scan_issues ORDER BY id")]
+    sources = [dict(r) for r in store.q("SELECT * FROM evidence_sources ORDER BY id")]
+    layout = {sid: l.model_dump() for sid, l in case.layouts.items()}
+
+    by_type = {r["artifact_type"]: r["n"] for r in store.q("SELECT artifact_type, COUNT(*) n FROM artifacts GROUP BY 1")}
+    artifact_status = {r["status"]: r["n"] for r in store.q("SELECT status, COUNT(*) n FROM artifacts GROUP BY 1")}
+    apps: dict[str, dict[str, Any]] = {}
+    for r in store.q("SELECT COALESCE(application,'(unattributed)') a, artifact_type t, COUNT(*) n FROM artifacts WHERE artifact_type!='app_summary' GROUP BY 1,2"):
+        apps.setdefault(r["a"], {"application": r["a"], "name": KNOWN_APPS.get(r["a"], ""), "counts": {}})["counts"][r["t"]] = r["n"]
+
+    databases: list[dict[str, Any]] = []
+    for d in store.q(
+        "SELECT d.*, f.path, f.package, f.sha256, f.size, (SELECT COUNT(*) FROM artifacts a WHERE a.database_id=d.id) AS parsed "
+        "FROM databases d JOIN evidence_files f ON f.id=d.evidence_file_id ORDER BY f.path"):
+        side = json.loads(d["sidecars_json"] or "{}")
+        hdr = json.loads(d["header_json"] or "{}")
+        version = json.loads(d["version_json"] or "null") or {}
+        engine = json.loads(d["engine_json"] or "null") or {}
+        databases.append({
+            "auto_vacuum": hdr.get("auto_vacuum"),
+            "sqlite_version": version.get("last_writer_version"), "sqlite_version_reliable": version.get("last_writer_version_reliable"),
+            "schema_format": version.get("schema_format"), "user_version": hdr.get("user_version"), "application_id": hdr.get("application_id"),
+            "wal_frames_valid": engine.get("wal_frames_valid"),
+            "id": d["id"], "path": d["path"], "package": d["package"], "sha256": d["sha256"], "size": d["size"],
+            "sqlite_status": d["sqlite_status"], "sqlite_status_detail": d["sqlite_status_detail"],
+            "open_status": d["open_status"], "open_error": d["open_error"], "integrity": d["integrity_status"],
+            "integrity_detail": d["integrity_detail"], "page_size": d["page_size"], "page_count": d["page_count_header"],
+            "encoding": d["text_encoding"], "journal_mode": d["journal_mode"], "tables": d["table_count"],
+            "artifacts": d["parsed"], "view_includes_wal": d["view_includes_wal"],
+            "freelist_pages": d["freelist_page_count"], "wal": side.get("wal"), "journal": side.get("journal"), "shm": side.get("shm"),
+            "warnings": json.loads(d["warnings_json"] or "[]"),
+        })
+    app_directories = []
+    for a in store.q("SELECT * FROM app_directories ORDER BY path"):
+        row = dict(a)
+        row["subdirectories"] = json.loads(row.pop("subdirectories_json") or "[]")
+        row["kind_counts"] = json.loads(row.pop("kind_counts_json") or "{}")
+        app_directories.append(row)
+    indicators = []
+    for d in databases:
+        if d["open_status"] in ("encrypted_suspect", "not_preserved"):
+            continue
+        wal = d["wal"] or {}
+        jr = d["journal"] or {}
+        notes = []
+        if d["auto_vacuum"] in ("full", "incremental"):
+            notes.append(f"auto-vacuum ({d['auto_vacuum']}) enabled — freed pages are reclaimed, so freelist-based recovery potential is reduced")
+        if d["freelist_pages"]:
+            notes.append(f"{d['freelist_pages']} freelist page(s) declared in the header — deleted rows may persist there")
+        if wal.get("size", 0) > 32:
+            notes.append(f"WAL present ({wal.get('frame_slots', '?')} frame slot(s)) — may hold superseded page images")
+        if jr.get("magic_valid"):
+            notes.append("valid-magic rollback journal — holds pre-transaction page images")
+        elif jr.get("size", 0) > 0:
+            notes.append("journal file present but header not valid/zeroed — stale pages may remain")
+        if d["open_status"] != "ok":
+            notes.append("database not readable by SQLite — a candidate for Review 2 salvage")
+        indicators.append({"path": d["path"], "freelist_pages": d["freelist_pages"], "page_count": d["page_count"],
+                           "wal_frame_slots": wal.get("frame_slots") if wal else None, "journal_bytes": jr.get("size") if jr else None,
+                           "notes": notes or ["no indicator present in header or sidecars (this does not prove nothing was deleted)"]})
+
+    val_rows = [dict(r) for r in store.q("SELECT target_type, target_id, target_label, check_name, status, detail FROM validation_results ORDER BY CASE status WHEN 'INVALID' THEN 0 WHEN 'PARTIAL' THEN 1 WHEN 'UNVERIFIED' THEN 2 ELSE 3 END, check_name, id")]
+    by_status = Counter(r["status"] for r in val_rows)
+    by_check: dict[str, dict[str, int]] = {}
+    for r in val_rows:
+        by_check.setdefault(r["check_name"], {}).setdefault(r["status"], 0)
+        by_check[r["check_name"]][r["status"]] += 1
+
+    tl = [dict(r) for r in store.q(
+        "SELECT ts_utc, time_basis, event_kind, artifact_type, event, source, status, confidence, artifact_id FROM timeline_events ORDER BY ts_utc, id")]
+    table_catalog = [dict(r) for r in store.q(
+        "SELECT f.path AS database, t.name, t.obj_type, t.row_count, t.parsed_by, t.schema_variant, t.schema_score, t.columns_json, t.read_error, t.details_json "
+        "FROM db_tables t JOIN databases d ON d.id=t.database_id JOIN evidence_files f ON f.id=d.evidence_file_id "
+        "WHERE t.obj_type='table' ORDER BY f.path, t.name")]
+    for t in table_catalog:
+        t["columns"] = [c[0] for c in json.loads(t.pop("columns_json") or "[]")]
+        details = json.loads(t.pop("details_json") or "null") or {}
+        t["primary_key"] = details.get("primary_key", [])
+        t["indexes"] = [
+            {"name": i["name"], "unique": i["unique"], "origin": i["origin"], "partial": i["partial"],
+             "columns": [c["name"] if c["name"] is not None else "(expression)" for c in i["columns"]]}
+            for i in details.get("indexes", [])
+        ]
+        t["foreign_keys"] = [{"columns": f["columns"], "references": f["referenced_table"]} for f in details.get("foreign_keys", [])]
+        t["flags"] = [label for label, on in (
+            ("WITHOUT ROWID", details.get("without_rowid")), ("AUTOINCREMENT", details.get("autoincrement")), ("STRICT", details.get("strict")),
+            ("virtual table", details.get("kind") == "virtual"), ("shadow table", details.get("kind") == "shadow"),
+        ) if on]
+
+    ok, msg = store.verify_custody_chain()
+    custody = {"intact": ok, "message": msg, "entries": [dict(r) for r in store.q("SELECT id, ts, actor, action, target, detail_json, entry_hash FROM custody_log ORDER BY id")]}
+    runs = [dict(r) for r in store.q("SELECT id, stage, status, started_at, finished_at, tool_version, stats_json FROM analysis_runs ORDER BY id")]
+
+    active = _active_section(store)
+    at_a_glance = [
+        {"label": "ACTIVE DATA", "value": counts["active_artifacts"], "note": "records present in live databases", "state": "ok"},
+        {"label": "RECOVERED DELETED DATA", "value": "not performed", "note": "Review 2", "state": "na"},
+        {"label": "PARTIAL RECOVERIES", "value": "not performed", "note": "Review 2", "state": "na"},
+        {"label": "CARVED CANDIDATES", "value": "not performed", "note": "Review 2", "state": "na"},
+        {"label": "UNRECOVERABLE DATA", "value": "not classified", "note": "Review 2", "state": "na"},
+    ]
+    model = ReportModel(
+        meta={
+            "case_id": case.id, "case_name": case.name, "examiner": case.examiner, "description": case.description,
+            "created_at": case.created_at, "generated_at": utcnow(), "tool_name": TOOL_NAME, "tool_version": __version__,
+            "python": sys.version.split()[0], "sqlite_library": sqlite3.sqlite_version, "platform": platform.platform(),
+            "review_scope": text.REVIEW_SCOPE,
+        },
+        at_a_glance=at_a_glance,
+        sources=sources,
+        acquisition={
+            "files": len(files), "bytes": sum(f["size"] for f in files), "kinds": dict(kinds.most_common()),
+            "layout": case.layout, "layout_detail": layout, "issue_counts": dict(Counter(i["issue_type"] for i in issues)),
+            "preserved_copies": sum(1 for f in files if f["preserved_copy"]), "all_complete": all(s["complete"] for s in sources),
+        },
+        evidence_files=files,
+        artifact_summary={"by_type": by_type, "by_status": artifact_status, "by_application": sorted(apps.values(), key=lambda a: a["application"]), "total": counts["artifacts"]},
+        databases=databases,
+        app_directories=app_directories,
+        recovery={"performed": False, "messages": text.NOT_PERFORMED, "indicators": indicators},
+        active=active,
+        timeline=tl,
+        validation={"total": len(val_rows), "by_status": dict(by_status), "by_check": by_check, "results": val_rows},
+        scan_issues=issues,
+        table_catalog=table_catalog,
+        custody=custody,
+        runs=runs,
+        methodology=text.METHODOLOGY,
+        limitations=text.LIMITATIONS,
+        disclaimer=text.DISCLAIMER,
+        status_glossary=text.STATUS_GLOSSARY,
+    )
+    model.html_row_cap = cap
+    model.truncation = {
+        "evidence_files": [min(len(files), cap), len(files)], "timeline": [min(len(tl), cap), len(tl)],
+        **{k: [min(len(v["rows"]), cap), len(v["rows"])] for k, v in active.items()},
+        "validation": [min(len(val_rows), cap), len(val_rows)],
+    }
+    return model

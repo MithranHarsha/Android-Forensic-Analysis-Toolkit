@@ -1,0 +1,5 @@
+﻿source_id,path,issue_type,detail,stage
+1,data/data/com.example.corrupt/databases/broken.db,database_truncated,29437 bytes on disk but the header implies 49152,scan
+1,data/data/com.example.secure/databases/vault.db,encrypted_suspect,"database-like name without SQLite header; high entropy (7.96 bits/byte) — likely encrypted, not attempted",scan
+1,data/system/packages.xml,binary_xml_not_parsed,Android Binary XML (ABX); not parsed in Review 1,scan
+1,data/data/com.example.corrupt/databases/broken.db,database_unopenable,SQLite refused to open it: DatabaseError: database disk image is malformed,scan

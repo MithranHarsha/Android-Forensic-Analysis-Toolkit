@@ -1,0 +1,6 @@
+input,files,mib,seconds,mib_per_second
+directory,3003,301,0.79,381
+"directory, copy all files",3003,301,1.09,276
+zip (stored),3003,301,1.3,232
+tar,3003,301,1.28,236
+reference: SHA-256 alone (hashlib),0,300,0.1,3080

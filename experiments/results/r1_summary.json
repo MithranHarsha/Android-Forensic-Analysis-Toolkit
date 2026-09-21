@@ -1,0 +1,95 @@
+{
+  "tool_version": "0.1.0",
+  "python": "3.12.13",
+  "sqlite": "3.53.3",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "e1": {
+    "datasets": 15,
+    "records_expected": 9210,
+    "records_extracted": 9210,
+    "records_correct": 9210,
+    "min_precision": 1.0,
+    "min_recall": 1.0,
+    "min_f1": 1.0,
+    "total_field_mismatches": 0
+  },
+  "e2": [
+    {
+      "sms_rows": 1000,
+      "db_bytes": 110592,
+      "extracted": 1000,
+      "extract_seconds": 0.059,
+      "rows_per_second": 16949,
+      "peak_python_mib": 6.2
+    },
+    {
+      "sms_rows": 10000,
+      "db_bytes": 1019904,
+      "extracted": 10000,
+      "extract_seconds": 0.573,
+      "rows_per_second": 17452,
+      "peak_python_mib": 6.3
+    },
+    {
+      "sms_rows": 50000,
+      "db_bytes": 5128192,
+      "extracted": 50000,
+      "extract_seconds": 2.854,
+      "rows_per_second": 17519,
+      "peak_python_mib": 6.3
+    },
+    {
+      "sms_rows": 100000,
+      "db_bytes": 10260480,
+      "extracted": 100000,
+      "extract_seconds": 5.903,
+      "rows_per_second": 16941,
+      "peak_python_mib": 6.3
+    },
+    {
+      "sms_rows": 250000,
+      "db_bytes": 25878528,
+      "extracted": 250000,
+      "extract_seconds": 15.621,
+      "rows_per_second": 16004,
+      "peak_python_mib": 6.3
+    }
+  ],
+  "e3": [
+    {
+      "input": "directory",
+      "files": 3003,
+      "mib": 301,
+      "seconds": 0.79,
+      "mib_per_second": 381
+    },
+    {
+      "input": "directory, copy all files",
+      "files": 3003,
+      "mib": 301,
+      "seconds": 1.09,
+      "mib_per_second": 276
+    },
+    {
+      "input": "zip (stored)",
+      "files": 3003,
+      "mib": 301,
+      "seconds": 1.3,
+      "mib_per_second": 232
+    },
+    {
+      "input": "tar",
+      "files": 3003,
+      "mib": 301,
+      "seconds": 1.28,
+      "mib_per_second": 236
+    },
+    {
+      "input": "reference: SHA-256 alone (hashlib)",
+      "files": 0,
+      "mib": 300,
+      "seconds": 0.1,
+      "mib_per_second": 3080
+    }
+  ]
+}

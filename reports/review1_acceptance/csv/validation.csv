@@ -1,0 +1,55 @@
+﻿target_type,target_id,target_label,check_name,status,detail
+database,5,data/data/com.example.corrupt/databases/broken.db,sqlite_header,PARTIAL,header valid but file size is inconsistent: header declares 12 pages (49152 bytes) but file is 29437 bytes — truncated
+database,8,data/data/com.example.secure/databases/vault.db,sqlite_header,UNVERIFIED,"database-like name without SQLite header; high entropy (7.96 bits/byte) — likely encrypted, not attempted"
+database,5,data/data/com.example.corrupt/databases/broken.db,sqlite_integrity,UNVERIFIED,database could not be opened by SQLite
+database,8,data/data/com.example.secure/databases/vault.db,sqlite_integrity,UNVERIFIED,not attempted: file appears encrypted
+source,1,source s1 android_dump,acquisition_completeness,VALID,all 16 entries acquired; none skipped
+case,,call log vs contacts,cross_artifact_consistency,VALID,cached call names agree with contacts; 59 of 60 calls have a number present in contacts
+case,,SMS thread consistency,cross_artifact_consistency,VALID,every SMS thread maps to a single address
+case,,chain-of-custody log,custody_chain,VALID,custody chain intact
+case,,sms artifacts,duplicate_detection,VALID,no duplicate sms records among 120
+case,,call artifacts,duplicate_detection,VALID,no duplicate call records among 60
+case,,browser_visit artifacts,duplicate_detection,VALID,no duplicate browser_visit records among 152
+case,,contact artifacts,duplicate_detection,VALID,no duplicate contact records among 30
+database,1,data/data/com.android.chrome/app_chrome/Default/History,filename_schema_agreement,VALID,file name and content agree (152 browser_visit artifacts)
+database,2,data/data/com.android.providers.contacts/databases/calllog.db,filename_schema_agreement,VALID,file name and content agree (60 call artifacts)
+database,3,data/data/com.android.providers.contacts/databases/contacts2.db,filename_schema_agreement,VALID,file name and content agree (30 contact artifacts)
+database,4,data/data/com.android.providers.telephony/databases/mmssms.db,filename_schema_agreement,VALID,file name and content agree (120 sms artifacts)
+source,1,source s1 android_dump,hash_consistency,VALID,all 16 original files re-hashed and match ingest-time SHA-256
+case,,preserved evidence copies,hash_consistency,VALID,all 13 write-protected preserved copies match their recorded SHA-256
+case,,evidence_manifest.json,manifest_integrity,VALID,manifest matches the hash recorded in the custody log
+case,,artifact provenance,provenance_completeness,VALID,"all 373 artifacts trace to an evidence file, SHA-256, table and row; 373 raw source rows match their digests"
+table,,data/data/com.android.chrome/app_chrome/Default/History :: visits (browser_visit),record_structure,VALID,150 records: field types consistent with the schema
+table,,data/data/com.android.chrome/app_chrome/Default/History :: urls (browser_visit),record_structure,VALID,2 records: field types consistent with the schema
+table,,data/data/com.android.chrome/app_chrome/Default/History :: downloads (browser_download),record_structure,VALID,5 records: field types consistent with the schema
+table,,data/data/com.android.providers.contacts/databases/calllog.db :: calls (call),record_structure,VALID,60 records: field types consistent with the schema
+table,,data/data/com.android.providers.contacts/databases/contacts2.db :: raw_contacts (contact),record_structure,VALID,30 records: field types consistent with the schema
+table,,data/data/com.android.providers.telephony/databases/mmssms.db :: sms (sms),record_structure,VALID,120 records: field types consistent with the schema
+table,3,data/data/com.android.chrome/app_chrome/Default/History :: urls,schema_consistency,VALID,all fields known to the browser parser are present (chromium_history)
+table,5,data/data/com.android.chrome/app_chrome/Default/History :: visits,schema_consistency,VALID,all fields known to the browser parser are present (chromium_history)
+table,6,data/data/com.android.chrome/app_chrome/Default/History :: downloads,schema_consistency,VALID,all fields known to the browser parser are present (chromium_history)
+table,9,data/data/com.android.providers.contacts/databases/calllog.db :: calls,schema_consistency,VALID,all fields known to the calls parser are present (aosp_calls)
+table,12,data/data/com.android.providers.contacts/databases/contacts2.db :: accounts,schema_consistency,VALID,all fields known to the contacts parser are present (aosp_contacts2)
+table,14,data/data/com.android.providers.contacts/databases/contacts2.db :: mimetypes,schema_consistency,VALID,all fields known to the contacts parser are present (aosp_contacts2)
+table,15,data/data/com.android.providers.contacts/databases/contacts2.db :: contacts,schema_consistency,VALID,all fields known to the contacts parser are present (aosp_contacts2)
+table,16,data/data/com.android.providers.contacts/databases/contacts2.db :: raw_contacts,schema_consistency,VALID,all fields known to the contacts parser are present (aosp_contacts2)
+table,17,data/data/com.android.providers.contacts/databases/contacts2.db :: data,schema_consistency,VALID,all fields known to the contacts parser are present (aosp_contacts2)
+table,20,data/data/com.android.providers.telephony/databases/mmssms.db :: sms,schema_consistency,VALID,all fields known to the sms parser are present (aosp_sms)
+database,1,data/data/com.android.chrome/app_chrome/Default/History,sqlite_header,VALID,"valid SQLite 3 header (page size 4096, UTF-8, rollback mode)"
+database,2,data/data/com.android.providers.contacts/databases/calllog.db,sqlite_header,VALID,"valid SQLite 3 header (page size 4096, UTF-8, wal mode)"
+database,3,data/data/com.android.providers.contacts/databases/contacts2.db,sqlite_header,VALID,"valid SQLite 3 header (page size 4096, UTF-8, rollback mode)"
+database,4,data/data/com.android.providers.telephony/databases/mmssms.db,sqlite_header,VALID,"valid SQLite 3 header (page size 4096, UTF-8, rollback mode)"
+database,6,data/data/com.example.notes/databases/notes.db,sqlite_header,VALID,"valid SQLite 3 header (page size 4096, UTF-8, rollback mode)"
+database,7,data/data/com.example.notes/databases/pending.db,sqlite_header,VALID,"valid SQLite 3 header (page size 4096, UTF-8, rollback mode)"
+database,1,data/data/com.android.chrome/app_chrome/Default/History,sqlite_integrity,VALID,ok
+database,2,data/data/com.android.providers.contacts/databases/calllog.db,sqlite_integrity,VALID,ok
+database,3,data/data/com.android.providers.contacts/databases/contacts2.db,sqlite_integrity,VALID,ok
+database,4,data/data/com.android.providers.telephony/databases/mmssms.db,sqlite_integrity,VALID,ok
+database,6,data/data/com.example.notes/databases/notes.db,sqlite_integrity,VALID,ok
+database,7,data/data/com.example.notes/databases/pending.db,sqlite_integrity,VALID,ok
+table,,data/data/com.android.chrome/app_chrome/Default/History :: visits (browser_visit),timestamp_plausibility,VALID,150 of 150 records carry a plausible timestamp (2008-01-01 … now)
+table,,data/data/com.android.chrome/app_chrome/Default/History :: urls (browser_visit),timestamp_plausibility,VALID,2 of 2 records carry a plausible timestamp (2008-01-01 … now)
+table,,data/data/com.android.chrome/app_chrome/Default/History :: downloads (browser_download),timestamp_plausibility,VALID,5 of 5 records carry a plausible timestamp (2008-01-01 … now)
+table,,data/data/com.android.providers.contacts/databases/calllog.db :: calls (call),timestamp_plausibility,VALID,60 of 60 records carry a plausible timestamp (2008-01-01 … now)
+table,,data/data/com.android.providers.contacts/databases/contacts2.db :: raw_contacts (contact),timestamp_plausibility,VALID,30 of 30 records carry a plausible timestamp (2008-01-01 … now)
+table,,data/data/com.android.providers.telephony/databases/mmssms.db :: sms (sms),timestamp_plausibility,VALID,120 of 120 records carry a plausible timestamp (2008-01-01 … now)

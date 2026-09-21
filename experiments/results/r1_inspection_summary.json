@@ -1,0 +1,144 @@
+{
+  "tool_version": "0.1.0",
+  "python": "3.12.13",
+  "sqlite": "3.53.3",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "e4": [
+    {
+      "rows": 1000,
+      "db_mib": 0.1,
+      "mode": "schema_only",
+      "rows_returned": 1000,
+      "seconds": 0.002,
+      "rows_per_second": 447043,
+      "peak_python_mib": 1.1
+    },
+    {
+      "rows": 1000,
+      "db_mib": 0.1,
+      "mode": "stream",
+      "rows_returned": 1000,
+      "seconds": 0.006,
+      "rows_per_second": 167862,
+      "peak_python_mib": 1.1
+    },
+    {
+      "rows": 1000,
+      "db_mib": 0.1,
+      "mode": "in_memory",
+      "rows_returned": 1000,
+      "seconds": 0.007,
+      "rows_per_second": 141792,
+      "peak_python_mib": 2.1
+    },
+    {
+      "rows": 10000,
+      "db_mib": 0.8,
+      "mode": "schema_only",
+      "rows_returned": 10000,
+      "seconds": 0.002,
+      "rows_per_second": 5460130,
+      "peak_python_mib": 1.8
+    },
+    {
+      "rows": 10000,
+      "db_mib": 0.8,
+      "mode": "stream",
+      "rows_returned": 10000,
+      "seconds": 0.057,
+      "rows_per_second": 176315,
+      "peak_python_mib": 1.8
+    },
+    {
+      "rows": 10000,
+      "db_mib": 0.8,
+      "mode": "in_memory",
+      "rows_returned": 10000,
+      "seconds": 0.072,
+      "rows_per_second": 138139,
+      "peak_python_mib": 21.4
+    },
+    {
+      "rows": 50000,
+      "db_mib": 4.1,
+      "mode": "schema_only",
+      "rows_returned": 50000,
+      "seconds": 0.006,
+      "rows_per_second": 8877643,
+      "peak_python_mib": 2.0
+    },
+    {
+      "rows": 50000,
+      "db_mib": 4.1,
+      "mode": "stream",
+      "rows_returned": 50000,
+      "seconds": 0.28,
+      "rows_per_second": 178491,
+      "peak_python_mib": 2.0
+    },
+    {
+      "rows": 50000,
+      "db_mib": 4.1,
+      "mode": "in_memory",
+      "rows_returned": 50000,
+      "seconds": 0.372,
+      "rows_per_second": 134354,
+      "peak_python_mib": 107.0
+    },
+    {
+      "rows": 100000,
+      "db_mib": 8.3,
+      "mode": "schema_only",
+      "rows_returned": 100000,
+      "seconds": 0.011,
+      "rows_per_second": 9051275,
+      "peak_python_mib": 2.0
+    },
+    {
+      "rows": 100000,
+      "db_mib": 8.3,
+      "mode": "stream",
+      "rows_returned": 100000,
+      "seconds": 0.553,
+      "rows_per_second": 180669,
+      "peak_python_mib": 2.0
+    },
+    {
+      "rows": 100000,
+      "db_mib": 8.3,
+      "mode": "in_memory",
+      "rows_returned": 100000,
+      "seconds": 0.822,
+      "rows_per_second": 121628,
+      "peak_python_mib": 214.0
+    },
+    {
+      "rows": 250000,
+      "db_mib": 21.1,
+      "mode": "schema_only",
+      "rows_returned": 250000,
+      "seconds": 0.033,
+      "rows_per_second": 7657974,
+      "peak_python_mib": 2.0
+    },
+    {
+      "rows": 250000,
+      "db_mib": 21.1,
+      "mode": "stream",
+      "rows_returned": 250000,
+      "seconds": 1.372,
+      "rows_per_second": 182157,
+      "peak_python_mib": 2.0
+    }
+  ],
+  "e5": {
+    "databases": 300,
+    "tables": 739,
+    "rows": 55740,
+    "cells": 329930,
+    "deleted_rows": 16779,
+    "cell_mismatches": 0,
+    "deleted_tokens_leaked": 0,
+    "integrity_ok": 300
+  }
+}

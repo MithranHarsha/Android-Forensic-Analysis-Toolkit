@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+  <string name="theme">dark</string>
+  <boolean name="first_run" value="false" />
+  <string name="auth_token">SYNTHETIC-NOT-A-REAL-TOKEN</string>
+  <long name="last_sync" value="1709280000000" />
+</map>

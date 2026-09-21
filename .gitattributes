@@ -1,0 +1,5 @@
+# Generated evidence, reports and experiment results are byte-exact artifacts (their hashes are recorded): never normalise line endings.
+*.csv -text
+reports/** -text
+experiments/results/** -text
+synthetic_evidence/** -text
