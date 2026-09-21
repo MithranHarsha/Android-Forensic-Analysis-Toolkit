@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from android_forensics.models import (
     UNKNOWN,
     ApplicationSummary,
+    GenericRecord,
     Artifact,
     ArtifactStatus,
     ArtifactType,
@@ -37,7 +38,7 @@ from tests.unit.models.factories import (
     ts,
 )
 
-ALL_CLASSES = [SMSMessage, CallRecord, Contact, BrowserHistoryEntry, BrowserDownload, ApplicationSummary]
+ALL_CLASSES = [SMSMessage, CallRecord, Contact, BrowserHistoryEntry, BrowserDownload, ApplicationSummary, GenericRecord]
 
 
 # ------------------------------------------------------------------ the requested field set

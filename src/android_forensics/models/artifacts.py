@@ -335,6 +335,18 @@ class ApplicationSummary(Artifact):
     known_app: str | None = None
 
 
+class GenericRecord(Artifact):
+    """A row of a table no parser recognises, kept without semantic labelling (Review 2: recovered rows).
+
+    ``columns`` holds the values the bytes determined; a column the bytes did not determine is *absent* and named in
+    ``unknown_columns`` (distinct from a column whose stored value is NULL)."""
+
+    artifact_type: Literal[ArtifactType.GENERIC_RECORD] = ArtifactType.GENERIC_RECORD
+    table: str
+    columns: dict[str, Any] = Field(default_factory=dict)
+    unknown_columns: list[str] = Field(default_factory=list)
+
+
 # ---------------------------------------------------------------- polymorphic loading
 
 _ARTIFACT_CLASSES: dict[ArtifactType, type[Artifact]] = {}
@@ -354,7 +366,7 @@ def register_artifact(cls: type[Artifact]) -> type[Artifact]:
     return cls
 
 
-for _cls in (SMSMessage, CallRecord, Contact, BrowserHistoryEntry, BrowserDownload, ApplicationSummary):
+for _cls in (SMSMessage, CallRecord, Contact, BrowserHistoryEntry, BrowserDownload, ApplicationSummary, GenericRecord):
     register_artifact(_cls)
 
 
@@ -422,6 +434,6 @@ def artifact_from_record(record: Mapping[str, Any]) -> Artifact:
 
 __all__ = [
     "ApplicationSummary", "Artifact", "BrowserDownload", "BrowserHistoryEntry", "CallRecord", "Contact",
-    "ContactEmail", "ContactPhone", "SMSMessage", "artifact_adapter", "artifact_class", "artifact_from_record",
+    "ContactEmail", "ContactPhone", "GenericRecord", "SMSMessage", "artifact_adapter", "artifact_class", "artifact_from_record",
     "register_artifact",
 ]

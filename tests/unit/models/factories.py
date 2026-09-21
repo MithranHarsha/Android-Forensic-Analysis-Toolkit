@@ -16,6 +16,7 @@ from android_forensics.models import (
     ContactEmail,
     ContactPhone,
     ExtractionMethod,
+    GenericRecord,
     ParserInfo,
     PhysicalLocation,
     Provenance,
@@ -93,4 +94,6 @@ def one_of_each_type() -> list[Any]:
                              raw=RawReference(kind=RawKind.INVENTORY, row={"member_count": 3}),
                              parser=parser(name="app_data"), package="com.example.app", file_count=3, total_bytes=100,
                              database_count=1, sidecar_count=0)
-    return [sms(), call, contact, visit, dl, app]
+    generic = GenericRecord(provenance=prov(source_table="notes", source_rowid=3), raw=raw_row(_id=3, title="t"), parser=parser(name="generic"),
+                            table="notes", columns={"_id": 3, "title": "t"})
+    return [sms(), call, contact, visit, dl, app, generic]

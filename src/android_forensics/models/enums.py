@@ -22,6 +22,7 @@ class ArtifactType(StrEnum):
     BROWSER_VISIT = "browser_visit"  # a browser history entry: a visit, or a URL-level record
     BROWSER_DOWNLOAD = "browser_download"
     APP_SUMMARY = "app_summary"
+    GENERIC_RECORD = "generic_record"  # a row of a table no parser recognises (Review 2: recovered rows only)
 
 
 class ArtifactStatus(StrEnum):
@@ -410,3 +411,45 @@ _TRANSITION_QUALIFIER_BITS = (
 _DOWNLOAD_STATE = {
     0: DownloadState.IN_PROGRESS, 1: DownloadState.COMPLETE, 2: DownloadState.CANCELLED, 3: DownloadState.INTERRUPTED,
 }
+
+
+class CarveKind(StrEnum):
+    """What a raw-carving pattern looks for."""
+
+    PHONE_NUMBER = "phone_number"
+    URL = "url"
+    EMAIL = "email"
+    TIMESTAMP_UNIX_SECONDS = "timestamp_unix_seconds"
+    TIMESTAMP_UNIX_MILLIS = "timestamp_unix_millis"
+    TIMESTAMP_TEXT = "timestamp_text"
+    SMS_LIKE_TEXT = "sms_like_text"
+    SQLITE_RECORD = "sqlite_record"
+
+
+class EntityKind(StrEnum):
+    """Nodes of the correlation graph."""
+
+    PERSON = "person"
+    PHONE_NUMBER = "phone_number"
+    MESSAGE = "message"
+    CALL = "call"
+    CONTACT = "contact"
+    APPLICATION = "application"
+    DATABASE = "database"
+    FILE = "file"
+    TIMESTAMP = "timestamp"
+    URL = "url"
+    ARTIFACT = "artifact"
+    CARVED = "carved_candidate"
+
+
+class Relation(StrEnum):
+    """Edges of the correlation graph."""
+
+    SENT = "SENT"
+    RECEIVED = "RECEIVED"
+    CALLED = "CALLED"
+    CONTACT_OF = "CONTACT_OF"
+    FOUND_IN = "FOUND_IN"
+    RECOVERED_FROM = "RECOVERED_FROM"
+    CORRELATES_WITH = "CORRELATES_WITH"

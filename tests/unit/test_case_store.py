@@ -1,6 +1,9 @@
 import pytest
 
 from android_forensics.storage.case_store import CaseError, CaseStore
+from android_forensics.storage.schema import MIGRATIONS
+
+REVIEW2_TABLES = ("recovered_records", "unrecovered_regions", "wal_frames", "freelist_pages", "carved_candidates", "correlations")
 
 
 def test_create_open_and_duplicate(tmp_path):
@@ -18,7 +21,23 @@ def test_migrations_idempotent(tmp_path):
     s = CaseStore.create(tmp_path / "c", "n")
     s.close()
     s2 = CaseStore.open(tmp_path / "c")
-    assert s2.scalar("SELECT COUNT(*) FROM schema_migrations") == 1
+    assert s2.scalar("SELECT COUNT(*) FROM schema_migrations") == len(MIGRATIONS)
+    assert [r[0] for r in s2.q("SELECT version FROM schema_migrations ORDER BY version")] == [m[0] for m in MIGRATIONS]
+
+
+def test_a_review_1_case_is_upgraded_in_place_without_touching_its_data(tmp_path):
+    """A case created before the Review 2 tables existed (only migration 1 applied) gains them on the next open."""
+    s = CaseStore.create(tmp_path / "c", "n", "examiner", "kept")
+    for table in REVIEW2_TABLES:
+        s.conn.execute(f"DROP TABLE {table}")
+    s.conn.execute("DELETE FROM schema_migrations WHERE version=2")
+    s.conn.commit()
+    s.close()
+    upgraded = CaseStore.open(tmp_path / "c")
+    assert upgraded.case().examiner == "examiner" and upgraded.case().description == "kept"
+    names = {r[0] for r in upgraded.q("SELECT name FROM sqlite_master WHERE type='table'")}
+    assert set(REVIEW2_TABLES) <= names
+    assert upgraded.scalar("SELECT COUNT(*) FROM schema_migrations") == len(MIGRATIONS)
 
 
 def test_custody_chain_detects_tampering_and_deletion(fresh_case):

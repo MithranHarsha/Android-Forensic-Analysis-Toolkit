@@ -53,8 +53,9 @@ def _typed_insert(store: CaseStore, art: Artifact, aid: int) -> None:
         )
 
 
-def insert_artifacts(store: CaseStore, run_id: int, database_id: int | None, artifacts: Iterable[Artifact]) -> int:
-    n = 0
+def insert_artifacts_with_ids(store: CaseStore, run_id: int, database_id: int | None, artifacts: Iterable[Artifact]) -> list[int]:
+    """Store ``artifacts`` and return their row ids, in order (the reconstruct stage links recovered records to them)."""
+    ids: list[int] = []
     now = utcnow()
     with store.transaction():
         for a in artifacts:
@@ -64,5 +65,9 @@ def insert_artifacts(store: CaseStore, run_id: int, database_id: int | None, art
             record["database_id"] = database_id
             aid = store.insert("artifacts", record)
             _typed_insert(store, a, aid)
-            n += 1
-    return n
+            ids.append(aid)
+    return ids
+
+
+def insert_artifacts(store: CaseStore, run_id: int, database_id: int | None, artifacts: Iterable[Artifact]) -> int:
+    return len(insert_artifacts_with_ids(store, run_id, database_id, artifacts))

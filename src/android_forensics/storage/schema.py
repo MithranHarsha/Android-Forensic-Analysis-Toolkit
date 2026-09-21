@@ -273,6 +273,116 @@ CREATE TABLE custody_log(
 );
 """
 
+MIGRATION_002 = """
+-- Review 2: deleted-data recovery, carving, correlation. Staging tables keep raw findings; artifacts are built from them.
+CREATE TABLE recovered_records(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER REFERENCES analysis_runs(id),
+    database_id INTEGER REFERENCES databases(id),
+    database_file_id INTEGER NOT NULL REFERENCES evidence_files(id),
+    source TEXT NOT NULL,                 -- main | wal | journal
+    source_file_id INTEGER NOT NULL REFERENCES evidence_files(id),
+    source_path TEXT NOT NULL,
+    source_sha256 TEXT NOT NULL,
+    table_name TEXT NOT NULL,
+    rowid_value INTEGER,
+    status TEXT NOT NULL,                 -- RECOVERED | PARTIAL | CORRUPTED
+    method TEXT NOT NULL,
+    page_number INTEGER NOT NULL,
+    page_offset INTEGER NOT NULL,
+    file_offset INTEGER NOT NULL,
+    length INTEGER NOT NULL,
+    page_type TEXT,
+    region TEXT NOT NULL,
+    cell_index INTEGER,
+    frame INTEGER,
+    raw_hex TEXT NOT NULL,
+    raw_sha256 TEXT NOT NULL,
+    fit REAL NOT NULL,
+    values_json TEXT NOT NULL,
+    unknown_columns_json TEXT NOT NULL,
+    issues_json TEXT NOT NULL,
+    also_found_at_json TEXT NOT NULL,
+    artifact_id INTEGER REFERENCES artifacts(id)
+);
+CREATE INDEX idx_rec_db ON recovered_records(database_id);
+CREATE INDEX idx_rec_status ON recovered_records(status);
+
+CREATE TABLE unrecovered_regions(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER REFERENCES analysis_runs(id),
+    database_id INTEGER REFERENCES databases(id),
+    source TEXT NOT NULL,
+    source_path TEXT NOT NULL,
+    page_number INTEGER NOT NULL,
+    page_offset INTEGER NOT NULL,
+    file_offset INTEGER NOT NULL,
+    length INTEGER NOT NULL,
+    region TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    raw_sha256 TEXT NOT NULL,
+    frame INTEGER
+);
+
+CREATE TABLE wal_frames(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER REFERENCES analysis_runs(id),
+    database_id INTEGER NOT NULL REFERENCES databases(id),
+    frame_index INTEGER NOT NULL,
+    file_offset INTEGER NOT NULL,
+    page_number INTEGER NOT NULL,
+    commit_size INTEGER NOT NULL,
+    status TEXT NOT NULL
+);
+CREATE TABLE freelist_pages(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER REFERENCES analysis_runs(id),
+    database_id INTEGER NOT NULL REFERENCES databases(id),
+    page_number INTEGER NOT NULL,
+    role TEXT NOT NULL                    -- trunk | leaf
+);
+
+CREATE TABLE carved_candidates(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER REFERENCES analysis_runs(id),
+    evidence_file_id INTEGER NOT NULL REFERENCES evidence_files(id),
+    source_file TEXT NOT NULL,
+    source_sha256 TEXT NOT NULL,
+    byte_offset INTEGER NOT NULL,
+    length INTEGER NOT NULL,
+    kind TEXT NOT NULL,
+    pattern TEXT NOT NULL,
+    matched TEXT NOT NULL,
+    encoding TEXT NOT NULL,
+    context_before_hex TEXT NOT NULL,
+    context_after_hex TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'CARVED CANDIDATE' CHECK (status = 'CARVED CANDIDATE'),
+    confidence TEXT,
+    confidence_factors_json TEXT NOT NULL,
+    explanation TEXT NOT NULL,
+    corroborated_by_json TEXT NOT NULL,
+    notes_json TEXT NOT NULL
+);
+CREATE INDEX idx_carved_file ON carved_candidates(evidence_file_id);
+CREATE INDEX idx_carved_kind ON carved_candidates(kind);
+
+CREATE TABLE correlations(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER REFERENCES analysis_runs(id),
+    source_kind TEXT NOT NULL,
+    source_ref TEXT NOT NULL,
+    target_kind TEXT NOT NULL,
+    target_ref TEXT NOT NULL,
+    relation TEXT NOT NULL,
+    strength REAL NOT NULL,
+    explanation TEXT NOT NULL,
+    evidence_json TEXT NOT NULL
+);
+CREATE INDEX idx_corr_source ON correlations(source_ref);
+CREATE INDEX idx_corr_target ON correlations(target_ref);
+"""
+
 MIGRATIONS: list[tuple[int, str, str]] = [
     (1, "Review 1 foundation schema", MIGRATION_001),
+    (2, "Review 2: recovered records, carved candidates, correlations", MIGRATION_002),
 ]

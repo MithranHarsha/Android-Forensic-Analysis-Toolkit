@@ -18,6 +18,7 @@ from android_forensics.models.artifacts import (
     Contact,
     ContactEmail,
     ContactPhone,
+    GenericRecord,
     SMSMessage,
     artifact_adapter,
     artifact_class,
@@ -25,6 +26,16 @@ from android_forensics.models.artifacts import (
     register_artifact,
 )
 from android_forensics.models.case import Case, SourceLayout
+from android_forensics.models.recovery import (
+    CARVED_CANDIDATE,
+    CarvedCandidate,
+    ConfidenceAssessment,
+    CorrelationEdge,
+    RecoveredRecord,
+    UnrecoveredRegion,
+    decode_value,
+    encode_value,
+)
 from android_forensics.models.discovery import (
     AndroidAppDirectory,
     DiscoveredDatabase,
@@ -39,6 +50,9 @@ from android_forensics.models.enums import (
     AddressKind,
     ArtifactStatus,
     ArtifactType,
+    CarveKind,
+    EntityKind,
+    Relation,
     CallPresentation,
     CallType,
     Confidence,
@@ -77,6 +91,18 @@ from android_forensics.models.unknown import UNKNOWN, is_unknown
 from android_forensics.models.validation import ValidationResult
 
 __all__ = [
+    "CARVED_CANDIDATE",
+    "CarveKind",
+    "CarvedCandidate",
+    "ConfidenceAssessment",
+    "CorrelationEdge",
+    "EntityKind",
+    "GenericRecord",
+    "RecoveredRecord",
+    "Relation",
+    "UnrecoveredRegion",
+    "decode_value",
+    "encode_value",
     "AddressKind",
     "AnalysisRun",
     "AndroidAppDirectory",
