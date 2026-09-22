@@ -1,4 +1,4 @@
-# Architecture (Review 1)
+# Architecture
 
 ## Design rules
 
@@ -77,7 +77,8 @@ source row is always kept verbatim (blobs summarised by length/SHA-256/head).
 
 ## Review 2 seams
 
-These hooks exist **now** and are used by Review 1; Review 2 adds code without rewriting them.
+Review 1 was built with these seams in place; Review 2 filled every one of them without rewriting Review 1's code. The
+table names, for each seam, what Review 1 already had and what Review 2 added on top of it.
 
 | Seam | In Review 1 | Review 2 adds |
 |---|---|---|
@@ -100,5 +101,6 @@ These hooks exist **now** and are used by Review 1; Review 2 adds code without r
   `extract` (yield artifacts) and `from_row` (pure conversion), decorate with `@register`, add the enum member and, if
   needed, a typed field model. No other module changes.
 * **New validation check** — write `def check_x(store, opts) -> Iterator[ValidationResult]` and append it to `CHECKS`.
-* **New stage** — add a `Stage` to `PIPELINE`; the CLI and dependency invalidation pick it up.
+* **New stage** — add a `Stage` to `pipeline.runner.ALL_STAGES` (only add it to `PIPELINE`, the Review 1 default list, if
+  it should run without being asked for by name); `_dependents` and the CLI pick it up automatically.
 * **New acquirer** — implement `Acquirer.acquire(ctx)` yielding `AcquiredFile` / `AcquisitionIssue`.

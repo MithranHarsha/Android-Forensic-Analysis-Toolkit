@@ -1,4 +1,4 @@
-# Forensic methodology (Review 1)
+# Forensic methodology
 
 ## 1. Authorisation and scope
 
@@ -96,15 +96,50 @@ Zip DOS times carry no timezone and are labelled so.
 
 ## 10. Reporting
 
-Every artifact row shows evidence file, table, rowid, SHA-256 and whether WAL frames were included. Sections for
-Review 2 capabilities state **NOT PERFORMED**; the recoverability disclaimer is always present. HTML output is escaped
-(evidence text is untrusted), terminal output renders evidence text verbatim as plain text (never as Rich markup, which would drop `[backup]` from a file name), CSV cells that could execute as spreadsheet formulas are neutralised with a leading `'`
-(originals are preserved verbatim in the JSON), and the report files are hashed in `sha256sums.txt`.
+Every artifact row shows evidence file, table, rowid, SHA-256 and whether WAL frames were included. A section for a
+Review 2 capability that did not run (`recover`/`carve`/`correlate` not part of this analysis) states **NOT PERFORMED**
+explicitly; one that did run shows the real recovered/carved/correlated rows, each with its confidence and the sentence
+that justifies it — never both for the same section. The recoverability disclaimer is always present regardless. HTML
+output is escaped (evidence text is untrusted), terminal output renders evidence text verbatim as plain text (never as
+Rich markup, which would drop `[backup]` from a file name), CSV cells that could execute as spreadsheet formulas are
+neutralised with a leading `'` (originals are preserved verbatim in the JSON), and the report files are hashed in
+`sha256sums.txt`.
 
-## 11. Examiner checklist
+## 11. Deleted-data recovery, carving and correlation (Review 2)
+
+* **Recovery is page-level, not schema-level.** Every page image (the main file's pages, WAL frames, rollback-journal
+  pages) is scanned byte-for-byte for sequences that parse as a record of a known table; live-cell extents are excluded
+  first, so nothing already visible through the active view is re-reported. A record whose whole cell survived is
+  `RECOVERED`; one whose first bytes were overwritten by SQLite's own freeblock header is `PARTIAL`, with the columns
+  the bytes no longer determine explicitly named `UNKNOWN` — never guessed, never defaulted. See
+  [sqlite_recovery.md](sqlite_recovery.md).
+* **Carving is a last resort, and it says so.** A pattern match in bytes no parser reads (a phone number, a URL, an
+  e-mail address, a timestamp, SMS-like text, a loose SQLite-record shape) is a `CarvedCandidate`, status literally
+  `CARVED CANDIDATE`. It is never presented as evidence, never reaches `ACTIVE`/`RECOVERED`/`PARTIAL`, and its
+  confidence can never be `HIGH`. See [carving.md](carving.md).
+* **Correlation corroborates, it does not invent.** A recovered record or carved candidate is linked to an artifact only
+  when they share an actual fact (a phone number, a URL, a timestamp, message text) — and only when that artifact comes
+  from a genuinely independent source (a different database, not the same file's own data seen twice, and for a
+  recovered record, an artifact of a different kind). See [correlation.md](correlation.md).
+* **Confidence is computed, never modelled.** A fixed, published set of weighted factors — schema match, structural
+  validity, serial-type validity, field consistency, page integrity, source provenance, cross-artifact corroboration,
+  timestamp plausibility, raw-byte completeness — combines by a fixed rule into `LOW`/`MEDIUM`/`HIGH`, with hard caps
+  (no schema match → `LOW`; `CORRUPTED` → `LOW`; `PARTIAL` capped at `MEDIUM` without two corroborations; a carved
+  candidate capped at `MEDIUM`, `LOW` without any). The same bytes always score the same way. Every level ships with the
+  factor list and a plain-language sentence.
+* **Ground truth for evaluating all of this is physical**, never the recovery algorithm's own output: a deleted row is
+  re-encoded exactly as SQLite would write it and searched for in the file's actual bytes. See
+  [synthetic_lab.md](synthetic_lab.md) and [evaluation.md](evaluation.md).
+
+## 12. Examiner checklist
 
 1. Verify the source hash independently before ingest and after the case.
 2. Read the `INVALID` / `PARTIAL` / `UNVERIFIED` results and skipped entries before relying on any artifact.
 3. Treat `PARTIAL` schema scores and `UNKNOWN` fields as uncertainty, not as absence of data.
 4. Corroborate significant findings with a second tool and, for anything that matters, the original device or image.
-5. Remember Review 1 says nothing about deleted data.
+5. A `RECOVERED` or `PARTIAL` record is reconstructed from freed or superseded bytes, not read live — check its
+   confidence and the sentence that explains it before relying on it.
+6. A `CARVED CANDIDATE` is never evidence on its own. Do not cite one in a finding unless correlation has corroborated
+   it with an independent source and that corroboration is stated.
+7. The absence of a recovered or carved result is not evidence that nothing was deleted: recoverability depends on the
+   acquisition, the filesystem, encryption and how much was subsequently overwritten (`docs/limitations.md`).

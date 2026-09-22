@@ -1,12 +1,43 @@
 # Limitations
 
+## Review 2 scope limits (engineering, not fundamental)
+
+* **Recovery does not attempt every table.** Tables with fewer than three stored columns, `WITHOUT ROWID` tables, virtual
+  tables and `sqlite_*` tables are not modelled for free-space scanning (`MIN_SCAN_WIDTH`; too little structure to tell a
+  genuine row from coincidence, and `WITHOUT ROWID`/virtual cells are not table-leaf cells). Rowids longer than 6 varint
+  bytes are not attempted. See [sqlite_recovery.md §7](sqlite_recovery.md#7-when-recovery-is-expected-to-fail--and-why)
+  for the measured effect (three documented sub-100% conditions in the 28-case matrix, all where a neighbouring cell's
+  own head is also destroyed).
+* **A journal-sourced record's checksum verification is not re-derivable after the fact.** `recover` persists each WAL
+  frame's precise status, so a WAL-sourced record's provenance factor is scored exactly; the equivalent per-record
+  journal checksum is not persisted the same way, so a journal-sourced record's `source_provenance` factor defaults to
+  verified rather than being re-checked at reconstruct time (D-021 in `docs/decisions.md`).
+* **The synthetic lab's genuine deletions are limited to two databases.** `mmssms.db` and Chromium `History` (both plain
+  rollback-journal mode) carry real `DELETE`s with physical ground truth; `calllog.db` (WAL mode) and `contacts2.db`
+  (multi-table) are left as Review 1 already built them, since they already exercise other Review 2-relevant conditions
+  (WAL history, the application-level `deleted=1` flag) — see [synthetic_lab.md](synthetic_lab.md) and D-031.
+* **Carving is a shape match, not a schema match.** A bare digit run is never called a phone number; a binary integer
+  timestamp is not carved on its own; a URL is taken up to the first character it cannot contain, so one stored directly
+  against the next text column can be reported too long (`context_valid` flags this). See
+  [carving.md](carving.md#limits).
+* **Correlation matches by identity of a value, not by meaning.** Two people who share a landline share one `PhoneNumber`
+  entity; names are matched across artifacts only through a contact's display name appearing inside a carved record. See
+  [correlation.md](correlation.md#limits).
+* **Confidence calibration was measured on a small synthetic sample** (93 recovered artifacts across three seeds of one
+  lab) — see [evaluation.md](evaluation.md#e7--confidence-calibration-and-processing-cost). It demonstrates the scoring
+  mechanism works as designed, not a generalisable precision curve.
+* **The dashboard's frontend is not packaged for a wheel install.** `web/` sits at the repository root, resolved by a
+  path relative to the source file; running from a checkout (as this project and its tests always do) works, but an
+  installed wheel from PyPI would not find it (D-027).
+* **Recovering a database SQLite cannot open still needs a working copy.** Recovery reads raw file bytes directly, so a
+  database ingested with `--preserve none` (hash-only) yields nothing to recover from; this is reported, not silently
+  skipped.
+
 ## Review 1 scope limits (engineering, not fundamental)
 
-* **No deleted-data recovery, carving, correlation or confidence scoring** — Review 2. The report says so and lists only
-  header-level *indicators* of recovery potential.
 * **Damaged databases.** If SQLite refuses to open a file (e.g. truncated below its declared size, malformed root page) no
-  artifacts are produced from it. It is reported as `unopenable` with a `PARTIAL` header verdict; salvaging such files needs the
-  Review 2 page-level parser. If damage is *mid-table* and SQLite can still open the file, rows before the damage are kept.
+  active artifacts are produced from it; page-level recovery still attempts it directly. It is reported as `unopenable` with
+  a `PARTIAL` header verdict. If damage is *mid-table* and SQLite can still open the file, rows before the damage are kept.
 * **Discovery classifies; it does not parse.** XML, JSON, log and media files are found, counted and hashed as requested, but their
   content is not interpreted (nor is Android Binary XML). Classification reads the first 4 KiB, so a signature deeper in a file is
   missed. The SQLite detection status (`VALID` …) is a header-and-size check, not an integrity check; `ENCRYPTED_SUSPECT` is an entropy

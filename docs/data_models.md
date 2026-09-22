@@ -52,6 +52,13 @@ one that actually holds a value.
 `ArtifactStatus` also exposes `is_active`, `is_recovery_state`, `requires_confidence`, `is_candidate`.
 `ValidationStatus` (`VALID`/`PARTIAL`/`INVALID`/`UNVERIFIED`) is a separate enum for check outcomes.
 
+`ArtifactStatus.CARVED` ("CARVED") is a real, invariant-tested part of this enum, but the carving implementation
+(Phase 6) does not use it: a carved hit is a `CarvedCandidate`, never an `Artifact`, and its own `status` field is the
+distinct literal string `"CARVED CANDIDATE"` — not by accident, but because `CarvedCandidate` is deliberately not an
+`Artifact` subclass at all (see the Review 2 models section below). `ArtifactStatus.CARVED` stays part of the model so
+the "a carved status can never be HIGH" invariant is enforced at the `Artifact` level too, for any future code path that
+represents one as a full artifact.
+
 ## Invariants enforced by the model
 
 They make it impossible to build a recovered artifact that breaks the project's forensic rules:
@@ -92,6 +99,22 @@ recovered = carved.evolve(status=ArtifactStatus.RECOVERED, extraction_method=Ext
 | inspection models | `DatabaseInspection` (file, header, version, sidecars, engine, integrity, schema entries, tables, issues), `TableInspection` (columns, primary key, indexes, foreign keys, active records), `ActiveRecord` (`state: "ACTIVE"`, rowid, values), `BlobValue`, `SpecialFloat`. They live in `sqlite/inspection.py` because they embed the header and sidecar facts. See [sqlite_inspection.md](sqlite_inspection.md) |
 | manifest models | `ManifestEntry` (per-file `original_path`, `relative_path`, `size`, flat `md5`/`sha1`/`sha256`, `kind`, `times`, `preserved_copy`), `ManifestSource` (container hashes, acquisition/ingest times, `complete`), `Manifest` (`case_id`, `analysis_timestamp`, `tool_version`, version 2) |
 
+## Review 2 models (`models/recovery.py`)
+
+| Model | Key fields and rules |
+|---|---|
+| `RecoveredRecord` | the *staging* form of recovered evidence, persisted before it is scored: `source` (`main`/`wal`/`journal`), page/offset/region/cell, `raw_hex` bound to a verified `raw_sha256`, `values` (undetermined columns absent, named in `unknown_columns`), `status` restricted to `RECOVERED`/`PARTIAL`/`CORRUPTED`, `also_found_at`, `artifact_id` (set once reconstructed). Not an `Artifact` — nothing downstream reads it as evidence |
+| `CarvedCandidate` | `status: Literal["CARVED CANDIDATE"]` (the model refuses any other value); `kind` (`CarveKind`), `matched`, `context_valid`, `container` (`file` or `sqlite_free_space`); `confidence` can never be `HIGH`; a scored candidate must carry `confidence_factors` |
+| `CorrelationEdge` | one edge of the evidence graph: `source_kind`/`source_ref` → `relation` → `target_kind`/`target_ref` (`EntityKind`, `Relation`), `strength`, mandatory `explanation`; a self-loop is rejected |
+| `ConfidenceAssessment` | `level` (`Confidence`), `score`, `factors` (at least one `ConfidenceFactor`), `explanation` — which must literally start with the level it justifies |
+| `GenericRecord` (`models/artifacts.py`, an `Artifact` subclass) | a row (active or recovered) of a table no parser recognises: `table`, `columns` (values the bytes determined), `unknown_columns`. Carries the full `Artifact` envelope and its invariants — a recovered `GenericRecord` still needs a physical location, raw bytes and a scored confidence |
+
+`RecoveredRecord` and `CarvedCandidate` are deliberately **not** `Artifact` subclasses: an `Artifact` requires a
+confidence level, and the strongest confidence factor is corroboration by another artifact, which can only be known
+after correlation. `artifacts.recovered.reconstruct` turns a scored `RecoveredRecord` into the right `Artifact` subclass
+(via the same `ArtifactParser.from_row` an active row uses) or a `GenericRecord`; a `CarvedCandidate` never becomes an
+`Artifact` at all. See [data flow in pipeline_stages.md](pipeline_stages.md).
+
 ## Types
 
 `Sha256Hex`/`Sha1Hex`/`Md5Hex` (lowercase hex, exact length), `UtcIso` (`YYYY-MM-DDTHH:MM:SS.mmmZ`, sortable),
@@ -112,6 +135,6 @@ values as JSON so their type survives (`1709280000000` vs `"garbage"`).
 
 ## Tests
 
-`tests/unit/models/` (237 tests) covers types, enums, provenance, every invariant, one valid instance of **every** status,
+`tests/unit/models/` (268 tests) covers types, enums, provenance, every invariant, one valid instance of **every** status,
 record and JSON round trips for every artifact class, and the remaining models. Integration tests reload all 373
 artifacts of the synthetic case through the typed models and compare them with the stored rows.

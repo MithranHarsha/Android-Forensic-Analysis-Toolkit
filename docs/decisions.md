@@ -215,3 +215,10 @@ same mistake is not repeated in a future evaluation script.
 `experiments/r2_recovery.py` on the seed it runs with, which is the same recovery matrix `tests/integration/
 test_recovery_matrix.py` already asserts a minimum recall against — so a regression that would change the documented
 number is already caught by the test suite before it could go stale in the docs.
+
+**D-036 · Docs describe what the tool does now, not a review boundary that no longer exists.** Phase 16 replaced every
+"Review 1 only" / "not yet implemented" claim about deleted-data recovery across the docs (README, architecture.md,
+limitations.md, data_models.md, forensic_methodology.md) with what Review 2 actually built and what it actually measures.
+Where a genuine scope limit remains (which databases in the synthetic lab carry real deletions, what confidence
+calibration's sample size supports, the dashboard's packaging), it is stated as a Review 2 limitation in its own right
+(`docs/limitations.md`), not folded back into "Review 2 has not been done."
