@@ -20,9 +20,9 @@ def test_full_manual_workflow(synth, tmp_path):
     assert r.exit_code == 0 and "Manifest SHA-256" in r.stdout and "16" in r.stdout
     r = run("scan", "case001", cases=cases)
     assert r.exit_code == 0 and "SQLite databases" in r.stdout and "android_root" in r.stdout
-    r = run("analyze", "case001", "--no-report", cases=cases)
+    r = run("analyze", "case001", "--no-report", "--no-recover", cases=cases)
     assert r.exit_code == 0 and "Artifacts (ACTIVE)" in r.stdout and "373" in r.stdout
-    assert "Deleted-data recovery has not been run" in r.stdout
+    assert "Deleted-data recovery was not run (--no-recover)" in r.stdout
     r = run("artifacts", "case001", "--type", "sms", "--limit", "3", cases=cases)
     assert r.exit_code == 0 and "of 120" in r.stdout
     r = run("artifacts", "case001", "--show", "1", cases=cases)
@@ -43,6 +43,38 @@ def test_analyze_directly_on_a_path_creates_case_and_report(synth, tmp_path):
     r = run("analyze", str(out / "android_dump"), "--name", "auto", cases=cases)
     assert r.exit_code == 0 and "Report:" in r.stdout
     assert (cases / "auto" / "case.db").exists() and list((cases / "auto" / "reports").glob("report-*/report.html"))
+
+
+def test_analyze_runs_recovery_by_default_and_reports_real_numbers(synth, tmp_path):
+    out, _ = synth
+    cases = tmp_path / "cases"
+    r = run("init-case", "case-r2", cases=cases)
+    assert r.exit_code == 0
+    run("ingest", "case-r2", str(out / "android_dump"), cases=cases)
+    run("scan", "case-r2", cases=cases)
+    r = run("analyze", "case-r2", "--no-report", cases=cases)
+    assert r.exit_code == 0
+    assert "Deleted-data recovery (Review 2)" in r.stdout and "Deleted/superseded records found" in r.stdout
+    assert "Deleted-data recovery was not run" not in r.stdout
+    r = run("info", "case-r2", cases=cases)
+    assert r.exit_code == 0 and "Recovered/partial/corrupted records" in r.stdout and "Carved candidates" in r.stdout
+
+
+def test_the_standalone_recover_command_requires_scan_and_extract_first(synth, tmp_path):
+    out, _ = synth
+    cases = tmp_path / "cases"
+    run("init-case", "case-r3", cases=cases)
+    run("ingest", "case-r3", str(out / "android_dump"), cases=cases)
+    r = run("recover", "case-r3", cases=cases)
+    assert r.exit_code != 0 and "scan" in r.output.lower()
+    run("scan", "case-r3", cases=cases)
+    r = run("recover", "case-r3", cases=cases)
+    assert r.exit_code != 0 and "extract" in r.output.lower()
+    run("analyze", "case-r3", "--no-report", "--no-recover", cases=cases)
+    r = run("recover", "case-r3", cases=cases)
+    assert r.exit_code == 0 and "Deleted-data recovery (Review 2)" in r.stdout
+    r2 = run("recover", "case-r3", cases=cases)  # recovering the same evidence twice gives the same counts
+    assert r2.exit_code == 0 and "Deleted/superseded records found" in r2.stdout
 
 
 def test_info_on_database_file_and_hash_json(synth, tmp_path):

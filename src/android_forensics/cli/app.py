@@ -19,16 +19,19 @@ from android_forensics.acquisition import PreservePolicy
 from android_forensics.acquisition.ingest import ingest_source
 from android_forensics.cli.console import RichProgress, SafeTable, console, err_console, escape, plain_panel, stats_panel, styled
 from android_forensics.fmt import fmt_bytes
-from android_forensics.pipeline.runner import StageOptions, run_pipeline, run_stage
+from android_forensics.pipeline.runner import FULL_PIPELINE_NAMES, REVIEW2_STAGE_NAMES, StageOptions, run_pipeline, run_stage
 from android_forensics.errors import CaseError, ForensicsError
 from android_forensics.storage.case_store import CaseStore
 
 app = typer.Typer(
     name=TOOL_NAME,
     help=(
-        "Android forensic acquisition, active-artifact extraction, validation, timeline and reporting.\n\n"
-        "[bold]Review 1 scope:[/] evidence integrity → filesystem analysis → SQLite discovery → active artifact "
-        "extraction → validation → timeline → report. Deleted-data recovery arrives in Review 2.\n\n"
+        "Android forensic acquisition, active-artifact extraction, deleted-data recovery, validation, timeline and "
+        "reporting.\n\n"
+        "[bold]Pipeline:[/] evidence integrity → filesystem analysis → SQLite discovery → active artifact extraction → "
+        "deleted/superseded record recovery → raw carving → correlation → validation → timeline → report. "
+        "'analyze' runs all of it (recovery can be skipped with --no-recover); 'recover' runs just the recovery stages "
+        "on a case that has already been scanned and extracted.\n\n"
         "[yellow]Use only on evidence you are legally authorised to examine.[/]"
     ),
     no_args_is_help=True,
@@ -369,6 +372,26 @@ def _print_scan(store: CaseStore, s: dict) -> None:
         console.print(Text(f"source s{sid}: {info.layout} — {info.detail}", style="dim"))
 
 
+def _print_recovery(rec: dict, carve: dict, correlate: dict, reconstruct: dict) -> None:
+    recovered = sum(v for k, v in rec.items() if k.startswith("recovered_"))
+    reconstructed = {k[len("reconstructed_"):]: v for k, v in reconstruct.items() if k.startswith("reconstructed_")}
+    console.print(stats_panel("Deleted-data recovery (Review 2)", [
+        ("Deleted/superseded records found", recovered),
+        ("  reconstructed → RECOVERED", reconstructed.get("recovered", 0)),
+        ("  reconstructed → PARTIAL", reconstructed.get("partial", 0)),
+        ("  reconstructed → CORRUPTED", reconstructed.get("corrupted", 0)),
+        ("Unrecoverable regions (proven, empty)", rec.get("unrecovered_regions", 0)),
+        ("Corroborated by another source", correlate.get("recovered_corroborated", 0)),
+        ("Databases attempted", rec.get("databases_attempted", 0)),
+        ("Skipped (no working copy)", rec.get("skipped_no_working_copy", 0)),
+        ("Carved candidates (CARVED CANDIDATE — unconfirmed)", carve.get("candidates", 0)),
+        ("  corroborated", correlate.get("carved_corroborated", 0)),
+        ("Correlation edges", reconstruct.get("correlation_edges", 0)),
+    ]))
+    console.print("[dim]A carved candidate is never confirmed evidence; PARTIAL/CORRUPTED records had part of their bytes "
+                  "overwritten before recovery — see the report for what each record's confidence explanation says.[/]")
+
+
 @app.command()
 @handle_errors
 def analyze(
@@ -377,9 +400,10 @@ def analyze(
     name: Annotated[Optional[str], typer.Option(help="Case name when TARGET is a path.")] = None,
     timeline_files: Annotated[str, typer.Option("--timeline-files", help="File-time events in the timeline: key | all | none.")] = "key",
     no_rehash: Annotated[bool, typer.Option("--no-rehash", help="Skip re-hashing originals during validation (faster, less assurance).")] = False,
+    recover: Annotated[bool, typer.Option("--recover/--no-recover", help="Recover deleted/superseded records and carve raw bytes (Review 2). On by default.")] = True,
     report: Annotated[bool, typer.Option("--report/--no-report", help="Generate the report at the end.")] = True,
 ) -> None:
-    """Run the full pipeline: scan → extract → validate → timeline → report."""
+    """Run the full pipeline: scan → extract → recover → carve → correlate → reconstruct → validate → timeline → report."""
     p = Path(target)
     store: CaseStore | None = None
     for candidate in (p, cases_dir / target):
@@ -397,7 +421,8 @@ def analyze(
         console.print(f"[green]✓[/] ingested {r.files:,} files ({fmt_bytes(r.total_bytes)}), manifest SHA-256 {r.manifest_sha256[:16]}…")
 
     opts = _options(no_rehash, timeline_files)
-    results = run_pipeline(store, options=opts, on_stage=lambda n, s: console.print(f"[green]✓[/] {n:<9} {s['seconds']}s"))
+    names = list(FULL_PIPELINE_NAMES) if recover else [n for n in FULL_PIPELINE_NAMES if n not in REVIEW2_STAGE_NAMES]
+    results = run_pipeline(store, names=names, options=opts, on_stage=lambda n, s: console.print(f"[green]✓[/] {n:<11} {s['seconds']}s"))
     _print_scan(store, results["scan"])
     ex, va, tl = results["extract"], results["validate"], results["timeline"]
     a = ex["artifacts"]
@@ -407,10 +432,13 @@ def analyze(
         ("Application summaries", a.get("app_summary", 0)), ("Total", ex["total"]),
         ("Tables recognised by parsers", ex["tables_matched"]), ("Tables catalogued generically", ex["generic_tables"]),
     ]))
+    if recover:
+        _print_recovery(results["recover"], results["carve"], results["correlate"], results["reconstruct"])
+    else:
+        console.print("[dim]Deleted-data recovery was not run (--no-recover). Freelist/WAL/journal indicators are reported, not analysed.[/]")
     st = va["by_status"]
     console.print(stats_panel("Validation", [("Checks recorded", va["total"])] + [(k, st.get(k, 0)) for k in ("VALID", "PARTIAL", "INVALID", "UNVERIFIED")]))
     console.print(f"Timeline events: [bold]{tl['total']:,}[/] ({tl['artifact_events']:,} artifact, {tl['file_events']:,} file)")
-    console.print("[dim]Deleted-data recovery has not been run (Review 2). Freelist/WAL/journal indicators are reported, not analysed.[/]")
     if report:
         from android_forensics.reporting.generate import generate_report
 
@@ -426,8 +454,8 @@ def analyze(
 def artifacts(
     case: CaseArg,
     cases_dir: CasesDir = Path("cases"),
-    type_: Annotated[Optional[str], typer.Option("--type", help="sms|call|contact|browser_visit|browser_download|app_summary")] = None,
-    status: Annotated[Optional[str], typer.Option(help="ACTIVE (Review 1 produces only ACTIVE)")] = None,
+    type_: Annotated[Optional[str], typer.Option("--type", help="sms|call|contact|browser_visit|browser_download|generic_record|app_summary")] = None,
+    status: Annotated[Optional[str], typer.Option(help="ACTIVE|RECOVERED|PARTIAL|CORRUPTED (the last three only after 'recover'/'analyze' with recovery)")] = None,
     db: Annotated[Optional[str], typer.Option(help="Substring of the source database path.")] = None,
     app_: Annotated[Optional[str], typer.Option("--app", help="Android package name.")] = None,
     limit: int = 30,
@@ -488,6 +516,30 @@ def _show_artifact(store: CaseStore, aid: int) -> None:
     console.print(Panel(grid, title="Provenance", border_style="blue"))
     console.print(plain_panel(json.dumps(art.payload(), indent=2, ensure_ascii=False), "Normalised fields"))
     console.print(plain_panel(json.dumps(raw.row, indent=2, ensure_ascii=False)[:4000] if raw.row is not None else (raw.raw_bytes_hex or ""), "Raw source"))
+
+
+@app.command()
+@handle_errors
+def recover(
+    case: CaseArg,
+    cases_dir: CasesDir = Path("cases"),
+) -> None:
+    """Recover deleted/superseded SQLite records, carve raw bytes, correlate and score (Review 2).
+
+    Requires 'scan' and 'extract' to have already run (android-forensics analyze --no-recover, or analyze/scan/... in
+    sequence). Re-running this recovers the same evidence again: recovery is deterministic."""
+    store = open_case(case, cases_dir)
+    for stage in ("scan", "extract"):
+        if store.last_run(stage) is None:
+            raise CaseError(f"Run '{TOOL_NAME} analyze --no-recover {case}' (or 'scan'/'extract') first — no completed '{stage}' stage")
+    opts = StageOptions(progress=RichProgress())
+    results = {}
+    for name in REVIEW2_STAGE_NAMES:
+        results[name] = run_stage(store, name, opts)
+        console.print(f"[green]✓[/] {name:<11} {results[name]['seconds']}s")
+    _print_recovery(results["recover"], results["carve"], results["correlate"], results["reconstruct"])
+    console.print(f"Next: [bold]{TOOL_NAME} validate {escape(case)}[/] and [bold]{TOOL_NAME} report {escape(case)}[/] "
+                 "to see recovered records reflected there.")
 
 
 @app.command()
@@ -609,6 +661,9 @@ def info(
         ("Bytes", fmt_bytes(counts["bytes"])), ("SQLite databases", counts["databases"]),
         ("Artifacts (ACTIVE)", counts["active_artifacts"]), ("Validation results", counts["validation_results"]),
         ("Timeline events", counts["timeline_events"]), ("Skipped/flagged entries", counts["scan_issues"]),
+        ("Recovered/partial/corrupted records", counts["recovered_records"]),
+        ("  reconstructed into artifacts", counts["recovered_artifacts"]),
+        ("Carved candidates", counts["carved_candidates"]), ("Correlation edges", counts["correlation_edges"]),
     ]))
     runs = SafeTable(title="Analysis runs", header_style="bold")
     for col in ("#", "Stage", "Status", "Started", "Finished"):

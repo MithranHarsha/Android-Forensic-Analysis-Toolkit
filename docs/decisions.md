@@ -139,3 +139,11 @@ formally depend on ``reconstruct``. Its reset therefore deletes matching ``timel
 the dependency graph would normally cascade to) so that re-running ``recover`` never leaves a foreign-key error or a dangling
 reference; the timeline is stale until the user re-runs the ``timeline`` stage, the same way ``validate`` already needs a
 manual re-run to see recovered artifacts in a partial pipeline.
+
+**D-025 · `analyze` runs recovery by default; `--no-recover` opts out.** The CLI is where a Review 1 default would matter
+most to a user, but recovery only *adds* information (deleted/superseded records, carved candidates, correlation edges) — it
+never changes what Review 1's stages report. `analyze` therefore defaults to the full pipeline
+(`pipeline.runner.FULL_PIPELINE_NAMES`) and prints a "Deleted-data recovery (Review 2)" panel with the real counts (records
+found, reconstructed by status, corroborated, carved candidates, correlation edges); `--no-recover` restores the exact
+Review 1 stage list and message. A standalone `recover` command runs just the four Review 2 stages on a case that has
+already been scanned and extracted, for someone who wants to add recovery to an existing Review 1 analysis.

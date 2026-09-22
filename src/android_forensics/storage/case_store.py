@@ -298,4 +298,8 @@ class CaseStore:
             "timeline_events": n("SELECT COUNT(*) FROM timeline_events"),
             "validation_results": n("SELECT COUNT(*) FROM validation_results"),
             "scan_issues": n("SELECT COUNT(*) FROM scan_issues"),
+            "recovered_records": n("SELECT COUNT(*) FROM recovered_records"),
+            "recovered_artifacts": n("SELECT COUNT(*) FROM artifacts WHERE status IN ('RECOVERED','PARTIAL','CORRUPTED')"),
+            "carved_candidates": n("SELECT COUNT(*) FROM carved_candidates"),
+            "correlation_edges": n("SELECT COUNT(*) FROM correlations"),
         }
