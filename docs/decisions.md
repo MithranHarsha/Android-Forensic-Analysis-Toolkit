@@ -113,3 +113,29 @@ for being right about *who*. A record with no timestamp is judged on the rest.
 scoring needs corroboration. So correlation is a pure function: pass 1 over active artifacts and recovered *drafts* produces the
 sentences; the stage reconstructs and stores the artifacts; pass 2 over the stored artifacts persists the edges with final
 `artifact:<id>` refs. No edge is ever rewritten.
+
+**D-021 · Recovery's WAL provenance is re-verified; its journal provenance is not (yet).** ``recover`` persists each WAL
+frame's precise status (``committed`` / ``uncommitted`` / ``stale_generation`` / ...) to the ``wal_frames`` table, so
+``reconstruct`` can score a WAL-sourced record's ``source_provenance`` factor exactly. The equivalent per-record journal
+checksum is not persisted (only a qualitative note is attached to the record's ``issues``), so a journal-sourced record's
+``journal_verified`` defaults to true. This is stated as a limitation rather than silently assumed; closing it needs a
+``journal_records`` table analogous to ``wal_frames``, deferred to a later phase since no test currently depends on it.
+
+**D-022 · Recovery is opt-in, never bundled into the default pipeline.** ``run_pipeline(store)`` with no explicit stage names
+still runs exactly Review 1's four stages (``scan``, ``extract``, ``validate``, ``timeline``); ``recover`` / ``carve`` /
+``correlate`` / ``reconstruct`` only run when named explicitly (directly, or via ``FULL_PIPELINE_NAMES``). This is what keeps
+every existing Review 1 test and fixture (which calls `run_pipeline(store)` bare) producing exactly the results it always
+did, per D-007 -- adding Review 2 must not change what Review 1 reports unless recovery is asked for.
+
+**D-023 · The staged design costs one extra recovery scan at reconstruct time.** ``reconstruct`` (and ``correlate``, to build
+draft artifacts for corroboration) need a ``DatabaseContext`` -- the table schema and WAL frame status -- for each database.
+Rather than serialise the whole ``RecoveryReport`` between stages, each rebuilds it cheaply from what ``recover`` already
+persisted (the database's own schema, plus the ``wal_frames`` table); recovery is proven deterministic (Phase 4), so this is a
+correctness-preserving, stage-independent way to reconstruct context without adding a serialisation format for it.
+
+**D-024 · Resetting a stage also cleans up what a later, formally-unrelated stage wrote about its output.** ``reconstruct``'s
+own artifacts can be referenced by ``timeline_events.artifact_id`` even though ``timeline`` does not (for D-022's reason)
+formally depend on ``reconstruct``. Its reset therefore deletes matching ``timeline_events`` rows itself (not just the stages
+the dependency graph would normally cascade to) so that re-running ``recover`` never leaves a foreign-key error or a dangling
+reference; the timeline is stale until the user re-runs the ``timeline`` stage, the same way ``validate`` already needs a
+manual re-run to see recovered artifacts in a partial pipeline.

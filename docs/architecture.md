@@ -87,11 +87,11 @@ These hooks exist **now** and are used by Review 1; Review 2 adds code without r
 | Row contract | `ArtifactParser.from_row(RowSource, SchemaMatch, DbContext)` — pure, tolerates `UNKNOWN` fields | recovered raw records are turned into `RowSource`s and pass through the *same* code |
 | Schema knowledge | `SchemaMatch` / `FieldSpec` separate from extraction | tests candidate records against known schemas |
 | Byte access | `sqlite.header` + `sqlite.sidecars`; `SQLiteInspector` already reports every b-tree root page (`sqlite_master`), the freelist header facts and each sidecar's header facts | `PageSource` (db / WAL / journal pages behind one interface), `pages`, `records`, `freelist`, `wal`, `journal`, `recovery` |
-| Stage registry | `PIPELINE` list with `requires` and `reset` | `recover`, `carve`, `correlate`, `score` stages inserted before `validate` |
+| Stage registry | `PIPELINE` list with `requires` and `reset` | `recover`, `carve`, `correlate`, `reconstruct` registered in `BY_NAME` (run by name, or via `FULL_PIPELINE_NAMES`); `run_pipeline(store)` with no explicit names still runs only Review 1's four stages, so nothing about Review 1 changes unless recovery is asked for (D-022) |
 | Confidence | nullable `confidence`, `confidence_factors_json`; `schema_match_score` stored | `ConfidenceScorer` returning level + explained factors |
 | Correlation | `phone_key` on messages / calls / contacts | `Correlator`, entity and relation tables |
-| Validation | check registry (`CHECKS`) | record-level checks for recovered rows (serial types, field consistency) |
-| Storage | numbered migrations | migration 002: `recovered_records`, `carved_candidates`, `wal_frames`, `freelist_pages`, `correlations` |
+| Validation | check registry (`CHECKS`) | `check_recovery_integrity`: a recovered record's raw bytes still match its digest and its linked artifact's; a carved row is still, in the database, exactly `CARVED CANDIDATE` and never `HIGH` |
+| Storage | numbered migrations | migration 002: `recovered_records`, `carved_candidates`, `wal_frames`, `freelist_pages`, `correlations`; migration 003: a recovered record's corroboration sentences |
 | Synthetic lab | ground truth per database | controlled deletion / overwrite experiments on the same generator |
 
 ## Extending

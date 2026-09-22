@@ -368,6 +368,50 @@ def check_provenance(store: CaseStore, opts: Options) -> Iterator[ValidationResu
                                "raw_digest_mismatch": tampered[:FAILURE_ROW_CAP]})
 
 
+# ---------------------------------------------------------------- Review 2: recovered / carved data
+
+
+def check_recovery_integrity(store: CaseStore, opts: Options) -> Iterator[ValidationResult]:
+    """A recovered record's raw bytes match their stored digest, and its reconstructed artifact (if any) still carries the
+    same bytes; a carved candidate is still, in the database itself, exactly the unconfirmed candidate it was created as."""
+    total_recovered = store.scalar("SELECT COUNT(*) FROM recovered_records") or 0
+    if total_recovered:
+        bad_digest = []
+        bad_link = []
+        for r in store.q("SELECT id, raw_hex, raw_sha256, artifact_id FROM recovered_records"):
+            if hashlib.sha256(bytes.fromhex(r["raw_hex"])).hexdigest() != r["raw_sha256"]:
+                bad_digest.append(r["id"])
+                continue
+            if r["artifact_id"] is not None:
+                art = store.one("SELECT raw_hex FROM artifacts WHERE id=?", (r["artifact_id"],))
+                if art is None or art["raw_hex"] != r["raw_hex"]:
+                    bad_link.append(r["id"])
+        label = "recovered records"
+        if bad_digest or bad_link:
+            yield ValidationResult.of("case", None, label, "record_structure",
+                          VS.INVALID, f"{len(bad_digest)} recovered record(s) have raw bytes that no longer match their recorded "
+                          f"digest, {len(bad_link)} are linked to an artifact whose raw bytes differ from the record's own",
+                          {"digest_mismatch": bad_digest[:FAILURE_ROW_CAP], "link_mismatch": bad_link[:FAILURE_ROW_CAP]})
+        else:
+            reconstructed = store.scalar("SELECT COUNT(*) FROM recovered_records WHERE artifact_id IS NOT NULL") or 0
+            yield ValidationResult.of("case", None, label, "record_structure", VS.VALID,
+                          f"all {total_recovered} recovered records' raw bytes match their recorded digest"
+                          + (f"; {reconstructed} reconstructed artifacts carry the same bytes" if reconstructed else ""))
+    total_carved = store.scalar("SELECT COUNT(*) FROM carved_candidates") or 0
+    if total_carved:
+        bad_status = store.scalar("SELECT COUNT(*) FROM carved_candidates WHERE status != 'CARVED CANDIDATE'") or 0
+        bad_confidence = store.scalar("SELECT COUNT(*) FROM carved_candidates WHERE confidence = 'HIGH'") or 0
+        label = "carved candidates"
+        if bad_status or bad_confidence:
+            yield ValidationResult.of("case", None, label, "record_structure", VS.INVALID,
+                          f"{bad_status} carved row(s) do not carry the literal status 'CARVED CANDIDATE', "
+                          f"{bad_confidence} carry HIGH confidence: a carved candidate is never confirmed evidence",
+                          {"bad_status": bad_status, "bad_confidence": bad_confidence})
+        else:
+            yield ValidationResult.of("case", None, label, "record_structure", VS.VALID,
+                          f"all {total_carved} carved candidates remain unconfirmed ('CARVED CANDIDATE', never HIGH confidence)")
+
+
 CHECKS: list[Callable[[CaseStore, Options], Iterator[ValidationResult]]] = [
     check_hash_consistency,
     check_acquisition,
@@ -378,4 +422,5 @@ CHECKS: list[Callable[[CaseStore, Options], Iterator[ValidationResult]]] = [
     check_duplicates,
     check_cross_artifact,
     check_provenance,
+    check_recovery_integrity,
 ]

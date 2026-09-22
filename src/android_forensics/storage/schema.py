@@ -384,7 +384,14 @@ CREATE INDEX idx_corr_source ON correlations(source_ref);
 CREATE INDEX idx_corr_target ON correlations(target_ref);
 """
 
+MIGRATION_003 = """
+-- Phase 9: the correlation stage's pass-1 corroboration sentences for a recovered record, written before it is scored
+-- and reconstructed into an artifact (a carved candidate's equivalent is its own confidence_factors_json / notes_json).
+ALTER TABLE recovered_records ADD COLUMN corroboration_json TEXT NOT NULL DEFAULT '[]';
+"""
+
 MIGRATIONS: list[tuple[int, str, str]] = [
     (1, "Review 1 foundation schema", MIGRATION_001),
     (2, "Review 2: recovered records, carved candidates, correlations", MIGRATION_002),
+    (3, "Review 2: corroboration sentences on a recovered record", MIGRATION_003),
 ]

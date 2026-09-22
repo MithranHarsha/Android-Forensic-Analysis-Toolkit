@@ -1,8 +1,10 @@
 """Stage runner.
 
-Each stage declares what it depends on and how to clear its own derived data, so re-running a stage
-is idempotent and automatically invalidates only what was built on top of it. Review 2 adds its
-``recover`` / ``correlate`` stages here without touching the CLI.
+Each stage declares what it depends on and how to clear its own derived data, so re-running a stage is idempotent and
+automatically invalidates only what was built on top of it. Review 2's four stages (``recover``, ``carve``, ``correlate``,
+``reconstruct``; see ``pipeline.recovery_stages``) are registered here and can be run by name, but are not part of the
+default pipeline: ``run_pipeline(store)`` with no ``names`` still runs exactly Review 1's ``scan`` / ``extract`` / ``validate``
+/ ``timeline``, so nothing about Review 1's behaviour changes unless recovery is asked for by name (``FULL_PIPELINE_NAMES``).
 """
 
 from __future__ import annotations
@@ -14,6 +16,16 @@ from typing import Any, Callable
 
 from android_forensics.artifacts.extract import run_extraction
 from android_forensics.filesystem.scanner import scan_filesystem
+from android_forensics.pipeline.recovery_stages import (
+    _carve,
+    _correlate,
+    _reconstruct,
+    _recover,
+    _reset_carve,
+    _reset_correlate,
+    _reset_reconstruct,
+    _reset_recover,
+)
 from android_forensics.progress import NullProgress, Progress
 from android_forensics.sqlite.discovery import discover_databases
 from android_forensics.storage.case_store import CaseError, CaseStore
@@ -80,21 +92,37 @@ def _reset_extract(store: CaseStore) -> None:
         store.conn.execute("DELETE FROM scan_issues WHERE stage='extract'")
 
 
-PIPELINE: list[Stage] = [
+ALL_STAGES: list[Stage] = [
     Stage("scan", "Filesystem analysis and SQLite discovery", _scan, _reset_scan),
     Stage("extract", "Active artifact extraction and normalisation", _extract, _reset_extract, requires=("scan",)),
+    Stage("recover", "Deleted / superseded SQLite record recovery", _recover, _reset_recover, requires=("scan",)),
+    Stage("carve", "Raw pattern carving outside structured records", _carve, _reset_carve, requires=("recover",)),
+    Stage("correlate", "Evidence graph and corroboration for recovery/carving", _correlate, _reset_correlate,
+         requires=("extract", "carve")),
+    Stage("reconstruct", "Recovered records -> scored artifacts; final evidence graph", _reconstruct, _reset_reconstruct,
+         requires=("correlate",)),
     Stage("validate", "Automated validation", _validate, lambda s: s.clear_tables("validation_results"), requires=("extract",)),
     Stage("timeline", "Unified timeline", _timeline, lambda s: s.clear_tables("timeline_events"), requires=("extract",)),
 ]
-BY_NAME = {s.name: s for s in PIPELINE}
+BY_NAME = {s.name: s for s in ALL_STAGES}
+
+# The default pipeline (``run_pipeline`` with no explicit ``names``) is exactly Review 1's four stages: recovery is opt-in,
+# requested by name (``run_stage(store, "recover")``) or via an explicit stage list (the CLI's ``analyze`` uses one that
+# includes ``recover``/``carve``/``correlate``/``reconstruct`` unless ``--no-recover`` is given). This is what keeps every
+# Review 1 result unchanged when nothing asks for recovery (D-007).
+PIPELINE: list[Stage] = [s for s in ALL_STAGES if s.name in ("scan", "extract", "validate", "timeline")]
+REVIEW2_STAGE_NAMES: tuple[str, ...] = ("recover", "carve", "correlate", "reconstruct")
+FULL_PIPELINE_NAMES: tuple[str, ...] = ("scan", "extract", "recover", "carve", "correlate", "reconstruct", "validate", "timeline")
 
 
 def _dependents(name: str) -> list[str]:
+    """Every stage that (transitively) requires ``name``, across *all* registered stages -- not just the default pipeline --
+    so resetting a stage correctly invalidates recovery stages too, whether or not they are part of this run."""
     out = [name]
     changed = True
     while changed:
         changed = False
-        for s in PIPELINE:
+        for s in ALL_STAGES:
             if s.name not in out and any(r in out for r in s.requires):
                 out.append(s.name)
                 changed = True
