@@ -716,11 +716,12 @@ def info(
 def synth(
     out: Annotated[Path, typer.Argument(help="Output directory for the synthetic acquisition.")] = Path("synthetic_evidence"),
     seed: int = 1337,
+    with_deletions: Annotated[bool, typer.Option("--with-deletions/--no-deletions", help="Genuinely delete rows from mmssms.db and History, with physical ground truth (Review 2).")] = True,
 ) -> None:
     """Generate the deterministic synthetic Android evidence set (with ground truth) used for testing."""
     from android_forensics.lab.synth import SynthSpec, generate
 
-    truth = generate(out, SynthSpec(seed=seed))
+    truth = generate(out, SynthSpec(seed=seed, with_deletions=with_deletions))
     console.print(stats_panel("Synthetic evidence generated", [("Location", str(out.resolve())), ("Seed", seed)] + [(k, v) for k, v in truth["expected"].items()]))
 
 

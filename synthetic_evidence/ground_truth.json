@@ -9,7 +9,12 @@
     "browser_urls": 40,
     "browser_visits": 150,
     "downloads": 5,
-    "notes_count": 15
+    "notes_count": 15,
+    "with_deletions": true,
+    "sms_delete_count": 12,
+    "browser_delete_urls": 3,
+    "browser_delete_visits": 15,
+    "downloads_delete": 1
   },
   "environment": {
     "sqlite": "3.53.3"
@@ -2537,6 +2542,320 @@
           "error_code": 0,
           "creator": "com.google.android.apps.messaging",
           "seen": 1
+        }
+      ],
+      "deleted": [
+        {
+          "table": "sms",
+          "rowid": 4,
+          "expected": "RECOVERED",
+          "values": {
+            "_id": 4,
+            "thread_id": 4,
+            "address": "+12025550106",
+            "person": 0,
+            "date": 1714757113923,
+            "date_sent": 0,
+            "protocol": 0,
+            "read": 1,
+            "status": -1,
+            "type": 2,
+            "reply_path_present": 0,
+            "subject": null,
+            "body": "Please send the report by tonight",
+            "service_center": null,
+            "locked": 0,
+            "sub_id": -1,
+            "error_code": 0,
+            "creator": "com.google.android.apps.messaging",
+            "seen": 1
+          }
+        },
+        {
+          "table": "sms",
+          "rowid": 6,
+          "expected": "RECOVERED",
+          "values": {
+            "_id": 6,
+            "thread_id": 1,
+            "address": "+12025550117",
+            "person": 0,
+            "date": 1713718209539,
+            "date_sent": 1713718207374,
+            "protocol": 0,
+            "read": 1,
+            "status": -1,
+            "type": 1,
+            "reply_path_present": 0,
+            "subject": null,
+            "body": "Let's catch up this weekend \ud83d\ude42",
+            "service_center": "+12025550001",
+            "locked": 0,
+            "sub_id": -1,
+            "error_code": 0,
+            "creator": "com.google.android.apps.messaging",
+            "seen": 1
+          }
+        },
+        {
+          "table": "sms",
+          "rowid": 15,
+          "expected": "RECOVERED",
+          "values": {
+            "_id": 15,
+            "thread_id": 11,
+            "address": "+12025550129",
+            "person": 0,
+            "date": 1714657974573,
+            "date_sent": 0,
+            "protocol": 0,
+            "read": 1,
+            "status": -1,
+            "type": 2,
+            "reply_path_present": 0,
+            "subject": null,
+            "body": "Bank alert: Rs 2549 debited from account XX1708",
+            "service_center": null,
+            "locked": 0,
+            "sub_id": 1,
+            "error_code": 0,
+            "creator": "com.google.android.apps.messaging",
+            "seen": 1
+          }
+        },
+        {
+          "table": "sms",
+          "rowid": 28,
+          "expected": "RECOVERED",
+          "values": {
+            "_id": 28,
+            "thread_id": 20,
+            "address": "+12025550123",
+            "person": 0,
+            "date": 1710654095139,
+            "date_sent": 0,
+            "protocol": 0,
+            "read": 1,
+            "status": -1,
+            "type": 2,
+            "reply_path_present": 0,
+            "subject": null,
+            "body": "Running late, reach by 3:30",
+            "service_center": null,
+            "locked": 0,
+            "sub_id": 1,
+            "error_code": 0,
+            "creator": "com.google.android.apps.messaging",
+            "seen": 1
+          }
+        },
+        {
+          "table": "sms",
+          "rowid": 51,
+          "expected": "PARTIAL",
+          "values": {
+            "_id": 51,
+            "thread_id": 12,
+            "address": "56161",
+            "person": 0,
+            "date": 1710959094069,
+            "date_sent": 1710959090069,
+            "protocol": 0,
+            "read": 1,
+            "status": -1,
+            "type": 1,
+            "reply_path_present": 0,
+            "subject": null,
+            "body": "Bank alert: Rs 8053 debited from account XX1826",
+            "service_center": "+12025550001",
+            "locked": 0,
+            "sub_id": -1,
+            "error_code": 0,
+            "creator": "com.google.android.apps.messaging",
+            "seen": 1
+          }
+        },
+        {
+          "table": "sms",
+          "rowid": 56,
+          "expected": "PARTIAL",
+          "values": {
+            "_id": 56,
+            "thread_id": 29,
+            "address": "+12025550115",
+            "person": 0,
+            "date": 1713592605293,
+            "date_sent": 0,
+            "protocol": 0,
+            "read": 1,
+            "status": -1,
+            "type": 2,
+            "reply_path_present": 0,
+            "subject": null,
+            "body": "Your OTP is 394329. Do not share it with anyone.",
+            "service_center": null,
+            "locked": 0,
+            "sub_id": 1,
+            "error_code": 0,
+            "creator": "com.google.android.apps.messaging",
+            "seen": 1
+          }
+        },
+        {
+          "table": "sms",
+          "rowid": 63,
+          "expected": "PARTIAL",
+          "values": {
+            "_id": 63,
+            "thread_id": 32,
+            "address": "+12025550127",
+            "person": 0,
+            "date": 1712606396859,
+            "date_sent": 1712606396710,
+            "protocol": 0,
+            "read": 1,
+            "status": -1,
+            "type": 1,
+            "reply_path_present": 0,
+            "subject": null,
+            "body": "Bank alert: Rs 5045 debited from account XX5727",
+            "service_center": "+12025550001",
+            "locked": 0,
+            "sub_id": 1,
+            "error_code": 0,
+            "creator": "com.google.android.apps.messaging",
+            "seen": 1
+          }
+        },
+        {
+          "table": "sms",
+          "rowid": 67,
+          "expected": "PARTIAL",
+          "values": {
+            "_id": 67,
+            "thread_id": 34,
+            "address": "+12025550114",
+            "person": 0,
+            "date": 1711179154623,
+            "date_sent": 0,
+            "protocol": 0,
+            "read": 1,
+            "status": -1,
+            "type": 2,
+            "reply_path_present": 0,
+            "subject": null,
+            "body": "Payment of Rs 1462 received. Thank you.",
+            "service_center": null,
+            "locked": 0,
+            "sub_id": -1,
+            "error_code": 0,
+            "creator": "com.google.android.apps.messaging",
+            "seen": 1
+          }
+        },
+        {
+          "table": "sms",
+          "rowid": 68,
+          "expected": "RECOVERED",
+          "values": {
+            "_id": 68,
+            "thread_id": 12,
+            "address": "56161",
+            "person": 0,
+            "date": 1714539256267,
+            "date_sent": 1714539254172,
+            "protocol": 0,
+            "read": 0,
+            "status": -1,
+            "type": 1,
+            "reply_path_present": 0,
+            "subject": null,
+            "body": "Happy birthday! Have a great year ahead",
+            "service_center": "+12025550001",
+            "locked": 0,
+            "sub_id": -1,
+            "error_code": 0,
+            "creator": "com.google.android.apps.messaging",
+            "seen": 1
+          }
+        },
+        {
+          "table": "sms",
+          "rowid": 77,
+          "expected": "PARTIAL",
+          "values": {
+            "_id": 77,
+            "thread_id": 33,
+            "address": "+12025550128",
+            "person": 0,
+            "date": 1711904741494,
+            "date_sent": 1711904738595,
+            "protocol": 0,
+            "read": 0,
+            "status": -1,
+            "type": 1,
+            "reply_path_present": 0,
+            "subject": null,
+            "body": "Payment of Rs 8870 received. Thank you.",
+            "service_center": "+12025550001",
+            "locked": 0,
+            "sub_id": -1,
+            "error_code": 0,
+            "creator": "com.google.android.apps.messaging",
+            "seen": 1
+          }
+        },
+        {
+          "table": "sms",
+          "rowid": 79,
+          "expected": "PARTIAL",
+          "values": {
+            "_id": 79,
+            "thread_id": 35,
+            "address": "+12025550126",
+            "person": 0,
+            "date": 1716503025539,
+            "date_sent": 0,
+            "protocol": 0,
+            "read": 1,
+            "status": -1,
+            "type": 2,
+            "reply_path_present": 0,
+            "subject": null,
+            "body": "Package out for delivery, arriving between 11:00 and 5:00",
+            "service_center": null,
+            "locked": 0,
+            "sub_id": -1,
+            "error_code": 0,
+            "creator": "com.google.android.apps.messaging",
+            "seen": 1
+          }
+        },
+        {
+          "table": "sms",
+          "rowid": 85,
+          "expected": "PARTIAL",
+          "values": {
+            "_id": 85,
+            "thread_id": 9,
+            "address": "+12025550125",
+            "person": 0,
+            "date": 1714916903459,
+            "date_sent": 0,
+            "protocol": 0,
+            "read": 1,
+            "status": -1,
+            "type": 2,
+            "reply_path_present": 0,
+            "subject": null,
+            "body": "Good night :)",
+            "service_center": null,
+            "locked": 0,
+            "sub_id": -1,
+            "error_code": 0,
+            "creator": "com.google.android.apps.messaging",
+            "seen": 1
+          }
         }
       ]
     },
@@ -5809,6 +6128,283 @@
       "orphan_url_ids": [
         39,
         40
+      ],
+      "deleted_visits": [
+        {
+          "table": "visits",
+          "rowid": 7,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 7,
+            "url": 32,
+            "visit_time": 13358059225428000,
+            "from_visit": 0,
+            "transition": 1,
+            "segment_id": null,
+            "visit_duration": 541000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 12,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 12,
+            "url": 17,
+            "visit_time": 13360177258981000,
+            "from_visit": 0,
+            "transition": 8,
+            "segment_id": null,
+            "visit_duration": 316000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 28,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 28,
+            "url": 27,
+            "visit_time": 13358027782330000,
+            "from_visit": 0,
+            "transition": 33554433,
+            "segment_id": null,
+            "visit_duration": 363000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 29,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 29,
+            "url": 24,
+            "visit_time": 13353755292947000,
+            "from_visit": 0,
+            "transition": 33554433,
+            "segment_id": null,
+            "visit_duration": 833000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 44,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 44,
+            "url": 29,
+            "visit_time": 13353806454056000,
+            "from_visit": 0,
+            "transition": 1,
+            "segment_id": null,
+            "visit_duration": 444000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 47,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 47,
+            "url": 18,
+            "visit_time": 13356279871911000,
+            "from_visit": 0,
+            "transition": 33554433,
+            "segment_id": null,
+            "visit_duration": 437000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 52,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 52,
+            "url": 5,
+            "visit_time": 13356224797079000,
+            "from_visit": 0,
+            "transition": 1,
+            "segment_id": null,
+            "visit_duration": 332000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 57,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 57,
+            "url": 21,
+            "visit_time": 13357842084493000,
+            "from_visit": 0,
+            "transition": 8,
+            "segment_id": null,
+            "visit_duration": 649000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 69,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 69,
+            "url": 28,
+            "visit_time": 13361166601056000,
+            "from_visit": 0,
+            "transition": 805306373,
+            "segment_id": null,
+            "visit_duration": 826000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 75,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 75,
+            "url": 22,
+            "visit_time": 13359432074963000,
+            "from_visit": 0,
+            "transition": 33554433,
+            "segment_id": null,
+            "visit_duration": 308000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 93,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 93,
+            "url": 5,
+            "visit_time": 13353992191205000,
+            "from_visit": 0,
+            "transition": 0,
+            "segment_id": null,
+            "visit_duration": 315000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 121,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 121,
+            "url": 20,
+            "visit_time": 13354785784334000,
+            "from_visit": 0,
+            "transition": 805306373,
+            "segment_id": null,
+            "visit_duration": 740000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 124,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 124,
+            "url": 19,
+            "visit_time": 13355870533710000,
+            "from_visit": 0,
+            "transition": 33554433,
+            "segment_id": null,
+            "visit_duration": 729000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 134,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 134,
+            "url": 6,
+            "visit_time": 13360052834210000,
+            "from_visit": 0,
+            "transition": 33554433,
+            "segment_id": null,
+            "visit_duration": 709000000
+          }
+        },
+        {
+          "table": "visits",
+          "rowid": 144,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 144,
+            "url": 12,
+            "visit_time": 13354946214237000,
+            "from_visit": 0,
+            "transition": 1,
+            "segment_id": null,
+            "visit_duration": 509000000
+          }
+        }
+      ],
+      "deleted_urls": [
+        {
+          "table": "urls",
+          "rowid": 6,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 6,
+            "url": "https://university.example.edu/portal",
+            "title": "Student Portal",
+            "visit_count": 6,
+            "typed_count": 0,
+            "last_visit_time": 13361050679837000,
+            "hidden": 0
+          }
+        },
+        {
+          "table": "urls",
+          "rowid": 22,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 22,
+            "url": "https://news.example.org/world?p=22",
+            "title": "World News #22",
+            "visit_count": 4,
+            "typed_count": 0,
+            "last_visit_time": 13359432074963000,
+            "hidden": 0
+          }
+        },
+        {
+          "table": "urls",
+          "rowid": 31,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 31,
+            "url": "https://www.wikipedia.org/?p=31",
+            "title": "Wikipedia #31",
+            "visit_count": 2,
+            "typed_count": 0,
+            "last_visit_time": 13356678263651000,
+            "hidden": 0
+          }
+        }
+      ],
+      "deleted_downloads": [
+        {
+          "table": "downloads",
+          "rowid": 3,
+          "expected": "PARTIAL",
+          "values": {
+            "id": 3,
+            "guid": "00000000-0000-4000-8000-000000000003",
+            "current_path": "/storage/emulated/0/Download/file3.pdf",
+            "target_path": "/storage/emulated/0/Download/file3.pdf",
+            "start_time": 13359266165000000,
+            "received_bytes": 30000,
+            "total_bytes": 30000,
+            "state": 1,
+            "end_time": 13359266170000000,
+            "referrer": "https://docs.example.com/",
+            "tab_url": "https://docs.example.com/d/xyz",
+            "mime_type": "application/pdf"
+          }
+        }
       ]
     },
     "data/data/com.example.notes/databases/notes.db": {
@@ -5923,15 +6519,20 @@
     }
   },
   "expected": {
-    "sms": 120,
+    "sms": 108,
     "call": 60,
     "contact": 30,
-    "browser_visit": 152,
-    "browser_download": 5,
+    "browser_visit": 137,
+    "browser_download": 4,
     "encrypted_suspects": 1,
     "truncated_databases": 1,
     "hot_journal_databases": 1,
     "hot_journal_rows_after_rollback": 4000,
-    "wal_databases": 1
+    "wal_databases": 1,
+    "deleted_rows": 31,
+    "deleted_rows_by_class": {
+      "RECOVERED": 5,
+      "PARTIAL": 26
+    }
   }
 }

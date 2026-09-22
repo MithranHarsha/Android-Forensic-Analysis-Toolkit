@@ -18,12 +18,14 @@ import sqlite3
 import tarfile
 import time
 import zipfile
+from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from android_forensics.lab.journal import build_hot_journal
+from android_forensics.sqlite.records import encode_record, encode_table_leaf_cell
 
 WEBKIT_EPOCH_OFFSET_S = 11_644_473_600
 BASE = datetime(2024, 3, 1, 8, 0, 0, tzinfo=timezone.utc)
@@ -70,6 +72,11 @@ class SynthSpec:
     browser_visits: int = 150
     downloads: int = 5
     notes_count: int = 15
+    with_deletions: bool = False  # Phase 13: genuinely delete rows from mmssms.db and History, with physical ground truth
+    sms_delete_count: int = 12
+    browser_delete_urls: int = 3
+    browser_delete_visits: int = 15
+    downloads_delete: int = 1
 
 
 def _pn(i: int) -> str:
@@ -393,6 +400,46 @@ def _build_misc(root: Path, spec: SynthSpec, rng: random.Random) -> None:
     (sysdir / "packages.xml").write_bytes(b"ABX\x00" + rng.randbytes(256))
 
 
+def _table_model_from_db(conn: sqlite3.Connection, table: str):
+    from android_forensics.sqlite.ddl import parse_create_table
+    from android_forensics.sqlite.recovery import TableModel
+
+    sql = conn.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone()[0]
+    return TableModel.from_sql(parse_create_table(sql))
+
+
+def _delete_rows_and_truth(db_path: Path, table: str, ids: list[int]) -> list[dict[str, Any]]:
+    """Delete ``ids`` (rowids) from ``table`` in a plain rollback-journal-mode database, and return **physical** ground
+    truth for each: the row re-encoded exactly as SQLite wrote it (``records.encode_table_leaf_cell``), searched for in the
+    final file bytes. RECOVERED (the whole cell survives), PARTIAL (only the bytes after the first four -- SQLite's
+    freeblock header overwrote the payload size and rowid), or UNRECOVERABLE. The expectation never depends on what any
+    recovery algorithm finds; see ``lab/deletions.py`` for the same method applied to the single-table recovery matrix."""
+    if not ids:
+        return []
+    conn = sqlite3.connect(db_path)
+    conn.execute("PRAGMA secure_delete=OFF")
+    model = _table_model_from_db(conn, table)
+    cols = [c.name for c in model.columns]
+    placeholders = ",".join("?" * len(ids))
+    originals = {
+        row[0]: row[1:]
+        for row in conn.execute(f"SELECT rowid, {', '.join(cols)} FROM {table} WHERE rowid IN ({placeholders})", ids)
+    }
+    conn.execute(f"DELETE FROM {table} WHERE rowid IN ({placeholders})", ids)
+    conn.commit()
+    conn.close()
+    data = db_path.read_bytes()
+    truth = []
+    for rowid, values in sorted(originals.items()):
+        stored = list(values)
+        if model.alias_index is not None:
+            stored[model.alias_index] = None
+        cell = encode_table_leaf_cell(rowid, encode_record(tuple(stored)))
+        expected = "RECOVERED" if cell in data else ("PARTIAL" if cell[4:] in data else "UNRECOVERABLE")
+        truth.append({"table": table, "rowid": rowid, "expected": expected, "values": dict(zip(cols, values))})
+    return truth
+
+
 def _stamp_mtimes(root: Path) -> None:
     files = sorted(p for p in root.rglob("*") if p.is_file())
     for i, p in enumerate(files):
@@ -448,20 +495,54 @@ def generate(out_dir: Path, spec: SynthSpec | None = None, overwrite: bool = Tru
     truth["files"][f"{CHROME}/History"] = {"type": "browser", **_build_chrome(root, spec, rng)}
     truth["files"][f"{NOTES}/databases/notes.db"] = {"type": "generic_app", "active": _build_notes(root, spec, rng)}
     _build_misc(root, spec, rng)
+
+    deleted_sms_count = deleted_visits_count = deleted_downloads_count = 0
+    if spec.with_deletions:
+        sms_path = root / TELEPHONY / "mmssms.db"
+        sms_ids = sorted(rng.sample(range(1, spec.sms_count + 1), min(spec.sms_delete_count, spec.sms_count)))
+        deleted_sms = _delete_rows_and_truth(sms_path, "sms", sms_ids)
+        truth["files"][f"{TELEPHONY}/mmssms.db"]["deleted"] = deleted_sms
+        deleted_sms_count = len(deleted_sms)
+
+        history_path = root / CHROME / "History"
+        chrome_truth = truth["files"][f"{CHROME}/History"]
+        url_ids = [u["id"] for u in chrome_truth["urls"]]
+        visit_ids = [v["id"] for v in chrome_truth["visits"]]
+        download_ids = [d["id"] for d in chrome_truth["downloads"]]
+        delete_urls = sorted(rng.sample(url_ids, min(spec.browser_delete_urls, len(url_ids))))
+        delete_visits = sorted(rng.sample(visit_ids, min(spec.browser_delete_visits, len(visit_ids))))
+        delete_downloads = sorted(rng.sample(download_ids, min(spec.downloads_delete, len(download_ids))))
+        # visits are deleted first: a urls row's own cell does not depend on its visits, but deleting both from the same
+        # page keeps the freed space pattern realistic (a user clearing a page's history clears both).
+        chrome_truth["deleted_visits"] = _delete_rows_and_truth(history_path, "visits", delete_visits)
+        chrome_truth["deleted_urls"] = _delete_rows_and_truth(history_path, "urls", delete_urls)
+        chrome_truth["deleted_downloads"] = _delete_rows_and_truth(history_path, "downloads", delete_downloads)
+        deleted_visits_count = len(delete_visits)
+        deleted_downloads_count = len(delete_downloads)
+
     _stamp_mtimes(root)
     _package(root, out_dir)
 
     truth["expected"] = {
-        "sms": spec.sms_count,
+        "sms": spec.sms_count - deleted_sms_count,
         "call": spec.call_count,
         "contact": spec.contact_count,
-        "browser_visit": spec.browser_visits + len(truth["files"][f"{CHROME}/History"]["orphan_url_ids"]),
-        "browser_download": spec.downloads,
+        "browser_visit": spec.browser_visits + len(truth["files"][f"{CHROME}/History"]["orphan_url_ids"]) - deleted_visits_count,
+        "browser_download": spec.downloads - deleted_downloads_count,
         "encrypted_suspects": 1,
         "truncated_databases": 1,
         "hot_journal_databases": 1 if (root / NOTES / "databases/pending.db-journal").exists() else 0,
         "hot_journal_rows_after_rollback": 4000,
         "wal_databases": 1,
     }
+    if spec.with_deletions:
+        deleted_all = (
+            truth["files"][f"{TELEPHONY}/mmssms.db"]["deleted"]
+            + truth["files"][f"{CHROME}/History"]["deleted_urls"]
+            + truth["files"][f"{CHROME}/History"]["deleted_visits"]
+            + truth["files"][f"{CHROME}/History"]["deleted_downloads"]
+        )
+        truth["expected"]["deleted_rows"] = len(deleted_all)
+        truth["expected"]["deleted_rows_by_class"] = dict(Counter(d["expected"] for d in deleted_all))
     (out_dir / "ground_truth.json").write_text(json.dumps(truth, indent=2, default=str))
     return truth

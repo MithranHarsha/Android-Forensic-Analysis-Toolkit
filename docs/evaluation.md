@@ -122,7 +122,11 @@ kept), UTF-16 databases, report escaping and the CLI.
   their *absence* from normal inspection, not to measure recovery.
 * **E4 uses one table shape** (six columns, short values); wide rows or large BLOBs change the per-row memory of the in-memory mode.
 
-## Review 2 evaluation plan (not yet run)
+## Review 2 synthetic lab (Phase 13, built)
+
+The full-dump generator and the single-table recovery matrix now both produce evidence with genuinely deleted rows and physically-derived ground truth (`docs/synthetic_lab.md`); `tests/integration/test_synthetic_recovery_lab.py` and `tests/integration/test_recovery_matrix.py` check the engine's output against it directly (100% and 507/511 measured recall respectively, on the seeds checked into this repo). The systematic measurement across the matrix's independent variables, written up as numbers and charts, is Phase 15, below.
+
+## Review 2 evaluation plan (Phase 15)
 
 Extend the generator with controlled deletions and overwrites, record what is recoverable by construction, and measure the
 recovery engine against it. Independent variables: database size, number of deletions, record size, deletion position

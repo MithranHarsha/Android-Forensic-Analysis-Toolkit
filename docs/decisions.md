@@ -174,3 +174,24 @@ Helvetica is latin-1 only. `pdf._txt` round-trips every string through `encode("
 character becomes `?` — visible and honest — rather than a crash or silent mojibake. Given the PDF is a condensed,
 printable companion to the HTML/JSON report (which keep full fidelity), this was judged an acceptable trade for a capstone
 tool with no server-side rendering budget for font subsetting.
+
+**D-030 · The checked-in `synthetic_evidence/` gains genuine deletions; the pytest `synth` fixture does not.**
+`SynthSpec.with_deletions` defaults to `False`, so `generate(out, SynthSpec())` — what every Review 1 test's `synth`
+fixture calls — is byte-for-byte what it always was; only the CLI's `android-forensics synth` (now `--with-deletions`
+by default) and a dedicated evaluation lab opt in. This lets the committed `synthetic_evidence/ground_truth.json` describe
+a full Android dump *with* deleted rows and their physically-derived recovery expectation (Phase 13) without touching a
+single existing Review 1 assertion, which reads its own fresh, undeleted copy of the same generator.
+
+**D-031 · Deletions are only applied to the two plain-rollback-journal databases.** `mmssms.db` and Chrome's `History` are
+both opened without `journal_mode=WAL`, so a delete there matches the well-tested "plain" condition of the single-table
+recovery matrix directly. `calllog.db` (WAL mode, already exercising the WAL-history condition) and `contacts2.db`
+(multi-table joins, already exercising the app-level `deleted=1` soft-delete flag) are left as `generate()` already builds
+them: adding real deletes to a WAL-mode file mid-construction, or to a table three parsers join across, would need
+building and proving a second physical-truth method under a tight schedule for no evaluation benefit the existing
+recovery-matrix conditions do not already cover. Ground truth for the two chosen tables reuses the exact method
+`lab/deletions.py` already established: re-encode the row as SQLite would and search the final bytes.
+
+**D-032 · Ground truth for the lab's deleted rows is derived once, directly, not reused from the recovery matrix.**
+`lab/synth._delete_rows_and_truth` reads each table's own `CREATE TABLE` SQL from `sqlite_master` (via
+`sqlite.ddl.parse_create_table` and `sqlite.recovery.TableModel`, not a hand-written column list), so it works for any
+table's real schema — `sms`, `urls`, `visits`, `downloads` all use one code path — and stays correct if a schema changes.
