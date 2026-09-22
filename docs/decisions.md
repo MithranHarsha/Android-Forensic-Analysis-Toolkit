@@ -147,3 +147,16 @@ never changes what Review 1's stages report. `analyze` therefore defaults to the
 found, reconstructed by status, corroborated, carved candidates, correlation edges); `--no-recover` restores the exact
 Review 1 stage list and message. A standalone `recover` command runs just the four Review 2 stages on a case that has
 already been scanned and extracted, for someone who wants to add recovery to an existing Review 1 analysis.
+
+**D-026 · The dashboard is read-only and opens its own connection per request.** `CaseStore` wraps one `sqlite3.Connection`,
+which is not safe to share across the threads a web server uses; `dashboard.create_app` therefore opens a fresh
+`CaseStore.open(case_dir)` per request (a FastAPI dependency, closed when the request finishes) rather than holding one
+connection for the app's lifetime. No endpoint calls `run_stage` or writes to the database — the dashboard can only show
+what `analyze` / `recover` / `report` already produced, never analyse on its own, so opening it can never change a case's
+recorded state.
+
+**D-027 · `web/` lives at the repository root, not inside the installed package.** `dashboard.create_app` locates it via a
+path relative to the source file (`parents[3] / "web"`), which works for the way this project is actually run — from a
+repository checkout, as the capstone and its tests always do — but would not resolve inside a wheel installed from PyPI
+(setuptools `package-data` only bundles files inside the package). Packaging the frontend as installable data is future
+work; noted here rather than left as a silent gap.

@@ -627,6 +627,34 @@ def report(
 
 @app.command()
 @handle_errors
+def dashboard(
+    case: CaseArg,
+    cases_dir: CasesDir = Path("cases"),
+    host: Annotated[str, typer.Option(help="Bind address.")] = "127.0.0.1",
+    port: Annotated[int, typer.Option(help="Bind port.")] = 8765,
+) -> None:
+    """Serve a read-only dashboard (REST API + browser frontend) over this case's results.
+
+    Never runs a stage and never writes to the case: it only reads what 'analyze' / 'recover' / 'report' already produced."""
+    import uvicorn
+
+    from android_forensics.dashboard import create_app
+
+    case_dir = None
+    for candidate in (Path(case), cases_dir / case):
+        if CaseStore.is_case_dir(candidate):
+            case_dir = candidate
+            break
+    if case_dir is None:
+        raise CaseError(f"No case '{case}' found (looked in ./{case} and {cases_dir}/{case})")
+    app_ = create_app(case_dir)
+    console.print(Text.assemble(("Dashboard: ", "bold green"), f"http://{host}:{port}/  (case: {case_dir})"), soft_wrap=True)
+    console.print("[dim]Read-only: no analysis stage runs from here. Ctrl+C to stop.[/]")
+    uvicorn.run(app_, host=host, port=port, log_level="warning")
+
+
+@app.command()
+@handle_errors
 def info(
     target: Annotated[str, typer.Argument(help="A case, or a SQLite database file to inspect.")],
     cases_dir: CasesDir = Path("cases"),
