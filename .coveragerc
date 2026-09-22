@@ -1,0 +1,12 @@
+[run]
+source = src/android_forensics
+omit =
+    */reporting/templates/*
+    */__main__.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise NotImplementedError
+precision = 1

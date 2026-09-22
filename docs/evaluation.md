@@ -106,10 +106,20 @@ inspection. It says nothing about coverage of real applications' schemas.
 
 ## Other verification
 
-The 1,054-test suite (1,053 pass; 1 is skipped on file systems that reject non-UTF-8 names, such as APFS) includes 239 unit tests of the data models, 27 of the ingestion building blocks, 61 end-to-end ingestion tests (every input type, manifest contents, read-only guarantees, change detection, verification), 367 tests of the SQLite inspection engine (85 of the typed results and helpers, 69 of header / version / schema, 124 of active records — every data type, NULLs, timestamps, deleted rows asserted absent — 62 of sidecars, damaged files, the read-only guarantee and the integrity caveat, plus 13 CLI and 14 pipeline-stage tests), 232 tests of filesystem discovery (72 of classification, 34 of the Android layout model, 48 of the analysis core, 47 scanner tests over real trees — every category, every kind of database damage, missing / unreadable / vanishing / symlinked entries — and 31 of the scan stage and CLI, including verbatim display of evidence text) and exactness checks on the default synthetic case (120 SMS, 60 calls, 30 contacts, 152 browser
-visits, 5 downloads; the 20 call rows that exist only in the WAL; the hot journal rolled back on the scratch copy; the
-encrypted and truncated databases flagged), tamper detection, archive attacks, corruption mid-table (rows before the damage
-kept), UTF-16 databases, report escaping and the CLI.
+The suite is 1,482 tests, all passing (one is skipped on file systems that reject non-UTF-8 names, such as APFS). Line
+coverage of `src/android_forensics` (`coverage run -m pytest && coverage report`, config in `.coveragerc`) is **95.7%**
+(10,481 statements, 447 missed); the full per-file report is `docs/coverage.txt`. Review 1 (evidence integrity through
+reporting) and Review 2 (recovery, carving, correlation, confidence, the dashboard, PDF reports, the synthetic labs) are
+both exercised: 239 unit tests of the data models, 27 of the ingestion building blocks, 61 end-to-end ingestion tests,
+367 of the SQLite inspection engine, 232 of filesystem discovery, ~150 of the page-level recovery engine and WAL/journal
+parsing (`test_sqlite_recovery_units.py`, `test_sqlite_wal_journal.py`, `test_recovery_matrix.py`), ~60 of raw carving
+(the planted-string fixture plus the SQLite free-space carver), 35 of the correlation graph, 22 of the confidence scorer,
+storage round-trips and the recovery pipeline stages, the FastAPI dashboard (`TestClient` against a real recovered case),
+the report in every format (HTML/JSON/CSV/PDF, with and without recovery having run) and the full synthetic lab
+(100% recall over the physically recoverable rows it plants). The lowest-covered modules are error branches that need a
+specific, hard-to-provoke I/O failure (`readonly.py`, `acquisition/archive.py`, `acquisition/single_file.py`) and CLI
+argument-parsing edges; nothing forensic-critical (a status transition, a confidence rule, a byte-offset calculation) is
+below its module's own average.
 
 ## Threats to validity
 

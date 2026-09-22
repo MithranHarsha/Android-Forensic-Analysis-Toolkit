@@ -195,3 +195,10 @@ recovery-matrix conditions do not already cover. Ground truth for the two chosen
 `lab/synth._delete_rows_and_truth` reads each table's own `CREATE TABLE` SQL from `sqlite_master` (via
 `sqlite.ddl.parse_create_table` and `sqlite.recovery.TableModel`, not a hand-written column list), so it works for any
 table's real schema — `sms`, `urls`, `visits`, `downloads` all use one code path — and stays correct if a schema changes.
+
+**D-033 · Coverage is measured, not asserted as a gate.** `coverage.py` (`.coveragerc`: source = `src/android_forensics`,
+templates and `__main__` excluded) is run over the full suite for Phase 14 and the number (95.7%, `docs/coverage.txt`) is
+reported rather than enforced by a minimum-coverage CI failure — a coverage floor pressures tests into existing just to
+touch a line, which is the opposite of this project's testing style (every test states a concrete forensic fact and checks
+it). The remaining gaps were read file by file: they are I/O error branches that need a specific, hard-to-provoke failure,
+and CLI argument-parsing edges — never a status transition, confidence rule or byte-offset calculation.

@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "httpx>=0.27", "pypdf>=4"]
+dev = ["pytest>=8", "httpx>=0.27", "pypdf>=4", "coverage>=7"]
 
 [project.scripts]
 android-forensics = "android_forensics.cli.app:main"
