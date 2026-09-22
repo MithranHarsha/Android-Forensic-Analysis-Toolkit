@@ -268,7 +268,7 @@ confirmed evidence; confidence calibration was measured on a small synthetic sam
 ├── tests/             unit/ · integration/
 ├── synthetic_evidence/  generated dataset (dir, .zip, .tar.gz, ground_truth.json — with genuine deletions)
 ├── experiments/       r1_*.py, r2_*.py · results/ (CSV, JSON, PNG charts)
-├── reports/           review1_acceptance/ (example report on the synthetic case)
+├── reports/           acceptance/ (Phase 17 end-to-end run on synthetic_evidence/, full pipeline, every format)
 └── docs/              architecture · evidence_ingestion · filesystem_discovery · sqlite_inspection · sqlite_recovery ·
                        carving · correlation · dashboard · reporting · pipeline_stages · synthetic_lab · data_models ·
                        forensic_methodology · artifact_formats · evaluation · limitations · decisions · coverage.txt

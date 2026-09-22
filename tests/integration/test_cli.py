@@ -33,6 +33,8 @@ def test_full_manual_workflow(synth, tmp_path):
     assert r.exit_code == 0 and "ACTIVE" in r.stdout
     r = run("report", "case001", "--format", "html,json", cases=cases)
     assert r.exit_code == 0 and "report.html" in r.stdout
+    r = run("report", "case001", "--format", "html,json,csv,pdf", cases=cases)
+    assert r.exit_code == 0 and "report.html" in r.stdout and "report.pdf" in r.stdout and "CSV dir" in r.stdout
     r = run("info", "case001", cases=cases)
     assert r.exit_code == 0 and "custody" in r.stdout.lower() and "intact" in r.stdout
 

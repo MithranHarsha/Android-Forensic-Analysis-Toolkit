@@ -1,0 +1,5 @@
+﻿source_path,region,reason
+/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History,freeblock,"zero-filled: the content was erased (secure_delete, or overwritten with zeros)"
+/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000004_contacts2.db,freeblock,"the bytes are not a record of any known table (partly overwritten, or another structure)"
+/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000007_notes.db,freeblock,"zero-filled: the content was erased (secure_delete, or overwritten with zeros)"
+/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000008_pending.db,freeblock,"the bytes are not a record of any known table (partly overwritten, or another structure)"

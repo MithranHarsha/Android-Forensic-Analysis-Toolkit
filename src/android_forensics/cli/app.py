@@ -620,7 +620,7 @@ def report(
             raise CaseError(f"Run '{TOOL_NAME} analyze {case}' first — no completed '{stage}' stage")
     fmts = [f.strip() for f in formats.split(",") if f.strip()]
     res = generate_report(store, fmts, out)
-    for label, p in (("HTML", res.html), ("JSON", res.json), ("CSV dir", res.csv_dir)):
+    for label, p in (("HTML", res.html), ("JSON", res.json), ("CSV dir", res.csv_dir), ("PDF", res.pdf)):
         if p:
             console.print(Text.assemble((f"{label}: ", "bold green"), str(p)), soft_wrap=True)
 

@@ -1,0 +1,383 @@
+﻿ts_utc,time_basis,event_kind,artifact_type,event,source,status,confidence,artifact_id
+2024-03-01T08:28:12.947Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,363
+2024-03-01T17:04:38.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Arjun Kapoor — (202) 555-0110,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#11,ACTIVE,,213
+2024-03-01T21:11:10.062Z,webkit_us,artifact,browser_visit,Visited Video #38,data/data/com.android.chrome/app_chrome/Default/History → visits#34,ACTIVE,,30
+2024-03-01T22:40:54.056Z,webkit_us,artifact,browser_visit,Last visit to Forum Thread #29,data/data/com.android.chrome/app_chrome/Default/History → urls#29,ACTIVE,,136
+2024-03-01T22:40:54.056Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,362
+2024-03-01T23:30:47.049Z,unix_ms,artifact,call,Call MISSED from +12025550129 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#56,ACTIVE,,198
+2024-03-02T07:06:55.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Omar Bose — (202) 555-0118,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#19,ACTIVE,,221
+2024-03-02T09:44:48.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Yash Rao — (202) 555-0124,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#25,ACTIVE,,227
+2024-03-02T11:26:36.255Z,webkit_us,artifact,browser_visit,Visited Weather #27,data/data/com.android.chrome/app_chrome/Default/History → visits#76,ACTIVE,,66
+2024-03-02T13:02:48.814Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550120: Dinner at my place on Saturday?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#5,ACTIVE,,236
+2024-03-02T14:16:03.631Z,unix_ms,artifact,call,Call INCOMING from +12025550108 (1651s),data/data/com.android.providers.contacts/databases/calllog.db → calls#5,ACTIVE,,147
+2024-03-02T17:06:11.439Z,webkit_us,artifact,browser_visit,Visited Weather #27,data/data/com.android.chrome/app_chrome/Default/History → visits#39,ACTIVE,,35
+2024-03-03T05:46:24.755Z,unix_ms,artifact,sms,"SMS RECEIVED from 56161: Package out for delivery, arriving between 1:00 and 4:00",data/data/com.android.providers.telephony/databases/mmssms.db → sms#69,ACTIVE,,292
+2024-03-03T15:44:39.440Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550108: Can you call me when you are free?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#54,ACTIVE,,281
+2024-03-03T18:23:18.707Z,unix_ms,artifact,sms,SMS DRAFT with unknown address: Meeting moved to room 485,data/data/com.android.providers.telephony/databases/mmssms.db → sms#17,ACTIVE,,246
+2024-03-03T18:24:48.149Z,webkit_us,artifact,browser_visit,Visited Student Portal #36,data/data/com.android.chrome/app_chrome/Default/History → visits#140,ACTIVE,,126
+2024-03-03T19:54:30.495Z,webkit_us,artifact,browser_visit,Visited Inbox #33,data/data/com.android.chrome/app_chrome/Default/History → visits#77,ACTIVE,,67
+2024-03-04T02:16:31.205Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,356
+2024-03-04T18:34:47.171Z,webkit_us,artifact,browser_visit,Visited World News,data/data/com.android.chrome/app_chrome/Default/History → visits#115,ACTIVE,,104
+2024-03-04T21:47:24.488Z,webkit_us,artifact,browser_visit,Visited Shared Doc #20,data/data/com.android.chrome/app_chrome/Default/History → visits#22,ACTIVE,,20
+2024-03-05T09:29:05.813Z,unix_ms,artifact,sms,SMS SENT to +12025550114: Reminder: appointment tomorrow at 6:15,data/data/com.android.providers.telephony/databases/mmssms.db → sms#101,ACTIVE,,321
+2024-03-05T20:06:21.718Z,unix_ms,artifact,call,Call OUTGOING to +12025550102 (757s),data/data/com.android.providers.contacts/databases/calllog.db → calls#22,ACTIVE,,164
+2024-03-06T01:18:20.468Z,webkit_us,artifact,browser_visit,Visited unknown URL,data/data/com.android.chrome/app_chrome/Default/History → visits#94,ACTIVE,,83
+2024-03-06T03:04:47.784Z,unix_ms,artifact,sms,SMS SENT to +12025550120: Bank alert: Rs 6494 debited from account XX6732,data/data/com.android.providers.telephony/databases/mmssms.db → sms#44,ACTIVE,,272
+2024-03-06T11:55:49.282Z,webkit_us,artifact,browser_visit,Visited Video,data/data/com.android.chrome/app_chrome/Default/History → visits#13,ACTIVE,,11
+2024-03-06T12:09:01.030Z,unix_ms,artifact,call,Call OUTGOING to +12025550125 (831s),data/data/com.android.providers.contacts/databases/calllog.db → calls#28,ACTIVE,,170
+2024-03-06T19:42:55.797Z,unix_ms,artifact,call,Call REJECTED from +12025550113 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#41,ACTIVE,,183
+2024-03-06T20:46:21.963Z,unix_ms,artifact,call,Call REJECTED from +12025550114 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#40,ACTIVE,,182
+2024-03-07T01:56:19.552Z,unix_ms,artifact,sms,"SMS SENT to +12025550104: Package out for delivery, arriving between 10:00 and 7:00",data/data/com.android.providers.telephony/databases/mmssms.db → sms#20,ACTIVE,,249
+2024-03-07T06:04:39.678Z,webkit_us,artifact,browser_visit,Visited Wikipedia #11,data/data/com.android.chrome/app_chrome/Default/History → visits#85,ACTIVE,,75
+2024-03-07T15:29:42.318Z,webkit_us,artifact,browser_visit,Visited unknown URL,data/data/com.android.chrome/app_chrome/Default/History → visits#1,ACTIVE,,1
+2024-03-07T16:44:51.001Z,webkit_us,artifact,browser_visit,Visited World News #32,data/data/com.android.chrome/app_chrome/Default/History → visits#51,ACTIVE,,45
+2024-03-07T21:44:20.006Z,webkit_us,artifact,browser_visit,Visited World News,data/data/com.android.chrome/app_chrome/Default/History → visits#8,ACTIVE,,7
+2024-03-08T02:44:42.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Ravi Pillai — (202) 555-0116,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#17,ACTIVE,,219
+2024-03-08T04:15:06.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Karan Menon — (202) 555-0112,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#13,ACTIVE,,215
+2024-03-08T06:58:55.265Z,unix_ms,artifact,call,Call MISSED from +12025550112 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#18,ACTIVE,,160
+2024-03-08T11:06:12.391Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550106: Payment of Rs 5733 received. Thank you.,data/data/com.android.providers.telephony/databases/mmssms.db → sms#117,ACTIVE,,337
+2024-03-08T13:54:41.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Isha Nair — (202) 555-0103,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#4,ACTIVE,,206
+2024-03-08T15:47:54.903Z,webkit_us,artifact,browser_visit,Visited Shared Doc #20,data/data/com.android.chrome/app_chrome/Default/History → visits#91,ACTIVE,,81
+2024-03-08T23:37:15.314Z,unix_ms,artifact,sms,"SMS RECEIVED from +12025550104: Package out for delivery, arriving between 5:00 and 4:00",data/data/com.android.providers.telephony/databases/mmssms.db → sms#95,ACTIVE,,315
+2024-03-09T06:33:03.160Z,unix_ms,artifact,call,Call INCOMING from +12025550104 (204s),data/data/com.android.providers.contacts/databases/calllog.db → calls#21,ACTIVE,,163
+2024-03-09T12:16:53.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Kabir Rao — (202) 555-0104,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#5,ACTIVE,,207
+2024-03-10T00:28:20.000Z,webkit_us,artifact,browser_download,Downloaded file2.pdf (20000 bytes),data/data/com.android.chrome/app_chrome/Default/History → downloads#2,ACTIVE,,140
+2024-03-10T04:23:54.818Z,webkit_us,artifact,browser_visit,Visited unknown URL,data/data/com.android.chrome/app_chrome/Default/History → visits#18,ACTIVE,,16
+2024-03-10T07:05:27.260Z,webkit_us,artifact,browser_visit,Visited Shopping Cart #35,data/data/com.android.chrome/app_chrome/Default/History → visits#139,ACTIVE,,125
+2024-03-10T10:08:51.684Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550100: Payment of Rs 6380 received. Thank you.,data/data/com.android.providers.telephony/databases/mmssms.db → sms#120,ACTIVE,,340
+2024-03-10T17:25:50.542Z,unix_ms,artifact,sms,"SMS SENT to +12025550124: Package out for delivery, arriving between 2:00 and 11:00",data/data/com.android.providers.telephony/databases/mmssms.db → sms#53,ACTIVE,,280
+2024-03-10T20:25:27.496Z,unix_ms,artifact,call,Call MISSED from +12025550125 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#30,ACTIVE,,172
+2024-03-11T03:09:58.450Z,webkit_us,artifact,browser_visit,Visited Maps #14,data/data/com.android.chrome/app_chrome/Default/History → visits#117,ACTIVE,,106
+2024-03-11T06:28:47.063Z,unix_ms,artifact,sms,SMS RECEIVED from AX-BANKOS: Please send the report by tonight,data/data/com.android.providers.telephony/databases/mmssms.db → sms#39,ACTIVE,,267
+2024-03-11T11:01:28.730Z,unix_ms,artifact,sms,SMS SENT to +12025550107: Can you call me when you are free?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#24,ACTIVE,,253
+2024-03-11T16:15:26.080Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550103: Please send the report by tonight,data/data/com.android.providers.telephony/databases/mmssms.db → sms#18,ACTIVE,,247
+2024-03-11T16:24:43.410Z,unix_ms,artifact,call,Call MISSED from +12025550103 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#23,ACTIVE,,165
+2024-03-11T18:05:49.010Z,webkit_us,artifact,browser_visit,Visited Forum Thread,data/data/com.android.chrome/app_chrome/Default/History → visits#19,ACTIVE,,17
+2024-03-11T18:35:16.508Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550129: Payment of Rs 7314 received. Thank you.,data/data/com.android.providers.telephony/databases/mmssms.db → sms#49,ACTIVE,,277
+2024-03-11T22:52:23.834Z,webkit_us,artifact,browser_visit,Visited Inbox #13,data/data/com.android.chrome/app_chrome/Default/History → visits#31,ACTIVE,,27
+2024-03-12T15:08:07.190Z,unix_ms,artifact,call,Call INCOMING from +12025550103 (1607s),data/data/com.android.providers.contacts/databases/calllog.db → calls#17,ACTIVE,,159
+2024-03-13T00:35:38.321Z,webkit_us,artifact,browser_visit,Visited World News,data/data/com.android.chrome/app_chrome/Default/History → visits#10,ACTIVE,,9
+2024-03-13T02:17:35.564Z,unix_ms,artifact,call,Call MISSED from +12025550100 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#2,ACTIVE,,144
+2024-03-13T06:43:04.334Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,355
+2024-03-13T11:32:18.606Z,webkit_us,artifact,browser_visit,Visited Student Portal #26,data/data/com.android.chrome/app_chrome/Default/History → visits#36,ACTIVE,,32
+2024-03-13T15:58:55.723Z,unix_ms,artifact,sms,SMS SENT to +12025550114: Thanks a lot!,data/data/com.android.providers.telephony/databases/mmssms.db → sms#90,ACTIVE,,310
+2024-03-15T03:16:54.237Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,352
+2024-03-15T09:56:21.298Z,unix_ms,artifact,call,Call INCOMING from +12025550102 (230s),data/data/com.android.providers.contacts/databases/calllog.db → calls#60,ACTIVE,,202
+2024-03-15T15:44:58.583Z,webkit_us,artifact,browser_visit,Visited Maps,data/data/com.android.chrome/app_chrome/Default/History → visits#88,ACTIVE,,78
+2024-03-15T23:32:08.346Z,unix_ms,artifact,call,Call OUTGOING to +12025550104 (461s),data/data/com.android.providers.contacts/databases/calllog.db → calls#29,ACTIVE,,171
+2024-03-16T00:17:24.446Z,unix_ms,artifact,call,Call REJECTED from private/unknown number (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#7,ACTIVE,,149
+2024-03-16T01:23:24.519Z,unix_ms,artifact,call,Call INCOMING from +12025550117 (1401s),data/data/com.android.providers.contacts/databases/calllog.db → calls#58,ACTIVE,,200
+2024-03-16T08:12:36.341Z,unix_ms,artifact,call,Call INCOMING from +12025550101 (824s),data/data/com.android.providers.contacts/databases/calllog.db → calls#48,ACTIVE,,190
+2024-03-16T14:32:13.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Vikram Reddy — (202) 555-0106,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#7,ACTIVE,,209
+2024-03-16T20:11:21.226Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550108: Dinner at my place on Saturday?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#10,ACTIVE,,240
+2024-03-17T05:41:35.139Z,unix_ms,artifact,sms,"SMS SENT to +12025550123: Running late, reach by 3:30",/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000005_mmssms.db → sms#28,RECOVERED,HIGH,372
+2024-03-17T05:59:24.168Z,webkit_us,artifact,browser_visit,Visited Inbox #33,data/data/com.android.chrome/app_chrome/Default/History → visits#125,ACTIVE,,112
+2024-03-17T15:36:37.227Z,webkit_us,artifact,browser_visit,Visited Video #28,data/data/com.android.chrome/app_chrome/Default/History → visits#128,ACTIVE,,115
+2024-03-17T22:19:48.983Z,unix_ms,artifact,sms,SMS RECEIVED from 72000: Payment of Rs 5442 received. Thank you.,data/data/com.android.providers.telephony/databases/mmssms.db → sms#93,ACTIVE,,313
+2024-03-18T01:53:06.206Z,webkit_us,artifact,browser_visit,Visited World News #12,data/data/com.android.chrome/app_chrome/Default/History → visits#118,ACTIVE,,107
+2024-03-18T08:24:46.809Z,unix_ms,artifact,sms,SMS RECEIVED from 56161: Meeting moved to room 334,data/data/com.android.providers.telephony/databases/mmssms.db → sms#16,ACTIVE,,245
+2024-03-18T10:41:38.739Z,unix_ms,artifact,sms,"SMS SENT to +12025550120: Package out for delivery, arriving between 9:00 and 5:00",data/data/com.android.providers.telephony/databases/mmssms.db → sms#83,ACTIVE,,304
+2024-03-18T11:01:07.038Z,webkit_us,artifact,browser_visit,Visited Student Portal #36,data/data/com.android.chrome/app_chrome/Default/History → visits#40,ACTIVE,,36
+2024-03-18T12:00:40.071Z,unix_ms,artifact,sms,SMS RECEIVED from JD-DELIVR: Can you call me when you are free?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#43,ACTIVE,,271
+2024-03-18T21:56:39.685Z,unix_ms,artifact,call,Call OUTGOING to +12025550124 (1143s),data/data/com.android.providers.contacts/databases/calllog.db → calls#6,ACTIVE,,148
+2024-03-19T03:37:29.383Z,webkit_us,artifact,browser_visit,Visited Maps,data/data/com.android.chrome/app_chrome/Default/History → visits#25,ACTIVE,,23
+2024-03-19T04:55:48.443Z,webkit_us,artifact,browser_visit,Visited Shared Doc #30,data/data/com.android.chrome/app_chrome/Default/History → visits#65,ACTIVE,,57
+2024-03-19T20:43:14.968Z,unix_ms,artifact,call,Call OUTGOING to +12025550110 (1686s),data/data/com.android.providers.contacts/databases/calllog.db → calls#1,ACTIVE,,143
+2024-03-20T00:25:17.543Z,webkit_us,artifact,browser_visit,Visited unknown URL,data/data/com.android.chrome/app_chrome/Default/History → visits#130,ACTIVE,,117
+2024-03-20T01:54:46.803Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550107: Thanks a lot!,data/data/com.android.providers.telephony/databases/mmssms.db → sms#104,ACTIVE,,324
+2024-03-20T02:28:06.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,"Contact Sneha Gupta — (202) 555-0129 [flagged deleted by Android, still present in database]",data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#30,ACTIVE,,232
+2024-03-20T05:35:29.906Z,webkit_us,artifact,browser_visit,Visited Shopping Cart,data/data/com.android.chrome/app_chrome/Default/History → visits#5,ACTIVE,,5
+2024-03-20T07:48:49.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Farhan Verma — (202) 555-0122,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#23,ACTIVE,,225
+2024-03-20T16:41:04.816Z,webkit_us,artifact,browser_visit,Visited Shopping Cart #25,data/data/com.android.chrome/app_chrome/Default/History → visits#78,ACTIVE,,68
+2024-03-20T18:24:54.069Z,unix_ms,artifact,sms,SMS RECEIVED from 56161: Bank alert: Rs 8053 debited from account XX1826,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000005_mmssms.db → sms,PARTIAL,MEDIUM,380
+2024-03-20T21:56:20.657Z,webkit_us,artifact,browser_visit,Visited Wikipedia #11,data/data/com.android.chrome/app_chrome/Default/History → visits#67,ACTIVE,,59
+2024-03-21T06:44:06.881Z,unix_ms,artifact,call,Call REJECTED from +12025550121 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#44,ACTIVE,,186
+2024-03-21T15:14:14.075Z,webkit_us,artifact,browser_visit,Visited Forum Thread #19,data/data/com.android.chrome/app_chrome/Default/History → visits#72,ACTIVE,,63
+2024-03-22T02:01:26.802Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550124: Dinner at my place on Saturday?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#88,ACTIVE,,308
+2024-03-22T08:23:01.146Z,webkit_us,artifact,browser_visit,Visited Weather #27,data/data/com.android.chrome/app_chrome/Default/History → visits#108,ACTIVE,,97
+2024-03-22T10:09:49.846Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550123: Meeting moved to room 104,data/data/com.android.providers.telephony/databases/mmssms.db → sms#74,ACTIVE,,297
+2024-03-22T19:58:51.215Z,webkit_us,artifact,browser_visit,Visited Wikipedia,data/data/com.android.chrome/app_chrome/Default/History → visits#126,ACTIVE,,113
+2024-03-23T04:22:34.585Z,webkit_us,artifact,browser_visit,Visited Video,data/data/com.android.chrome/app_chrome/Default/History → visits#92,ACTIVE,,82
+2024-03-23T07:32:34.623Z,unix_ms,artifact,sms,SMS SENT to +12025550114: Payment of Rs 1462 received. Thank you.,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000005_mmssms.db → sms,PARTIAL,HIGH,377
+2024-03-23T11:46:56.648Z,webkit_us,artifact,browser_visit,Visited Inbox #33,data/data/com.android.chrome/app_chrome/Default/History → visits#38,ACTIVE,,34
+2024-03-23T21:50:55.218Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550116: Bring the documents tomorrow,data/data/com.android.providers.telephony/databases/mmssms.db → sms#62,ACTIVE,,288
+2024-03-24T05:04:19.842Z,unix_ms,artifact,call,Call OUTGOING to +12025550126 (1688s),data/data/com.android.providers.contacts/databases/calllog.db → calls#59,ACTIVE,,201
+2024-03-24T14:32:41.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Sameer Patel — (202) 555-0120,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#21,ACTIVE,,223
+2024-03-24T19:31:34.357Z,unix_ms,artifact,sms,SMS DRAFT with unknown address: Reminder: appointment tomorrow at 12:15,data/data/com.android.providers.telephony/databases/mmssms.db → sms#58,ACTIVE,,284
+2024-03-24T22:07:02.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Neel Iyer — (202) 555-0114,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#15,ACTIVE,,217
+2024-03-25T15:56:35.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Rohan Verma — (202) 555-0102,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#3,ACTIVE,,205
+2024-03-25T18:10:14.051Z,unix_ms,artifact,call,Call INCOMING from +12025550104 (551s),data/data/com.android.providers.contacts/databases/calllog.db → calls#25,ACTIVE,,167
+2024-03-25T20:02:13.710Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,354
+2024-03-25T20:27:45.101Z,unix_ms,artifact,call,Call INCOMING from +12025550104 (1233s),data/data/com.android.providers.contacts/databases/calllog.db → calls#38,ACTIVE,,180
+2024-03-25T23:35:31.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,"Contact Rahul Kulkarni — (202) 555-0128 [flagged deleted by Android, still present in database]",data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#29,ACTIVE,,231
+2024-03-26T00:28:10.951Z,webkit_us,artifact,browser_visit,Visited Maps #24,data/data/com.android.chrome/app_chrome/Default/History → visits#83,ACTIVE,,73
+2024-03-26T09:45:29.474Z,unix_ms,artifact,call,Call OUTGOING to +12025550124 (1098s),data/data/com.android.providers.contacts/databases/calllog.db → calls#32,ACTIVE,,174
+2024-03-26T09:51:58.821Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550115: Call me back asap,data/data/com.android.providers.telephony/databases/mmssms.db → sms#78,ACTIVE,,300
+2024-03-26T23:17:57.003Z,unix_ms,artifact,call,Call MISSED from +12025550103 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#52,ACTIVE,,194
+2024-03-27T01:18:50.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Aarav Patel — (202) 555-0100,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#1,ACTIVE,,203
+2024-03-27T06:02:55.664Z,webkit_us,artifact,browser_visit,Visited Shopping Cart #15,data/data/com.android.chrome/app_chrome/Default/History → visits#148,ACTIVE,,133
+2024-03-27T10:10:35.823Z,unix_ms,artifact,sms,SMS SENT to +12025550112: Good night :),data/data/com.android.providers.telephony/databases/mmssms.db → sms#29,ACTIVE,,257
+2024-03-27T10:14:23.334Z,unix_ms,artifact,sms,SMS SENT to +12025550122: Are we still meeting at 12:00 today?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#111,ACTIVE,,331
+2024-03-27T10:37:44.921Z,webkit_us,artifact,browser_visit,Visited unknown URL,data/data/com.android.chrome/app_chrome/Default/History → visits#53,ACTIVE,,46
+2024-03-27T14:49:21.552Z,webkit_us,artifact,browser_visit,Visited Forum Thread #19,data/data/com.android.chrome/app_chrome/Default/History → visits#143,ACTIVE,,129
+2024-03-28T10:54:00.591Z,webkit_us,artifact,browser_visit,Visited Maps,data/data/com.android.chrome/app_chrome/Default/History → visits#104,ACTIVE,,93
+2024-03-29T10:18:57.190Z,webkit_us,artifact,browser_visit,Visited Video #18,data/data/com.android.chrome/app_chrome/Default/History → visits#54,ACTIVE,,47
+2024-03-29T15:11:49.134Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550121: Payment of Rs 503 received. Thank you.,data/data/com.android.providers.telephony/databases/mmssms.db → sms#97,ACTIVE,,317
+2024-03-29T15:36:23.156Z,webkit_us,artifact,browser_visit,Visited Video #28,data/data/com.android.chrome/app_chrome/Default/History → visits#37,ACTIVE,,33
+2024-03-29T22:26:37.079Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,360
+2024-03-29T23:24:18.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Diya Khan — (202) 555-0117,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#18,ACTIVE,,220
+2024-03-30T00:56:02.610Z,webkit_us,artifact,browser_visit,Visited Video #38,data/data/com.android.chrome/app_chrome/Default/History → visits#14,ACTIVE,,12
+2024-03-30T12:08:26.871Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550128: Bring the documents tomorrow,data/data/com.android.providers.telephony/databases/mmssms.db → sms#75,ACTIVE,,298
+2024-03-30T13:44:31.911Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,361
+2024-03-30T14:04:08.053Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550104: Ok,data/data/com.android.providers.telephony/databases/mmssms.db → sms#14,ACTIVE,,244
+2024-03-31T15:46:16.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,"Contact Anika Jain — (202) 555-0127 [flagged deleted by Android, still present in database]",data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#28,ACTIVE,,230
+2024-03-31T17:05:41.494Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550128: Payment of Rs 8870 received. Thank you.,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000005_mmssms.db → sms,PARTIAL,HIGH,383
+2024-03-31T19:13:42.000Z,webkit_us,artifact,browser_download,Downloaded file5.pdf (50000 bytes),data/data/com.android.chrome/app_chrome/Default/History → downloads#5,ACTIVE,,142
+2024-04-01T00:19:16.518Z,unix_ms,artifact,sms,SMS SENT to +12025550109: Reminder: appointment tomorrow at 2:15,data/data/com.android.providers.telephony/databases/mmssms.db → sms#55,ACTIVE,,282
+2024-04-01T01:38:26.706Z,webkit_us,artifact,browser_visit,Visited Shared Doc,data/data/com.android.chrome/app_chrome/Default/History → visits#107,ACTIVE,,96
+2024-04-01T06:24:44.568Z,unix_ms,artifact,sms,SMS RECEIVED from JD-DELIVR: Thanks a lot!,data/data/com.android.providers.telephony/databases/mmssms.db → sms#115,ACTIVE,,335
+2024-04-01T07:02:45.629Z,webkit_us,artifact,browser_visit,Visited Student Portal #36,data/data/com.android.chrome/app_chrome/Default/History → visits#101,ACTIVE,,90
+2024-04-01T10:57:22.871Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550117: Your OTP is 881857. Do not share it with anyone.,data/data/com.android.providers.telephony/databases/mmssms.db → sms#106,ACTIVE,,326
+2024-04-01T11:02:55.348Z,unix_ms,artifact,sms,SMS SENT to +12025550109: ,data/data/com.android.providers.telephony/databases/mmssms.db → sms#33,ACTIVE,,261
+2024-04-01T12:58:14.907Z,webkit_us,artifact,browser_visit,Visited Maps #34,data/data/com.android.chrome/app_chrome/Default/History → visits#2,ACTIVE,,2
+2024-04-01T21:57:57.141Z,webkit_us,artifact,browser_visit,Visited Forum Thread #19,data/data/com.android.chrome/app_chrome/Default/History → visits#97,ACTIVE,,86
+2024-04-02T00:58:13.000Z,webkit_us,artifact,browser_download,Downloaded file1.pdf (10000 bytes),data/data/com.android.chrome/app_chrome/Default/History → downloads#1,ACTIVE,,139
+2024-04-02T06:35:45.515Z,webkit_us,artifact,browser_visit,Visited Student Portal #36,data/data/com.android.chrome/app_chrome/Default/History → visits#55,ACTIVE,,48
+2024-04-02T16:17:33.183Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550126: Happy birthday! Have a great year ahead,data/data/com.android.providers.telephony/databases/mmssms.db → sms#80,ACTIVE,,301
+2024-04-02T19:40:18.633Z,webkit_us,artifact,browser_visit,Visited Weather #17,data/data/com.android.chrome/app_chrome/Default/History → visits#17,ACTIVE,,15
+2024-04-03T01:32:10.558Z,unix_ms,artifact,call,Call INCOMING from +12025550124 (390s),data/data/com.android.providers.contacts/databases/calllog.db → calls#16,ACTIVE,,158
+2024-04-03T16:16:09.108Z,unix_ms,artifact,sms,"SMS SENT to +12025550113: Running late, reach by 3:30",data/data/com.android.providers.telephony/databases/mmssms.db → sms#48,ACTIVE,,276
+2024-04-03T16:19:12.457Z,unix_ms,artifact,call,Call OUTGOING to +12025550100 (417s),data/data/com.android.providers.contacts/databases/calllog.db → calls#47,ACTIVE,,189
+2024-04-04T01:16:05.389Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550119: Thanks a lot!,data/data/com.android.providers.telephony/databases/mmssms.db → sms#9,ACTIVE,,239
+2024-04-04T04:24:23.651Z,webkit_us,artifact,browser_visit,Last visit to Wikipedia #31,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → urls,PARTIAL,MEDIUM,349
+2024-04-04T04:24:23.651Z,webkit_us,artifact,browser_visit,Visited unknown URL,data/data/com.android.chrome/app_chrome/Default/History → visits#89,ACTIVE,,79
+2024-04-04T06:39:06.984Z,webkit_us,artifact,browser_visit,Visited Student Portal #36,data/data/com.android.chrome/app_chrome/Default/History → visits#86,ACTIVE,,76
+2024-04-04T13:37:05.270Z,unix_ms,artifact,sms,SMS SENT to +12025550118: Lecture notes uploaded to the shared drive,data/data/com.android.providers.telephony/databases/mmssms.db → sms#91,ACTIVE,,311
+2024-04-04T15:40:51.567Z,unix_ms,artifact,call,Call REJECTED from +12025550106 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#9,ACTIVE,,151
+2024-04-04T22:40:02.032Z,webkit_us,artifact,browser_visit,Visited Shared Doc,data/data/com.android.chrome/app_chrome/Default/History → visits#46,ACTIVE,,41
+2024-04-05T09:00:44.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Zoya Sharma — (202) 555-0111,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#12,ACTIVE,,214
+2024-04-05T18:21:15.047Z,webkit_us,artifact,browser_visit,Visited Maps #34,data/data/com.android.chrome/app_chrome/Default/History → visits#9,ACTIVE,,8
+2024-04-05T19:25:55.969Z,unix_ms,artifact,call,Call OUTGOING to +12025550122 (708s),data/data/com.android.providers.contacts/databases/calllog.db → calls#19,ACTIVE,,161
+2024-04-06T02:49:24.274Z,unix_ms,artifact,sms,SMS SENT to +12025550113: Lecture notes uploaded to the shared drive,data/data/com.android.providers.telephony/databases/mmssms.db → sms#86,ACTIVE,,306
+2024-04-06T19:52:03.037Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550111: Please send the report by tonight,data/data/com.android.providers.telephony/databases/mmssms.db → sms#76,ACTIVE,,299
+2024-04-06T20:32:21.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Imran Reddy — (202) 555-0126,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#27,ACTIVE,,229
+2024-04-07T09:24:58.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Nisha Singh — (202) 555-0105,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#6,ACTIVE,,208
+2024-04-07T10:22:26.955Z,webkit_us,artifact,browser_visit,Visited Weather,data/data/com.android.chrome/app_chrome/Default/History → visits#62,ACTIVE,,54
+2024-04-07T19:20:27.466Z,webkit_us,artifact,browser_visit,Visited Shopping Cart,data/data/com.android.chrome/app_chrome/Default/History → visits#73,ACTIVE,,64
+2024-04-08T00:23:14.932Z,unix_ms,artifact,sms,SMS SENT to +12025550102: Ok,data/data/com.android.providers.telephony/databases/mmssms.db → sms#82,ACTIVE,,303
+2024-04-08T02:29:47.558Z,unix_ms,artifact,call,Call OUTGOING to +12025550126 (168s),data/data/com.android.providers.contacts/databases/calllog.db → calls#8,ACTIVE,,150
+2024-04-08T12:30:49.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Priya Mehta — (202) 555-0113,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#14,ACTIVE,,216
+2024-04-08T19:59:56.859Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550127: Bank alert: Rs 5045 debited from account XX5727,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000005_mmssms.db → sms,PARTIAL,HIGH,378
+2024-04-09T22:46:00.790Z,webkit_us,artifact,browser_visit,Visited Shopping Cart #35,data/data/com.android.chrome/app_chrome/Default/History → visits#133,ACTIVE,,120
+2024-04-10T02:07:42.988Z,unix_ms,artifact,call,Call OUTGOING to +12025550126 (567s),data/data/com.android.providers.contacts/databases/calllog.db → calls#15,ACTIVE,,157
+2024-04-10T03:57:52.522Z,webkit_us,artifact,browser_visit,Visited Forum Thread,data/data/com.android.chrome/app_chrome/Default/History → visits#129,ACTIVE,,116
+2024-04-10T14:41:03.125Z,webkit_us,artifact,browser_visit,Visited Maps #24,data/data/com.android.chrome/app_chrome/Default/History → visits#98,ACTIVE,,87
+2024-04-10T19:59:00.921Z,unix_ms,artifact,call,Call REJECTED from +12025550127 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#11,ACTIVE,,153
+2024-04-11T03:01:44.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Meera Shah — (202) 555-0101,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#2,ACTIVE,,204
+2024-04-11T07:35:37.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Anaya Jain — (202) 555-0107,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#8,ACTIVE,,210
+2024-04-11T13:06:29.485Z,webkit_us,artifact,browser_visit,Visited Video,data/data/com.android.chrome/app_chrome/Default/History → visits#146,ACTIVE,,131
+2024-04-11T17:45:45.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Riya Shah — (202) 555-0121,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#22,ACTIVE,,224
+2024-04-11T21:48:24.508Z,unix_ms,artifact,sms,"SMS SENT to +12025550117: Package out for delivery, arriving between 9:00 and 5:00",data/data/com.android.providers.telephony/databases/mmssms.db → sms#34,ACTIVE,,262
+2024-04-11T22:52:39.014Z,webkit_us,artifact,browser_visit,Visited Inbox #23,data/data/com.android.chrome/app_chrome/Default/History → visits#56,ACTIVE,,49
+2024-04-12T01:47:32.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Dev Kulkarni — (202) 555-0108,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#9,ACTIVE,,211
+2024-04-12T05:54:09.970Z,webkit_us,artifact,browser_visit,Visited Shared Doc #30,data/data/com.android.chrome/app_chrome/Default/History → visits#137,ACTIVE,,123
+2024-04-12T09:41:43.351Z,unix_ms,artifact,call,Call REJECTED from +12025550123 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#33,ACTIVE,,175
+2024-04-12T12:23:49.477Z,unix_ms,artifact,sms,SMS SENT to +12025550106: Let's catch up this weekend 🙂,data/data/com.android.providers.telephony/databases/mmssms.db → sms#81,ACTIVE,,302
+2024-04-12T12:34:49.285Z,unix_ms,artifact,call,Call INCOMING from +12025550127 (1462s),data/data/com.android.providers.contacts/databases/calllog.db → calls#12,ACTIVE,,154
+2024-04-13T03:58:49.160Z,unix_ms,artifact,sms,SMS SENT to +12025550118: Let's catch up this weekend 🙂,data/data/com.android.providers.telephony/databases/mmssms.db → sms#109,ACTIVE,,329
+2024-04-13T08:36:02.292Z,unix_ms,artifact,sms,SMS RECEIVED from JD-DELIVR: Let's catch up this weekend 🙂,data/data/com.android.providers.telephony/databases/mmssms.db → sms#52,ACTIVE,,279
+2024-04-13T14:29:43.224Z,webkit_us,artifact,browser_visit,Visited Inbox #33,data/data/com.android.chrome/app_chrome/Default/History → visits#21,ACTIVE,,19
+2024-04-13T23:28:56.735Z,webkit_us,artifact,browser_visit,Visited Maps,data/data/com.android.chrome/app_chrome/Default/History → visits#95,ACTIVE,,84
+2024-04-14T00:31:11.971Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550109: Your OTP is 752708. Do not share it with anyone.,data/data/com.android.providers.telephony/databases/mmssms.db → sms#64,ACTIVE,,289
+2024-04-14T09:21:32.805Z,webkit_us,artifact,browser_visit,Visited Shopping Cart #35,data/data/com.android.chrome/app_chrome/Default/History → visits#147,ACTIVE,,132
+2024-04-14T14:26:43.034Z,unix_ms,artifact,sms,SMS SENT to +12025550103: Reminder: appointment tomorrow at 1:15,data/data/com.android.providers.telephony/databases/mmssms.db → sms#96,ACTIVE,,316
+2024-04-14T22:27:11.599Z,unix_ms,artifact,sms,SMS SENT to +12025550110: Ok,data/data/com.android.providers.telephony/databases/mmssms.db → sms#27,ACTIVE,,256
+2024-04-15T11:21:01.430Z,webkit_us,artifact,browser_visit,Visited unknown URL,data/data/com.android.chrome/app_chrome/Default/History → visits#68,ACTIVE,,60
+2024-04-15T12:38:35.837Z,webkit_us,artifact,browser_visit,Visited Video #38,data/data/com.android.chrome/app_chrome/Default/History → visits#42,ACTIVE,,38
+2024-04-15T19:08:31.444Z,webkit_us,artifact,browser_visit,Visited Shopping Cart #15,data/data/com.android.chrome/app_chrome/Default/History → visits#64,ACTIVE,,56
+2024-04-15T22:55:25.582Z,webkit_us,artifact,browser_visit,Visited Maps #24,data/data/com.android.chrome/app_chrome/Default/History → visits#114,ACTIVE,,103
+2024-04-15T23:10:27.586Z,webkit_us,artifact,browser_visit,Visited Shopping Cart,data/data/com.android.chrome/app_chrome/Default/History → visits#120,ACTIVE,,109
+2024-04-16T01:22:55.516Z,unix_ms,artifact,sms,"SMS SENT to +12025550105: Package out for delivery, arriving between 9:00 and 6:00",data/data/com.android.providers.telephony/databases/mmssms.db → sms#98,ACTIVE,,318
+2024-04-16T04:49:36.072Z,webkit_us,artifact,browser_visit,Visited Shared Doc,data/data/com.android.chrome/app_chrome/Default/History → visits#60,ACTIVE,,52
+2024-04-16T06:21:54.762Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550107: Thanks a lot!,data/data/com.android.providers.telephony/databases/mmssms.db → sms#19,ACTIVE,,248
+2024-04-16T13:28:04.836Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550128: Ok,data/data/com.android.providers.telephony/databases/mmssms.db → sms#66,ACTIVE,,291
+2024-04-16T15:47:42.001Z,webkit_us,artifact,browser_visit,Visited Shared Doc #20,data/data/com.android.chrome/app_chrome/Default/History → visits#90,ACTIVE,,80
+2024-04-16T22:49:39.057Z,webkit_us,artifact,browser_visit,Visited Shopping Cart #15,data/data/com.android.chrome/app_chrome/Default/History → visits#48,ACTIVE,,42
+2024-04-17T01:55:11.027Z,webkit_us,artifact,browser_visit,Visited Forum Thread,data/data/com.android.chrome/app_chrome/Default/History → visits#119,ACTIVE,,108
+2024-04-17T03:19:33.121Z,webkit_us,artifact,browser_visit,Visited Shopping Cart,data/data/com.android.chrome/app_chrome/Default/History → visits#16,ACTIVE,,14
+2024-04-17T15:41:24.493Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,359
+2024-04-18T22:30:56.379Z,webkit_us,artifact,browser_visit,Visited unknown URL,data/data/com.android.chrome/app_chrome/Default/History → visits#49,ACTIVE,,43
+2024-04-19T10:25:43.646Z,unix_ms,artifact,call,Call OUTGOING to +12025550113 (293s),data/data/com.android.providers.contacts/databases/calllog.db → calls#53,ACTIVE,,195
+2024-04-19T15:43:55.628Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550106: Can you call me when you are free?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#103,ACTIVE,,323
+2024-04-19T19:09:10.352Z,unix_ms,artifact,sms,SMS SENT to +12025550111: Please send the report by tonight,data/data/com.android.providers.telephony/databases/mmssms.db → sms#65,ACTIVE,,290
+2024-04-19T19:16:22.330Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,364
+2024-04-19T21:07:11.642Z,webkit_us,artifact,browser_visit,Visited Inbox #33,data/data/com.android.chrome/app_chrome/Default/History → visits#113,ACTIVE,,102
+2024-04-20T00:17:16.785Z,unix_ms,artifact,sms,"SMS RECEIVED from +12025550125: Running late, reach by 2:30",data/data/com.android.providers.telephony/databases/mmssms.db → sms#73,ACTIVE,,296
+2024-04-20T04:00:25.428Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,366
+2024-04-20T04:25:13.049Z,unix_ms,artifact,call,Call INCOMING from +12025550125 (24s),data/data/com.android.providers.contacts/databases/calllog.db → calls#45,ACTIVE,,187
+2024-04-20T05:56:45.293Z,unix_ms,artifact,sms,SMS SENT to +12025550115: Your OTP is 394329. Do not share it with anyone.,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000005_mmssms.db → sms,PARTIAL,HIGH,379
+2024-04-20T15:41:48.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Tara Gupta — (202) 555-0109,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#10,ACTIVE,,212
+2024-04-20T21:35:53.187Z,unix_ms,artifact,call,Call MISSED from +12025550111 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#37,ACTIVE,,179
+2024-04-20T23:47:09.429Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550124: Where did you park?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#105,ACTIVE,,325
+2024-04-21T01:58:53.830Z,webkit_us,artifact,browser_visit,Visited Wikipedia,data/data/com.android.chrome/app_chrome/Default/History → visits#149,ACTIVE,,134
+2024-04-21T16:50:09.539Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550117: Let's catch up this weekend 🙂,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000005_mmssms.db → sms#6,RECOVERED,HIGH,374
+2024-04-22T10:04:01.592Z,unix_ms,artifact,call,Call OUTGOING to +12025550117 (647s),data/data/com.android.providers.contacts/databases/calllog.db → calls#51,ACTIVE,,193
+2024-04-22T14:59:18.546Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550105: Happy birthday! Have a great year ahead,data/data/com.android.providers.telephony/databases/mmssms.db → sms#110,ACTIVE,,330
+2024-04-22T15:38:55.710Z,webkit_us,artifact,browser_visit,Visited Inbox #33,data/data/com.android.chrome/app_chrome/Default/History → visits#70,ACTIVE,,61
+2024-04-22T18:12:40.614Z,unix_ms,artifact,sms,SMS SENT to +12025550125: Thanks a lot!,data/data/com.android.providers.telephony/databases/mmssms.db → sms#11,ACTIVE,,241
+2024-04-22T18:28:38.783Z,webkit_us,artifact,browser_visit,Visited Video #18,data/data/com.android.chrome/app_chrome/Default/History → visits#4,ACTIVE,,4
+2024-04-22T18:39:40.476Z,unix_ms,artifact,sms,SMS SENT to +12025550123: Lecture notes uploaded to the shared drive,data/data/com.android.providers.telephony/databases/mmssms.db → sms#47,ACTIVE,,275
+2024-04-22T19:17:43.853Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550108: Your OTP is 431396. Do not share it with anyone.,data/data/com.android.providers.telephony/databases/mmssms.db → sms#8,ACTIVE,,238
+2024-04-22T22:25:38.065Z,webkit_us,artifact,browser_visit,Visited Maps #34,data/data/com.android.chrome/app_chrome/Default/History → visits#102,ACTIVE,,91
+2024-04-23T11:15:56.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Leela Joshi — (202) 555-0119,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#20,ACTIVE,,222
+2024-04-24T04:46:26.114Z,webkit_us,artifact,browser_visit,Visited Student Portal #16,data/data/com.android.chrome/app_chrome/Default/History → visits#61,ACTIVE,,53
+2024-04-24T07:20:14.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Sara Das — (202) 555-0115,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#16,ACTIVE,,218
+2024-04-24T11:00:32.403Z,webkit_us,artifact,browser_visit,Visited World News,data/data/com.android.chrome/app_chrome/Default/History → visits#26,ACTIVE,,24
+2024-04-24T19:22:59.376Z,webkit_us,artifact,browser_visit,Visited Forum Thread,data/data/com.android.chrome/app_chrome/Default/History → visits#11,ACTIVE,,10
+2024-04-25T03:55:45.290Z,unix_ms,artifact,sms,"SMS RECEIVED from +12025550105: Package out for delivery, arriving between 3:00 and 4:00",data/data/com.android.providers.telephony/databases/mmssms.db → sms#102,ACTIVE,,322
+2024-04-25T05:06:49.795Z,webkit_us,artifact,browser_visit,Visited unknown URL,data/data/com.android.chrome/app_chrome/Default/History → visits#87,ACTIVE,,77
+2024-04-25T11:26:08.452Z,webkit_us,artifact,browser_visit,Visited Maps #34,data/data/com.android.chrome/app_chrome/Default/History → visits#132,ACTIVE,,119
+2024-04-25T21:45:13.711Z,unix_ms,artifact,sms,"SMS RECEIVED from +12025550102: Running late, reach by 10:30",data/data/com.android.providers.telephony/databases/mmssms.db → sms#40,ACTIVE,,268
+2024-04-27T01:53:42.194Z,unix_ms,artifact,sms,SMS SENT to +12025550118: Can you call me when you are free?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#35,ACTIVE,,263
+2024-04-27T04:06:50.419Z,unix_ms,artifact,sms,SMS SENT to +12025550100: Meeting moved to room 420,data/data/com.android.providers.telephony/databases/mmssms.db → sms#59,ACTIVE,,285
+2024-04-27T06:13:45.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Mira Singh — (202) 555-0125,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#26,ACTIVE,,228
+2024-04-27T06:24:38.753Z,unix_ms,artifact,sms,SMS SENT to +12025550100: Where did you park?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#94,ACTIVE,,314
+2024-04-27T08:16:32.033Z,unix_ms,artifact,sms,SMS SENT to +12025550104: Meeting moved to room 379,data/data/com.android.providers.telephony/databases/mmssms.db → sms#84,ACTIVE,,305
+2024-04-27T16:33:28.642Z,webkit_us,artifact,browser_visit,Visited Student Portal #36,data/data/com.android.chrome/app_chrome/Default/History → visits#35,ACTIVE,,31
+2024-04-27T21:15:43.667Z,unix_ms,artifact,sms,"SMS RECEIVED from +12025550118: Running late, reach by 2:30",data/data/com.android.providers.telephony/databases/mmssms.db → sms#112,ACTIVE,,332
+2024-04-28T08:20:07.299Z,webkit_us,artifact,browser_visit,Visited Weather #37,data/data/com.android.chrome/app_chrome/Default/History → visits#127,ACTIVE,,114
+2024-04-28T13:24:39.000Z,unix_ms (contact_last_updated_timestamp),artifact,contact,Contact Kiara Nair — (202) 555-0123,data/data/com.android.providers.contacts/databases/contacts2.db → raw_contacts#24,ACTIVE,,226
+2024-04-28T18:23:06.662Z,webkit_us,artifact,browser_visit,Visited Shared Doc,data/data/com.android.chrome/app_chrome/Default/History → visits#96,ACTIVE,,85
+2024-04-29T14:30:37.222Z,unix_ms,artifact,sms,SMS SENT to +12025550121: Where did you park?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#92,ACTIVE,,312
+2024-04-29T17:43:09.475Z,unix_ms,artifact,sms,SMS RECEIVED from AX-BANKOS: Let's catch up this weekend 🙂,data/data/com.android.providers.telephony/databases/mmssms.db → sms#114,ACTIVE,,334
+2024-04-29T20:43:08.376Z,unix_ms,artifact,call,Call MISSED from +12025550117 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#55,ACTIVE,,197
+2024-04-30T01:29:42.527Z,webkit_us,artifact,browser_visit,Visited Video #18,data/data/com.android.chrome/app_chrome/Default/History → visits#110,ACTIVE,,99
+2024-04-30T04:15:26.145Z,unix_ms,artifact,sms,SMS RECEIVED from JD-DELIVR: Call me back asap,data/data/com.android.providers.telephony/databases/mmssms.db → sms#57,ACTIVE,,283
+2024-04-30T20:21:06.977Z,webkit_us,artifact,browser_visit,Visited Shared Doc,data/data/com.android.chrome/app_chrome/Default/History → visits#145,ACTIVE,,130
+2024-05-01T04:54:16.267Z,unix_ms,artifact,sms,SMS RECEIVED from 56161: Happy birthday! Have a great year ahead,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000005_mmssms.db → sms#68,RECOVERED,MEDIUM,376
+2024-05-01T08:45:34.154Z,unix_ms,artifact,sms,SMS SENT to +12025550121: Are we still meeting at 3:00 today?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#61,ACTIVE,,287
+2024-05-01T13:56:03.568Z,unix_ms,artifact,call,Call REJECTED from +12025550108 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#3,ACTIVE,,145
+2024-05-01T18:54:42.052Z,webkit_us,artifact,browser_visit,Visited Wikipedia,data/data/com.android.chrome/app_chrome/Default/History → visits#43,ACTIVE,,39
+2024-05-01T21:53:54.166Z,unix_ms,artifact,sms,SMS RECEIVED from VM-ALERTS: Dinner at my place on Saturday?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#89,ACTIVE,,309
+2024-05-01T22:00:15.025Z,webkit_us,artifact,browser_visit,Visited Weather #27,data/data/com.android.chrome/app_chrome/Default/History → visits#123,ACTIVE,,111
+2024-05-02T03:06:39.328Z,unix_ms,artifact,call,Call INCOMING from +12025550104 (1472s),data/data/com.android.providers.contacts/databases/calllog.db → calls#42,ACTIVE,,184
+2024-05-02T03:16:04.389Z,unix_ms,artifact,sms,SMS SENT to +12025550124: Good night :),data/data/com.android.providers.telephony/databases/mmssms.db → sms#12,ACTIVE,,242
+2024-05-02T03:21:28.748Z,unix_ms,artifact,sms,SMS SENT to +12025550121: Reminder: appointment tomorrow at 10:15,data/data/com.android.providers.telephony/databases/mmssms.db → sms#46,ACTIVE,,274
+2024-05-02T05:11:50.826Z,webkit_us,artifact,browser_visit,Visited Video #28,data/data/com.android.chrome/app_chrome/Default/History → visits#23,ACTIVE,,21
+2024-05-02T12:49:30.712Z,unix_ms,artifact,call,Call MISSED from +12025550106 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#27,ACTIVE,,169
+2024-05-02T13:52:54.573Z,unix_ms,artifact,sms,SMS SENT to +12025550129: Bank alert: Rs 2549 debited from account XX1708,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000005_mmssms.db → sms#15,RECOVERED,HIGH,373
+2024-05-02T20:39:35.041Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550100: Reminder: appointment tomorrow at 12:15,data/data/com.android.providers.telephony/databases/mmssms.db → sms#26,ACTIVE,,255
+2024-05-02T20:49:40.185Z,webkit_us,artifact,browser_visit,Visited Shared Doc #20,data/data/com.android.chrome/app_chrome/Default/History → visits#112,ACTIVE,,101
+2024-05-03T03:33:49.902Z,unix_ms,artifact,call,Call MISSED from +12025550115 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#46,ACTIVE,,188
+2024-05-03T09:38:48.657Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550111: Happy birthday! Have a great year ahead,data/data/com.android.providers.telephony/databases/mmssms.db → sms#108,ACTIVE,,328
+2024-05-03T13:31:01.918Z,webkit_us,artifact,browser_visit,Visited Video #28,data/data/com.android.chrome/app_chrome/Default/History → visits#27,ACTIVE,,25
+2024-05-03T16:32:19.856Z,webkit_us,artifact,browser_visit,Visited Video #38,data/data/com.android.chrome/app_chrome/Default/History → visits#15,ACTIVE,,13
+2024-05-03T17:25:13.923Z,unix_ms,artifact,sms,SMS SENT to +12025550106: Please send the report by tonight,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000005_mmssms.db → sms#4,RECOVERED,HIGH,375
+2024-05-03T21:42:40.373Z,unix_ms,artifact,call,Call REJECTED from +12025550119 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#34,ACTIVE,,176
+2024-05-04T00:36:03.717Z,webkit_us,artifact,browser_visit,Visited Student Portal #26,data/data/com.android.chrome/app_chrome/Default/History → visits#103,ACTIVE,,92
+2024-05-04T01:25:41.674Z,webkit_us,artifact,browser_visit,Visited Student Portal #16,data/data/com.android.chrome/app_chrome/Default/History → visits#81,ACTIVE,,71
+2024-05-04T03:16:05.000Z,webkit_us,artifact,browser_download,Downloaded file3.pdf (30000 bytes),/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → downloads,PARTIAL,MEDIUM,347
+2024-05-04T06:19:43.369Z,webkit_us,artifact,browser_visit,Visited Inbox,data/data/com.android.chrome/app_chrome/Default/History → visits#50,ACTIVE,,44
+2024-05-04T06:44:57.795Z,unix_ms,artifact,sms,SMS SENT to +12025550111: Dinner at my place on Saturday?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#60,ACTIVE,,286
+2024-05-05T10:42:57.505Z,unix_ms,artifact,call,Call REJECTED from +12025550129 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#14,ACTIVE,,156
+2024-05-05T13:48:23.459Z,unix_ms,artifact,sms,SMS SENT to +12025550125: Good night :),/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000005_mmssms.db → sms,PARTIAL,HIGH,381
+2024-05-05T16:44:34.083Z,webkit_us,artifact,browser_visit,Visited World News #12,data/data/com.android.chrome/app_chrome/Default/History → visits#84,ACTIVE,,74
+2024-05-05T21:22:59.566Z,webkit_us,artifact,browser_visit,Visited Shared Doc #30,data/data/com.android.chrome/app_chrome/Default/History → visits#100,ACTIVE,,89
+2024-05-06T01:21:14.963Z,webkit_us,artifact,browser_visit,Last visit to World News #22,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → urls,PARTIAL,MEDIUM,350
+2024-05-06T01:21:14.963Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,357
+2024-05-06T02:09:52.357Z,webkit_us,artifact,browser_visit,Visited Shopping Cart #35,data/data/com.android.chrome/app_chrome/Default/History → visits#74,ACTIVE,,65
+2024-05-06T03:39:12.555Z,webkit_us,artifact,browser_visit,Visited Weather,data/data/com.android.chrome/app_chrome/Default/History → visits#138,ACTIVE,,124
+2024-05-06T06:47:47.707Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550109: Where did you park?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#3,ACTIVE,,235
+2024-05-06T09:59:29.027Z,unix_ms,artifact,sms,SMS SENT to +12025550119: Bank alert: Rs 7233 debited from account XX9541,data/data/com.android.providers.telephony/databases/mmssms.db → sms#45,ACTIVE,,273
+2024-05-06T12:06:09.026Z,unix_ms,artifact,sms,SMS RECEIVED from 56161: Reminder: appointment tomorrow at 11:15,data/data/com.android.providers.telephony/databases/mmssms.db → sms#119,ACTIVE,,339
+2024-05-06T15:38:33.054Z,unix_ms,artifact,call,Call REJECTED from +12025550103 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#35,ACTIVE,,177
+2024-05-06T15:51:25.709Z,webkit_us,artifact,browser_visit,Visited Wikipedia #11,data/data/com.android.chrome/app_chrome/Default/History → visits#59,ACTIVE,,51
+2024-05-06T16:34:03.914Z,webkit_us,artifact,browser_visit,Visited Inbox #13,data/data/com.android.chrome/app_chrome/Default/History → visits#79,ACTIVE,,69
+2024-05-07T05:22:23.732Z,webkit_us,artifact,browser_visit,Visited Student Portal #26,data/data/com.android.chrome/app_chrome/Default/History → visits#136,ACTIVE,,122
+2024-05-07T08:08:00.897Z,webkit_us,artifact,browser_visit,Visited Maps,data/data/com.android.chrome/app_chrome/Default/History → visits#141,ACTIVE,,127
+2024-05-07T18:46:28.509Z,webkit_us,artifact,browser_visit,Visited Inbox #23,data/data/com.android.chrome/app_chrome/Default/History → visits#111,ACTIVE,,100
+2024-05-08T01:24:36.747Z,webkit_us,artifact,browser_visit,Visited World News #32,data/data/com.android.chrome/app_chrome/Default/History → visits#41,ACTIVE,,37
+2024-05-08T04:32:08.994Z,unix_ms,artifact,sms,SMS RECEIVED from VM-ALERTS: Your OTP is 786827. Do not share it with anyone.,data/data/com.android.providers.telephony/databases/mmssms.db → sms#38,ACTIVE,,266
+2024-05-08T05:43:59.167Z,unix_ms,artifact,call,Call REJECTED from +12025550128 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#20,ACTIVE,,162
+2024-05-08T09:01:47.000Z,webkit_us,artifact,browser_download,Downloaded file4.pdf (40000 bytes),data/data/com.android.chrome/app_chrome/Default/History → downloads#4,ACTIVE,,141
+2024-05-08T10:25:50.543Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550112: Dinner at my place on Saturday?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#32,ACTIVE,,260
+2024-05-09T09:35:32.816Z,unix_ms,artifact,call,Call OUTGOING to +12025550103 (720s),data/data/com.android.providers.contacts/databases/calllog.db → calls#36,ACTIVE,,178
+2024-05-09T11:37:00.536Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550112: Please send the report by tonight,data/data/com.android.providers.telephony/databases/mmssms.db → sms#37,ACTIVE,,265
+2024-05-09T14:46:04.966Z,webkit_us,artifact,browser_visit,Visited World News,data/data/com.android.chrome/app_chrome/Default/History → visits#116,ACTIVE,,105
+2024-05-09T20:16:56.606Z,unix_ms,artifact,sms,SMS SENT to +12025550123: Dinner at my place on Saturday?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#36,ACTIVE,,264
+2024-05-10T07:25:41.671Z,unix_ms,artifact,call,Call INCOMING from +12025550107 (189s),data/data/com.android.providers.contacts/databases/calllog.db → calls#26,ACTIVE,,168
+2024-05-10T14:57:55.324Z,webkit_us,artifact,browser_visit,Visited Maps #14,data/data/com.android.chrome/app_chrome/Default/History → visits#20,ACTIVE,,18
+2024-05-10T15:24:17.783Z,unix_ms,artifact,call,Call OUTGOING to +12025550110 (1240s),data/data/com.android.providers.contacts/databases/calllog.db → calls#54,ACTIVE,,196
+2024-05-10T16:42:07.853Z,webkit_us,artifact,browser_visit,Visited Wikipedia #21,data/data/com.android.chrome/app_chrome/Default/History → visits#105,ACTIVE,,94
+2024-05-10T20:16:05.900Z,unix_ms,artifact,sms,SMS SENT to +12025550117: Thanks a lot!,data/data/com.android.providers.telephony/databases/mmssms.db → sms#70,ACTIVE,,293
+2024-05-11T02:47:39.216Z,webkit_us,artifact,browser_visit,Visited Shopping Cart,data/data/com.android.chrome/app_chrome/Default/History → visits#66,ACTIVE,,58
+2024-05-11T06:41:05.527Z,unix_ms,artifact,sms,"SMS RECEIVED from 72000: Running late, reach by 4:30",data/data/com.android.providers.telephony/databases/mmssms.db → sms#31,ACTIVE,,259
+2024-05-11T08:22:39.483Z,unix_ms,artifact,call,Call REJECTED from +12025550108 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#4,ACTIVE,,146
+2024-05-11T10:40:30.220Z,unix_ms,artifact,call,Call OUTGOING to +12025550120 (181s),data/data/com.android.providers.contacts/databases/calllog.db → calls#13,ACTIVE,,155
+2024-05-11T15:58:33.571Z,unix_ms,artifact,sms,SMS SENT to +12025550122: Meeting moved to room 485,data/data/com.android.providers.telephony/databases/mmssms.db → sms#7,ACTIVE,,237
+2024-05-12T09:59:04.372Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550127: Reminder: appointment tomorrow at 2:15,data/data/com.android.providers.telephony/databases/mmssms.db → sms#72,ACTIVE,,295
+2024-05-12T14:57:35.213Z,unix_ms,artifact,sms,SMS SENT to +12025550113: Bank alert: Rs 5275 debited from account XX9229,data/data/com.android.providers.telephony/databases/mmssms.db → sms#100,ACTIVE,,320
+2024-05-12T18:44:35.000Z,webkit_us,artifact,browser_visit,Last visit to Forum Thread #39,data/data/com.android.chrome/app_chrome/Default/History → urls#39,ACTIVE,,137
+2024-05-13T05:47:14.210Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,353
+2024-05-13T11:55:33.380Z,unix_ms,artifact,sms,SMS SENT to +12025550119: Can you call me when you are free?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#118,ACTIVE,,338
+2024-05-13T14:00:49.078Z,unix_ms,artifact,sms,SMS SENT to +12025550123: Lecture notes uploaded to the shared drive,data/data/com.android.providers.telephony/databases/mmssms.db → sms#113,ACTIVE,,333
+2024-05-14T06:17:33.522Z,unix_ms,artifact,call,Call INCOMING from +12025550105 (644s),data/data/com.android.providers.contacts/databases/calllog.db → calls#49,ACTIVE,,191
+2024-05-14T08:28:51.845Z,unix_ms,artifact,call,Call MISSED from +12025550106 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#57,ACTIVE,,199
+2024-05-14T10:57:07.043Z,webkit_us,artifact,browser_visit,Visited Weather #27,data/data/com.android.chrome/app_chrome/Default/History → visits#71,ACTIVE,,62
+2024-05-14T11:58:20.648Z,unix_ms,artifact,sms,SMS SENT to +12025550117: Reminder: appointment tomorrow at 2:15,data/data/com.android.providers.telephony/databases/mmssms.db → sms#42,ACTIVE,,270
+2024-05-14T13:07:05.705Z,unix_ms,artifact,sms,SMS SENT to +12025550109: Ok,data/data/com.android.providers.telephony/databases/mmssms.db → sms#116,ACTIVE,,336
+2024-05-14T16:20:58.981Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,365
+2024-05-14T21:24:47.071Z,unix_ms,artifact,sms,SMS SENT to +12025550106: Your OTP is 431428. Do not share it with anyone.,data/data/com.android.providers.telephony/databases/mmssms.db → sms#87,ACTIVE,,307
+2024-05-15T04:13:54.393Z,webkit_us,artifact,browser_visit,Visited Shared Doc #20,data/data/com.android.chrome/app_chrome/Default/History → visits#142,ACTIVE,,128
+2024-05-15T05:46:23.057Z,webkit_us,artifact,browser_visit,Visited Student Portal #16,data/data/com.android.chrome/app_chrome/Default/History → visits#80,ACTIVE,,70
+2024-05-16T11:55:21.827Z,unix_ms,artifact,sms,SMS RECEIVED from 56161: Dinner at my place on Saturday?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#23,ACTIVE,,252
+2024-05-16T16:22:02.936Z,unix_ms,artifact,call,Call INCOMING from +12025550114 (497s),data/data/com.android.providers.contacts/databases/calllog.db → calls#24,ACTIVE,,166
+2024-05-17T02:41:30.720Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550121: Bank alert: Rs 409 debited from account XX2038,data/data/com.android.providers.telephony/databases/mmssms.db → sms#99,ACTIVE,,319
+2024-05-18T02:14:19.446Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550110: Call me back asap,data/data/com.android.providers.telephony/databases/mmssms.db → sms#22,ACTIVE,,251
+2024-05-18T03:25:02.934Z,unix_ms,artifact,sms,"SMS RECEIVED from +12025550103: Running late, reach by 10:30",data/data/com.android.providers.telephony/databases/mmssms.db → sms#107,ACTIVE,,327
+2024-05-18T04:56:37.295Z,unix_ms,artifact,call,Call REJECTED from +12025550110 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#50,ACTIVE,,192
+2024-05-18T10:21:22.233Z,webkit_us,artifact,browser_visit,Visited Student Portal #26,data/data/com.android.chrome/app_chrome/Default/History → visits#99,ACTIVE,,88
+2024-05-18T21:29:59.779Z,unix_ms,artifact,sms,SMS SENT to +12025550107: Call me back asap,data/data/com.android.providers.telephony/databases/mmssms.db → sms#41,ACTIVE,,269
+2024-05-19T14:13:28.828Z,webkit_us,artifact,browser_visit,Visited Forum Thread #19,data/data/com.android.chrome/app_chrome/Default/History → visits#63,ACTIVE,,55
+2024-05-20T19:53:30.137Z,unix_ms,artifact,call,Call MISSED from +12025550101 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#43,ACTIVE,,185
+2024-05-21T02:00:42.152Z,webkit_us,artifact,browser_visit,Visited Forum Thread,data/data/com.android.chrome/app_chrome/Default/History → visits#135,ACTIVE,,121
+2024-05-21T22:19:08.193Z,webkit_us,artifact,browser_visit,Visited Weather #17,data/data/com.android.chrome/app_chrome/Default/History → visits#24,ACTIVE,,22
+2024-05-22T00:16:49.954Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550124: Reminder: appointment tomorrow at 12:15,data/data/com.android.providers.telephony/databases/mmssms.db → sms#13,ACTIVE,,243
+2024-05-22T08:37:54.607Z,webkit_us,artifact,browser_visit,Visited Shopping Cart #25,data/data/com.android.chrome/app_chrome/Default/History → visits#33,ACTIVE,,29
+2024-05-22T09:59:28.871Z,unix_ms,artifact,sms,"SMS RECEIVED from VM-ALERTS: Package out for delivery, arriving between 9:00 and 9:00",data/data/com.android.providers.telephony/databases/mmssms.db → sms#21,ACTIVE,,250
+2024-05-22T15:33:23.066Z,webkit_us,artifact,browser_visit,Visited Student Portal #36,data/data/com.android.chrome/app_chrome/Default/History → visits#45,ACTIVE,,40
+2024-05-22T20:34:41.000Z,webkit_us,artifact,browser_visit,Last visit to Shared Doc #40,data/data/com.android.chrome/app_chrome/Default/History → urls#40,ACTIVE,,138
+2024-05-22T23:20:12.990Z,webkit_us,artifact,browser_visit,Visited Weather #17,data/data/com.android.chrome/app_chrome/Default/History → visits#82,ACTIVE,,72
+2024-05-23T01:27:13.734Z,webkit_us,artifact,browser_visit,Visited Video #18,data/data/com.android.chrome/app_chrome/Default/History → visits#30,ACTIVE,,26
+2024-05-23T07:15:55.865Z,webkit_us,artifact,browser_visit,Visited World News #12,data/data/com.android.chrome/app_chrome/Default/History → visits#106,ACTIVE,,95
+2024-05-23T07:46:07.524Z,webkit_us,artifact,browser_visit,Visited World News #12,data/data/com.android.chrome/app_chrome/Default/History → visits#3,ACTIVE,,3
+2024-05-23T07:48:08.723Z,webkit_us,artifact,browser_visit,Visited World News #32,data/data/com.android.chrome/app_chrome/Default/History → visits#58,ACTIVE,,50
+2024-05-23T14:33:08.868Z,webkit_us,artifact,browser_visit,Visited Student Portal #26,data/data/com.android.chrome/app_chrome/Default/History → visits#109,ACTIVE,,98
+2024-05-23T22:23:45.539Z,unix_ms,artifact,sms,"SMS SENT to +12025550126: Package out for delivery, arriving between 11:00 and 5:00",/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000005_mmssms.db → sms,PARTIAL,HIGH,382
+2024-05-24T02:34:55.482Z,unix_ms,artifact,call,Call REJECTED from +12025550115 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#31,ACTIVE,,173
+2024-05-24T12:58:39.212Z,webkit_us,artifact,browser_visit,Visited Wikipedia #11,data/data/com.android.chrome/app_chrome/Default/History → visits#131,ACTIVE,,118
+2024-05-24T18:57:59.837Z,webkit_us,artifact,browser_visit,Last visit to Student Portal,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → urls,PARTIAL,MEDIUM,351
+2024-05-24T18:57:59.837Z,webkit_us,artifact,browser_visit,Visited unknown URL,data/data/com.android.chrome/app_chrome/Default/History → visits#32,ACTIVE,,28
+2024-05-24T23:03:22.870Z,unix_ms,artifact,sms,SMS RECEIVED from +12025550106: Dinner at my place on Saturday?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#50,ACTIVE,,278
+2024-05-25T06:59:03.921Z,unix_ms,artifact,sms,SMS RECEIVED from AX-BANKOS: Bring the documents tomorrow,data/data/com.android.providers.telephony/databases/mmssms.db → sms#30,ACTIVE,,258
+2024-05-25T09:22:21.036Z,unix_ms,artifact,sms,SMS SENT to +12025550103: Happy birthday! Have a great year ahead,data/data/com.android.providers.telephony/databases/mmssms.db → sms#71,ACTIVE,,294
+2024-05-26T03:10:01.056Z,webkit_us,artifact,browser_visit,Visited unknown URL,/Users/harshamithran/Documents/cf/cases/acceptance/evidence/s1/0000000_History → visits,PARTIAL,MEDIUM,358
+2024-05-26T13:57:41.413Z,unix_ms,artifact,sms,SMS SENT to +12025550124: Happy birthday! Have a great year ahead,data/data/com.android.providers.telephony/databases/mmssms.db → sms#2,ACTIVE,,234
+2024-05-27T02:02:55.947Z,unix_ms,artifact,call,Call OUTGOING to +12025550115 (922s),data/data/com.android.providers.contacts/databases/calllog.db → calls#39,ACTIVE,,181
+2024-05-27T08:34:48.783Z,webkit_us,artifact,browser_visit,Visited Weather,data/data/com.android.chrome/app_chrome/Default/History → visits#122,ACTIVE,,110
+2024-05-28T09:47:42.085Z,webkit_us,artifact,browser_visit,Visited Video #38,data/data/com.android.chrome/app_chrome/Default/History → visits#6,ACTIVE,,6
+2024-05-29T00:46:09.715Z,unix_ms,artifact,sms,SMS SENT to +12025550101: Where did you park?,data/data/com.android.providers.telephony/databases/mmssms.db → sms#25,ACTIVE,,254
+2024-05-29T02:57:09.386Z,webkit_us,artifact,browser_visit,Visited Shopping Cart #35,data/data/com.android.chrome/app_chrome/Default/History → visits#150,ACTIVE,,135
+2024-05-29T13:02:39.953Z,unix_ms,artifact,call,Call MISSED from +12025550121 (0s),data/data/com.android.providers.contacts/databases/calllog.db → calls#10,ACTIVE,,152
+2024-05-29T19:46:42.315Z,unix_ms,artifact,sms,SMS SENT to +12025550117: Bank alert: Rs 5502 debited from account XX6895,data/data/com.android.providers.telephony/databases/mmssms.db → sms#1,ACTIVE,,233
+2024-06-04T08:00:00.000Z,fs_stat (ctime = inode change time on POSIX),file_mtime,,"File modified: /data/data/com.android.chrome/app_chrome/Default/History (sqlite_db, 32768 bytes)",data/data/com.android.chrome/app_chrome/Default/History,,,
+2024-06-04T08:00:37.000Z,fs_stat (ctime = inode change time on POSIX),file_mtime,,"File modified: /data/data/com.android.providers.contacts/databases/calllog.db (sqlite_db, 28672 bytes)",data/data/com.android.providers.contacts/databases/calllog.db,,,
+2024-06-04T08:01:14.000Z,fs_stat (ctime = inode change time on POSIX),file_mtime,,"File modified: /data/data/com.android.providers.contacts/databases/calllog.db-shm (sqlite_shm, 32768 bytes)",data/data/com.android.providers.contacts/databases/calllog.db-shm,,,
+2024-06-04T08:01:51.000Z,fs_stat (ctime = inode change time on POSIX),file_mtime,,"File modified: /data/data/com.android.providers.contacts/databases/calllog.db-wal (sqlite_wal, 20632 bytes)",data/data/com.android.providers.contacts/databases/calllog.db-wal,,,
+2024-06-04T08:02:28.000Z,fs_stat (ctime = inode change time on POSIX),file_mtime,,"File modified: /data/data/com.android.providers.contacts/databases/contacts2.db (sqlite_db, 36864 bytes)",data/data/com.android.providers.contacts/databases/contacts2.db,,,
+2024-06-04T08:03:05.000Z,fs_stat (ctime = inode change time on POSIX),file_mtime,,"File modified: /data/data/com.android.providers.telephony/databases/mmssms.db (sqlite_db, 36864 bytes)",data/data/com.android.providers.telephony/databases/mmssms.db,,,
+2024-06-04T08:03:42.000Z,fs_stat (ctime = inode change time on POSIX),file_mtime,,"File modified: /data/data/com.example.corrupt/databases/broken.db (sqlite_db, 29437 bytes)",data/data/com.example.corrupt/databases/broken.db,,,
+2024-06-04T08:04:19.000Z,fs_stat (ctime = inode change time on POSIX),file_mtime,,"File modified: /data/data/com.example.notes/databases/notes.db (sqlite_db, 16384 bytes)",data/data/com.example.notes/databases/notes.db,,,
+2024-06-04T08:04:56.000Z,fs_stat (ctime = inode change time on POSIX),file_mtime,,"File modified: /data/data/com.example.notes/databases/pending.db (sqlite_db, 573440 bytes)",data/data/com.example.notes/databases/pending.db,,,
+2024-06-04T08:05:33.000Z,fs_stat (ctime = inode change time on POSIX),file_mtime,,"File modified: /data/data/com.example.notes/databases/pending.db-journal (sqlite_journal, 570968 bytes)",data/data/com.example.notes/databases/pending.db-journal,,,
+2024-06-04T08:06:10.000Z,fs_stat (ctime = inode change time on POSIX),file_mtime,,"File modified: /data/data/com.example.notes/shared_prefs/com.example.notes_preferences.xml (xml, 266 bytes)",data/data/com.example.notes/shared_prefs/com.example.notes_preferences.xml,,,
