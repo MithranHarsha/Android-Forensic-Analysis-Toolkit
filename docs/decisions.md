@@ -202,3 +202,16 @@ reported rather than enforced by a minimum-coverage CI failure — a coverage fl
 touch a line, which is the opposite of this project's testing style (every test states a concrete forensic fact and checks
 it). The remaining gaps were read file by file: they are I/O error branches that need a specific, hard-to-provoke failure,
 and CLI argument-parsing edges — never a status transition, confidence rule or byte-offset calculation.
+
+**D-034 · A PARTIAL row is calibrated by value, not by rowid.** `experiments/r2_recovery.py`'s confidence-calibration
+measurement matches a reconstructed artifact against the deleted row it corresponds to using `lab.evaluation.matches`
+(every known field must equal the truth's), the same notion of a match the recovery matrix already uses — never by rowid,
+since a PARTIAL row has lost its rowid by definition. Matching by rowid first (an earlier draft of this script) silently
+excluded every PARTIAL row from the measurement, understating the sample by roughly 5x; the fix is recorded here so the
+same mistake is not repeated in a future evaluation script.
+
+**D-035 · Experiment numbers are asserted to match the docs, not merely eyeballed.** `docs/evaluation.md`'s E6 table
+(511 physically recoverable rows, 507 matched, 99.22% recall, 0 false positives) is the literal output of
+`experiments/r2_recovery.py` on the seed it runs with, which is the same recovery matrix `tests/integration/
+test_recovery_matrix.py` already asserts a minimum recall against — so a regression that would change the documented
+number is already caught by the test suite before it could go stale in the docs.

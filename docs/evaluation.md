@@ -136,13 +136,83 @@ below its module's own average.
 
 The full-dump generator and the single-table recovery matrix now both produce evidence with genuinely deleted rows and physically-derived ground truth (`docs/synthetic_lab.md`); `tests/integration/test_synthetic_recovery_lab.py` and `tests/integration/test_recovery_matrix.py` check the engine's output against it directly (100% and 507/511 measured recall respectively, on the seeds checked into this repo). The systematic measurement across the matrix's independent variables, written up as numbers and charts, is Phase 15, below.
 
-## Review 2 evaluation plan (Phase 15)
+## Review 2 evaluation (Phase 15)
 
-Extend the generator with controlled deletions and overwrites, record what is recoverable by construction, and measure the
-recovery engine against it. Independent variables: database size, number of deletions, record size, deletion position
-(head / middle / tail of the table, last-cell vs interior), WAL enabled/disabled, journal mode, page size, auto-vacuum mode,
-`secure_delete`, checkpoint state, degree of overwriting. Metrics: precision, recall, F1, false-positive rate, per-status
-counts (`RECOVERED` / `PARTIAL` / `CORRUPTED` / `UNRECOVERABLE`), confidence calibration (share of `HIGH` that are correct),
-processing time and memory; results as CSV/JSON with graphs. The ground truth will distinguish *recoverable by
-construction* from *overwritten*, so "recovery rate" is measured against what was actually recoverable, not against everything
-that was deleted.
+Reproduce with `python experiments/r2_recovery.py` (≈4 min: the matrix is quick; the confidence/timing experiment runs the
+full synthetic lab three times) then `python experiments/r2_charts.py`. Raw results: `experiments/results/r2_e6_recovery_matrix.csv`,
+`r2_e7_confidence_calibration.csv`, `r2_summary.json`; charts: `r2_recall_by_condition.png`, `r2_status_breakdown.png`,
+`r2_confidence_calibration.png`. Environment of the reported run: Python 3.12.13, SQLite 3.53.3, macOS (arm64).
+
+### E6 — recovery matrix
+
+The standard deletion matrix (`lab.deletions.standard_matrix`: 12 conditions plus position / record-size / page-size /
+overwrite variants — 28 cases) run through the page-level recovery engine and scored against each case's physical ground
+truth (`lab.evaluation.score_case`).
+
+| | |
+|---|---:|
+| Cases | 28 |
+| Physically recoverable rows (RECOVERED or PARTIAL by construction) | 511 |
+| Matched | 507 |
+| **Overall recall** | **99.22%** |
+| False positives (any case) | 0 |
+| **Overall false-positive rate** | **0.0%** |
+| RECOVERED (whole cell) | 146 |
+| PARTIAL (freeblock header overwrote the first bytes) | 361 |
+| Missed | 4 |
+
+Every case reaches 100% precision and recall except three, all previously documented layout limits
+(`docs/sqlite_recovery.md` §7): `plain_ps1024` (75%), `plain_ps2048` (78%) — a neighbouring cell's own head is also
+destroyed at these page sizes, so a freed cell's end cannot be confirmed — and `overwrite_50` (92%), where half the freed
+space was reused before recovery ran. See `r2_recall_by_condition.png` for the full per-condition bar chart and
+`r2_status_breakdown.png` for the RECOVERED/PARTIAL/missed split.
+
+### E7 — confidence calibration and processing cost
+
+The full synthetic lab (`lab.synth`, genuine deletions, three seeds) run through `recover → carve → correlate →
+reconstruct`; every reconstructed RECOVERED/PARTIAL artifact is checked against the planted deleted row it corresponds to
+(`lab.evaluation.matches`, by value — a PARTIAL row has lost its rowid, so it cannot be matched by rowid) and grouped by
+its confidence level.
+
+| Confidence | n | Share matching the real deleted values |
+|---|---:|---:|
+| HIGH | 29 | 100% |
+| MEDIUM | 64 | 100% |
+| LOW | 0 | — |
+
+No LOW-confidence recovered artifact appeared in this lab (every recovered row in it either had a schema match and exact
+structure, or was excluded before reconstruction); HIGH and MEDIUM are both perfectly calibrated on this run — see
+`r2_confidence_calibration.png`. This is a small, synthetic sample and a stronger calibration claim would need many more
+runs and real-world evidence; it is reported as what was measured, not extrapolated.
+
+Processing cost, averaged over the three seeds (full Android dump: 120 SMS, 60 calls, 30 contacts, 152 browser visits,
+notes, misc files):
+
+| Stage | Seconds |
+|---|---:|
+| scan | 0.03 |
+| extract | 0.13 |
+| recover | 40.6 |
+| carve | 1.4 |
+| correlate | 5.2 |
+| reconstruct | 11.9 |
+| validate | 0.2 |
+| timeline | 0.02 |
+| **Total (incl. ingest)** | **≈59.6** |
+| Peak Python memory | ≈147 MB |
+
+`recover` dominates: it scans every page of every database for byte sequences that parse as a record, which is
+inherently more work than a single indexed `SELECT`. `carve` is comparatively cheap because it excludes everything
+`recover` already accounted for (live cells, structure, and rows already reported).
+
+### Threats to validity (Review 2)
+
+* **Confidence calibration's sample is small and synthetic.** 93 data points from one synthetic lab across three seeds is
+  enough to show the mechanism works as designed (higher levels are not wrong more often), not enough to claim a
+  precise, generalisable calibration curve.
+* **The recovery matrix isolates one table.** E6 uses the same SMS-shaped table as `lab/deletions.py`'s proof of the
+  engine's core logic; E7's full-dump lab is what exercises multiple real schemas (SMS, Chromium `urls`/`visits`/
+  `downloads`) together, but only two of its databases carry genuine deletions (D-031).
+* **Single machine, single SQLite build.** Page-level byte layouts are governed by the SQLite library that wrote the
+  file; a different version could, in principle, lay out freeblocks slightly differently. The physical-ground-truth
+  method does not depend on this, but the *measured* recall numbers are for this environment's SQLite 3.53.3.

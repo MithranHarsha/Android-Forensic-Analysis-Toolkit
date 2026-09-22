@@ -1,0 +1,74 @@
+{
+  "environment": {
+    "python": "3.12.13",
+    "sqlite": "3.53.3",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "tool_version": "0.1.0"
+  },
+  "e6_recovery_matrix": {
+    "cases": 28,
+    "total_expected_recoverable": 511,
+    "total_matched": 507,
+    "overall_recall": 0.9922,
+    "total_false_positives": 0,
+    "overall_false_positive_rate": 0.0,
+    "cases_below_95pct_recall": [
+      "overwrite_50",
+      "plain_ps1024",
+      "plain_ps2048"
+    ]
+  },
+  "e7_confidence_calibration": {
+    "MEDIUM": {
+      "total": 64,
+      "correct": 64,
+      "share_correct": 1.0
+    },
+    "HIGH": {
+      "total": 29,
+      "correct": 29,
+      "share_correct": 1.0
+    }
+  },
+  "e7_timings": [
+    {
+      "seed": 11,
+      "seconds": 59.39,
+      "peak_memory_mb": 146.91,
+      "scan_seconds": 0.025,
+      "extract_seconds": 0.129,
+      "recover_seconds": 40.294,
+      "carve_seconds": 1.474,
+      "correlate_seconds": 5.189,
+      "reconstruct_seconds": 11.972,
+      "validate_seconds": 0.222,
+      "timeline_seconds": 0.015
+    },
+    {
+      "seed": 12,
+      "seconds": 59.927,
+      "peak_memory_mb": 146.78,
+      "scan_seconds": 0.026,
+      "extract_seconds": 0.124,
+      "recover_seconds": 41.033,
+      "carve_seconds": 1.369,
+      "correlate_seconds": 5.19,
+      "reconstruct_seconds": 11.887,
+      "validate_seconds": 0.219,
+      "timeline_seconds": 0.015
+    },
+    {
+      "seed": 13,
+      "seconds": 59.563,
+      "peak_memory_mb": 146.66,
+      "scan_seconds": 0.025,
+      "extract_seconds": 0.122,
+      "recover_seconds": 40.513,
+      "carve_seconds": 1.428,
+      "correlate_seconds": 5.207,
+      "reconstruct_seconds": 11.968,
+      "validate_seconds": 0.221,
+      "timeline_seconds": 0.015
+    }
+  ]
+}
