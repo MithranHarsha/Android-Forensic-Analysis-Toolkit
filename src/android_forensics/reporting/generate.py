@@ -26,6 +26,7 @@ class ReportResult:
     html: Path | None = None
     json: Path | None = None
     csv_dir: Path | None = None
+    pdf: Path | None = None
     sums: Path | None = None
 
 
@@ -71,7 +72,7 @@ def _artifact_rows(store: CaseStore) -> list[dict[str, Any]]:
 
 def generate_report(store: CaseStore, formats: list[str], out_dir: Path | None = None, html_row_cap: int | None = None) -> ReportResult:
     formats = [f.lower() for f in formats]
-    bad = set(formats) - {"html", "json", "csv"}
+    bad = set(formats) - {"html", "json", "csv", "pdf"}
     if bad:
         raise ValueError(f"unsupported report format(s): {', '.join(sorted(bad))}")
     model: ReportModel = build_report_model(store, html_row_cap)
@@ -99,7 +100,21 @@ def generate_report(store: CaseStore, formats: list[str], out_dir: Path | None =
         _write_csv(res.csv_dir / "validation.csv", model.validation["results"])
         _write_csv(res.csv_dir / "databases.csv", model.databases)
         _write_csv(res.csv_dir / "scan_issues.csv", model.scan_issues, ["source_id", "path", "issue_type", "detail", "stage"])
+        if model.recovery["performed"]:
+            _write_csv(res.csv_dir / "recovered_records.csv", model.recovery["recovered"] + model.recovery["corrupted"])
+            _write_csv(res.csv_dir / "partial_recoveries.csv", model.recovery["partial"])
+            _write_csv(res.csv_dir / "unrecoverable_regions.csv", model.recovery["unrecoverable"])
+        if model.recovery["stages_run"]["carve"]:
+            _write_csv(res.csv_dir / "carved_candidates.csv", model.recovery["carved"])
+        if model.recovery["stages_run"]["correlate"]:
+            _write_csv(res.csv_dir / "correlations.csv", model.recovery["correlations"])
         written += sorted(res.csv_dir.glob("*.csv"))
+    if "pdf" in formats:
+        from android_forensics.reporting.pdf import render_pdf
+
+        res.pdf = out / "report.pdf"
+        render_pdf(model, res.pdf)
+        written.append(res.pdf)
 
     lines = [f"{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.relative_to(out).as_posix()}" for p in written]
     res.sums = out / "sha256sums.txt"

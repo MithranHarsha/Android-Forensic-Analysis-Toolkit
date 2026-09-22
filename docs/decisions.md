@@ -160,3 +160,17 @@ path relative to the source file (`parents[3] / "web"`), which works for the way
 repository checkout, as the capstone and its tests always do — but would not resolve inside a wheel installed from PyPI
 (setuptools `package-data` only bundles files inside the package). Packaging the frontend as installable data is future
 work; noted here rather than left as a silent gap.
+
+**D-028 · The report reflects exactly what ran, never what the tool can do.** `ReportModel.recovery["stages_run"]` is read
+directly from `CaseStore.last_run(stage)`, one bool per `recover`/`carve`/`correlate`/`reconstruct` — not from whether any
+rows happen to exist. A case where recovery ran and found nothing gets "no records were recovered from this evidence,"
+not the `NOT PERFORMED (Review 2)` box; a case where it never ran gets that box regardless of what a later run might find.
+The four sections (7, 9, 10, 12), the "at a glance" cards, the top banner and the methodology/limitations text all read the
+same four booleans, so nothing in the report can show recovery results and the "not performed" disclaimer at once.
+
+**D-029 · The PDF report uses fpdf2's core fonts, sacrificing full Unicode for zero bundled assets.** Embedding a Unicode
+TTF (for the "…" and "×" the HTML report uses freely) would add a font file to package and license; fpdf2's built-in
+Helvetica is latin-1 only. `pdf._txt` round-trips every string through `encode("latin-1", "replace")`, so an unsupported
+character becomes `?` — visible and honest — rather than a crash or silent mojibake. Given the PDF is a condensed,
+printable companion to the HTML/JSON report (which keep full fidelity), this was judged an acceptable trade for a capstone
+tool with no server-side rendering budget for font subsetting.

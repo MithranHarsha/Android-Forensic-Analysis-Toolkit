@@ -1,5 +1,5 @@
 {%- macro badge(s) -%}
-<span class="badge b-{{ (s or 'none')|lower }}">{{ s or '—' }}</span>
+<span class="badge b-{{ (s or 'none')|lower|replace(' ', '-') }}">{{ s or '—' }}</span>
 {%- endmacro -%}
 {%- macro prov(p) -%}
 <span class="prov" title="File: {{ p.file }}&#10;SHA-256: {{ p.sha256 }}&#10;Table: {{ p.table }}  rowid: {{ p.rowid }}&#10;{{ p.wal }}&#10;Method: {{ p.method }}&#10;Parser: {{ p.parser }} ({{ p.variant }}, schema match {{ p.score }})&#10;Page/offset: {{ 'not recorded (Review 2)' if p.page is none else p.page }}"><code>{{ p.file.rsplit('/',1)[-1] }}</code> › {{ p.table or '—' }}{% if p.rowid is not none %}#{{ p.rowid }}{% endif %}<br><span class="hash">sha256:{{ p.sha256[:12] }}… · {{ p.wal }}</span></span>
@@ -49,6 +49,8 @@ td.hashcell{min-width:500px}td.hashcell .hash{word-break:break-all;display:block
 .b-valid,.b-active,.b-ok{background:var(--ok-bg);color:var(--ok)}.b-partial{background:var(--warn-bg);color:var(--warn)}
 .b-invalid,.b-corrupted{background:var(--bad-bg);color:var(--bad)}.b-unverified{background:var(--info-bg);color:var(--info)}
 .b-recovered{background:#efe1fb;color:#6b21a8}.b-none,.b-file{background:var(--na-bg);color:var(--na)}
+.b-high{background:var(--ok-bg);color:var(--ok)}.b-medium{background:var(--warn-bg);color:var(--warn)}.b-low{background:var(--bad-bg);color:var(--bad)}
+.b-carved-candidate{background:#ece4fb;color:#4b2e83}
 .flag{color:var(--warn);font-size:12px}.del{background:var(--warn-bg)}
 .filter{margin:6px 0 10px;padding:7px 10px;width:100%;max-width:340px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
 .na-box{border:1px dashed var(--na);border-radius:8px;padding:12px 16px;background:var(--na-bg);color:var(--na)}
@@ -72,7 +74,11 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 <h1>Android Forensic Examination Report</h1>
 <p>{{ r.meta.case_name }} · generated {{ r.meta.generated_at }} · {{ r.meta.tool_name }} {{ r.meta.tool_version }}</p>
 </header>
+{% if r.recovery.performed %}
+<div class="banner" style="background:var(--ok-bg);color:var(--ok);border-color:var(--ok)"><strong>Review 1 + Review 2 — deleted-data recovery performed.</strong> {{ r.meta.review_scope }}</div>
+{% else %}
 <div class="banner"><strong>Review 1 — forensic foundation.</strong> {{ r.meta.review_scope }}</div>
+{% endif %}
 
 <section id="s1"><h2><span class="n">1</span>Case information</h2>
 <dl class="kv">
@@ -84,7 +90,7 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 <div class="glance">
 {% for g in r.at_a_glance %}<div class="card {{ g.state }}"><div class="l">{{ g.label }}</div><div class="v">{{ g.value if g.value is string else '{:,}'.format(g.value) }}</div><div class="s">{{ g.note }}</div></div>{% endfor %}
 </div>
-<p class="note">Categories are never merged: active records, recovered deleted records, partial recoveries, carved candidates and unrecoverable data are reported separately. Only ACTIVE data exists in Review 1.</p>
+<p class="note">Categories are never merged: active records, recovered deleted records, partial recoveries, carved candidates and unrecoverable data are reported separately.{% if not r.recovery.performed %} Only ACTIVE data exists until Review 2's recovery stages are run.{% endif %}</p>
 </section>
 
 <section id="s2"><h2><span class="n">2</span>Examiner and tool information</h2>
@@ -132,13 +138,33 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 </tbody></table></section>
 
 <section id="s7"><h2><span class="n">7</span>Recovered deleted data</h2>
+{% if r.recovery.stages_run.recover %}
+<p class="lead">Records reconstructed from freed cells, released pages, stale page images and WAL/journal history. Status, confidence and its explanation come from the deterministic scorer (section 14); a CORRUPTED row is one whose structure was recoverable but whose content failed validation. A column the bytes did not determine is never guessed — it is absent and named under "unknown".</p>
+{% set recon = r.recovery.recovered + r.recovery.corrupted %}
+{% if recon %}
+<input class="filter" placeholder="Filter recovered records…" oninput="ftab(this,'t-rec')">
+<div class="scroll"><table id="t-rec"><thead><tr><th>Status</th><th>Table</th><th>Rowid</th><th>Method</th><th>Region</th><th>Unknown</th><th>Confidence</th><th>Explanation</th><th>Also found at</th></tr></thead><tbody>
+{% for row in recon %}<tr><td>{{ badge(row.status) }}</td><td>{{ row.table }}</td><td class="nw">{{ row.rowid if row.rowid is not none else 'unknown' }}</td><td class="nw">{{ row.method }}</td><td>{{ row.region }}</td><td class="hash">{{ row.unknown_columns|join(', ') }}</td><td>{{ badge(row.confidence) }}</td><td>{{ row.explanation }}</td><td class="hash">{{ row.also_found_at|join('; ') }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p class="note">No records were recovered from this evidence.</p>{% endif %}
+{% else %}
 <div class="na-box"><strong>NOT PERFORMED (Review 2).</strong> {{ r.recovery.messages.recovered }}</div>
+{% endif %}
 <h3>Recovery-potential indicators</h3>
-<p class="lead">Facts read from database headers and sidecar files. They indicate where Review 2 should look; they are <strong>not findings</strong>, and their absence does not prove that nothing was deleted.</p>
+<p class="lead">Facts read from database headers and sidecar files. They indicate where recovery should look; they are <strong>not findings</strong> on their own, and their absence does not prove that nothing was deleted.</p>
 <div class="scroll"><table><thead><tr><th>Database</th><th>Freelist pages</th><th>Header page count</th><th>WAL frame slots</th><th>Journal bytes</th><th>Indicators</th></tr></thead><tbody>
 {% for i in r.recovery.indicators %}<tr><td>{{ i.path }}</td><td>{{ i.freelist_pages|cell }}</td><td>{{ i.page_count|cell }}</td><td>{{ i.wal_frame_slots|cell }}</td><td>{{ i.journal_bytes|cell }}</td><td>{% for n in i.notes %}{{ n }}{% if not loop.last %}<br>{% endif %}{% endfor %}</td></tr>{% endfor %}
 </tbody></table></div>
-<h3>Unrecoverable data</h3><div class="na-box">{{ r.recovery.messages.unrecoverable }}</div></section>
+<h3>Unrecoverable data</h3>
+{% if r.recovery.stages_run.recover %}
+{% if r.recovery.unrecoverable %}
+<p class="lead">Freed space proven to have held a record (or a page of them), whose bytes hold nothing recoverable — proof that data existed, not a record of what it was.</p>
+<div class="scroll"><table><thead><tr><th>Source</th><th>Region</th><th>Reason</th></tr></thead><tbody>
+{% for u in r.recovery.unrecoverable %}<tr><td>{{ u.source_path }}</td><td>{{ u.region }}</td><td>{{ u.reason }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p class="note">No unrecoverable region was recorded.</p>{% endif %}
+{% else %}<div class="na-box">{{ r.recovery.messages.unrecoverable }}</div>{% endif %}
+</section>
 
 <section id="s8"><h2><span class="n">8</span>Active data</h2>
 <p class="lead">Records present in the live database view. Every row shows its provenance: evidence file, table, rowid, file SHA-256 and whether committed WAL frames were included. Hover a provenance cell for full detail.</p>
@@ -150,8 +176,29 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 </tbody></table></div>{{ trunc(key) }}
 {% endif %}{% endfor %}</section>
 
-<section id="s9"><h2><span class="n">9</span>Partial recoveries</h2><div class="na-box"><strong>NOT PERFORMED (Review 2).</strong> {{ r.recovery.messages.partial }}</div></section>
-<section id="s10"><h2><span class="n">10</span>Carved candidates</h2><div class="na-box"><strong>NOT PERFORMED (Review 2).</strong> {{ r.recovery.messages.carved }}</div></section>
+<section id="s9"><h2><span class="n">9</span>Partial recoveries</h2>
+{% if r.recovery.stages_run.recover %}
+{% if r.recovery.partial %}
+<p class="lead">Part of the record's bytes were overwritten before recovery — typically the payload size and rowid, when a freed cell bordered the freeblock chain. Every column the surviving bytes still determine is shown; each missing one is named explicitly.</p>
+<input class="filter" placeholder="Filter partial recoveries…" oninput="ftab(this,'t-partial')">
+<div class="scroll"><table id="t-partial"><thead><tr><th>Table</th><th>Method</th><th>Region</th><th>Unknown columns</th><th>Confidence</th><th>Explanation</th></tr></thead><tbody>
+{% for row in r.recovery.partial %}<tr><td>{{ row.table }}</td><td class="nw">{{ row.method }}</td><td>{{ row.region }}</td><td class="hash">{{ row.unknown_columns|join(', ') }}</td><td>{{ badge(row.confidence) }}</td><td>{{ row.explanation }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p class="note">No partial recoveries in this evidence.</p>{% endif %}
+{% else %}<div class="na-box"><strong>NOT PERFORMED (Review 2).</strong> {{ r.recovery.messages.partial }}</div>{% endif %}
+</section>
+
+<section id="s10"><h2><span class="n">10</span>Carved candidates</h2>
+{% if r.recovery.stages_run.carve %}
+<p class="lead"><strong>Every row here is an unconfirmed candidate</strong> — a pattern match in raw bytes, status literally <code>CARVED CANDIDATE</code>, never presented as evidence. Confidence, once scored by correlation, is capped below HIGH and stays LOW without independent corroboration.</p>
+{% if r.recovery.carved %}
+<input class="filter" placeholder="Filter carved candidates…" oninput="ftab(this,'t-carved')">
+<div class="scroll"><table id="t-carved"><thead><tr><th>Status</th><th>Kind</th><th>Matched</th><th>Container</th><th>Confidence</th><th>Explanation</th><th>Corroborated by</th></tr></thead><tbody>
+{% for c in r.recovery.carved %}<tr><td>{{ badge('CARVED CANDIDATE') }}</td><td>{{ c.kind }}</td><td class="hash">{{ (c.matched or '')[:120] }}</td><td>{{ c.container }}</td><td>{{ badge(c.confidence) }}</td><td>{{ c.explanation|cell }}</td><td>{{ c.corroborated_by|length }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p class="note">No carved candidates in this evidence.</p>{% endif %}
+{% else %}<div class="na-box"><strong>NOT PERFORMED (Review 2).</strong> {{ r.recovery.messages.carved }}</div>{% endif %}
+</section>
 
 <section id="s11"><h2><span class="n">11</span>Timeline</h2>
 <p class="lead">Chronological (UTC). Artifact events carry their state; file events are filesystem metadata, not evidence of user activity. Recovered events will be visually distinct in Review 2.</p>
@@ -160,7 +207,17 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 {% for e in r.timeline[:r.html_row_cap] %}<tr><td class="mono nw">{{ e.ts_utc }}</td><td>{{ badge(e.status or 'FILE') }}</td><td>{{ e.artifact_type or 'file' }}</td><td>{{ e.event }}</td><td class="hash">{{ e.source }}</td><td class="hash">{{ e.time_basis|cell }}</td><td>{{ e.confidence|cell }}</td></tr>{% endfor %}
 </tbody></table></div>{{ trunc('timeline') }}</section>
 
-<section id="s12"><h2><span class="n">12</span>Correlation findings</h2><div class="na-box"><strong>NOT PERFORMED (Review 2).</strong> {{ r.recovery.messages.correlation }}</div></section>
+<section id="s12"><h2><span class="n">12</span>Correlation findings</h2>
+{% if r.recovery.stages_run.correlate %}
+{% if r.recovery.correlations %}
+<p class="lead">Edges of the evidence graph: <code>source --relation--&gt; target</code>. A recovered record or carved candidate is corroborated only by an artifact of another kind in another database (never the same file's own data seen twice).</p>
+<input class="filter" placeholder="Filter correlations…" oninput="ftab(this,'t-corr')">
+<div class="scroll"><table id="t-corr"><thead><tr><th>Source</th><th>Relation</th><th>Target</th><th>Explanation</th></tr></thead><tbody>
+{% for e in r.recovery.correlations %}<tr><td class="hash">{{ e.source }}</td><td>{{ e.relation }}</td><td class="hash">{{ e.target }}</td><td>{{ e.explanation }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p class="note">No correlation edges in this evidence.</p>{% endif %}
+{% else %}<div class="na-box"><strong>NOT PERFORMED (Review 2).</strong> {{ r.recovery.messages.correlation }}</div>{% endif %}
+</section>
 
 <section id="s13"><h2><span class="n">13</span>Validation results</h2>
 <div class="glance">{% for s in ['VALID','PARTIAL','INVALID','UNVERIFIED'] %}<div class="card"><div class="l">{{ s }}</div><div class="v">{{ r.validation.by_status.get(s,0) }}</div></div>{% endfor %}</div>

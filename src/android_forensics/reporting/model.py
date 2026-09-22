@@ -56,6 +56,49 @@ def _prov(r) -> dict[str, Any]:
     }
 
 
+def _recovered_rows(store: CaseStore, status: str) -> list[dict[str, Any]]:
+    rows = []
+    for r in store.q(
+        "SELECT rr.*, a.confidence AS a_confidence, a.validation_notes_json AS a_notes, a.summary AS a_summary "
+        "FROM recovered_records rr LEFT JOIN artifacts a ON a.id = rr.artifact_id WHERE rr.status=? ORDER BY rr.id", (status,)
+    ):
+        notes = json.loads(r["a_notes"] or "[]")
+        rows.append({
+            "id": r["id"], "status": r["status"], "table": r["table_name"], "rowid": r["rowid_value"], "method": r["method"],
+            "source": r["source"], "source_path": r["source_path"], "page": r["page_number"], "offset": r["file_offset"],
+            "region": r["region"], "fit": r["fit"], "summary": r["a_summary"],
+            "values": json.loads(r["values_json"]), "unknown_columns": json.loads(r["unknown_columns_json"] or "[]"),
+            "issues": json.loads(r["issues_json"] or "[]"), "also_found_at": json.loads(r["also_found_at_json"] or "[]"),
+            "corroboration": json.loads(r["corroboration_json"] or "[]"),
+            "confidence": r["a_confidence"], "explanation": notes[-1] if notes else "",
+        })
+    return rows
+
+
+def _carved_rows(store: CaseStore) -> list[dict[str, Any]]:
+    rows = []
+    for r in store.q("SELECT * FROM carved_candidates ORDER BY id"):
+        rows.append({
+            "id": r["id"], "status": r["status"], "kind": r["kind"], "pattern": r["pattern"], "matched": r["matched"],
+            "encoding": r["encoding"], "container": r["container"], "offset": r["byte_offset"], "length": r["length"],
+            "source_file": r["source_file"], "confidence": r["confidence"], "explanation": r["explanation"],
+            "corroborated_by": json.loads(r["corroborated_by_json"] or "[]"), "notes": json.loads(r["notes_json"] or "[]"),
+        })
+    return rows
+
+
+def _correlation_rows(store: CaseStore) -> list[dict[str, Any]]:
+    return [
+        {"source": f"{r['source_kind']}:{r['source_ref']}", "relation": r["relation"],
+         "target": f"{r['target_kind']}:{r['target_ref']}", "strength": r["strength"], "explanation": r["explanation"]}
+        for r in store.q("SELECT * FROM correlations ORDER BY id")
+    ]
+
+
+def _unrecovered_rows(store: CaseStore) -> list[dict[str, Any]]:
+    return [dict(r) for r in store.q("SELECT source_path, region, reason FROM unrecovered_regions ORDER BY id")]
+
+
 def _active_section(store: CaseStore) -> dict[str, dict[str, Any]]:
     layouts = {
         "sms": ("SMS messages", ["ID", "Time (UTC)", "Direction", "Address", "Body", "Read", "Thread"]),
@@ -195,19 +238,45 @@ def build_report_model(store: CaseStore, html_row_cap: int | None = None) -> Rep
     runs = [dict(r) for r in store.q("SELECT id, stage, status, started_at, finished_at, tool_version, stats_json FROM analysis_runs ORDER BY id")]
 
     active = _active_section(store)
+
+    stages_run = {stage: store.last_run(stage) is not None for stage in ("recover", "carve", "correlate", "reconstruct")}
+    recovery_performed = stages_run["recover"]
+    recovered_rows, corrupted_rows, partial_rows = (_recovered_rows(store, s) for s in ("RECOVERED", "CORRUPTED", "PARTIAL"))
+    carved_rows = _carved_rows(store) if stages_run["carve"] else []
+    correlation_rows = _correlation_rows(store) if stages_run["correlate"] else []
+    unrecovered_rows = _unrecovered_rows(store) if recovery_performed else []
+    recovery = {
+        "performed": recovery_performed, "stages_run": stages_run, "messages": text.NOT_PERFORMED,
+        "indicators": indicators, "recovered": recovered_rows, "corrupted": corrupted_rows, "partial": partial_rows,
+        "carved": carved_rows, "correlations": correlation_rows, "unrecoverable": unrecovered_rows,
+        "counts": {"recovered": len(recovered_rows), "corrupted": len(corrupted_rows), "partial": len(partial_rows),
+                  "carved": len(carved_rows), "correlation_edges": len(correlation_rows), "unrecoverable": len(unrecovered_rows)},
+    }
+
     at_a_glance = [
         {"label": "ACTIVE DATA", "value": counts["active_artifacts"], "note": "records present in live databases", "state": "ok"},
-        {"label": "RECOVERED DELETED DATA", "value": "not performed", "note": "Review 2", "state": "na"},
-        {"label": "PARTIAL RECOVERIES", "value": "not performed", "note": "Review 2", "state": "na"},
-        {"label": "CARVED CANDIDATES", "value": "not performed", "note": "Review 2", "state": "na"},
-        {"label": "UNRECOVERABLE DATA", "value": "not classified", "note": "Review 2", "state": "na"},
+        {"label": "RECOVERED DELETED DATA", "value": (len(recovered_rows) + len(corrupted_rows)) if recovery_performed else "not performed",
+         "note": (f"{len(corrupted_rows)} corrupted" if corrupted_rows else "reconstructed with a confidence explanation") if recovery_performed else "Review 2",
+         "state": "ok" if recovery_performed else "na"},
+        {"label": "PARTIAL RECOVERIES", "value": len(partial_rows) if recovery_performed else "not performed",
+         "note": "reconstructed; missing fields are UNKNOWN, never guessed" if recovery_performed else "Review 2",
+         "state": "ok" if recovery_performed else "na"},
+        {"label": "CARVED CANDIDATES", "value": len(carved_rows) if stages_run["carve"] else "not performed",
+         "note": "unconfirmed pattern hits, never ACTIVE" if stages_run["carve"] else "Review 2", "state": "ok" if stages_run["carve"] else "na"},
+        {"label": "UNRECOVERABLE DATA", "value": len(unrecovered_rows) if recovery_performed else "not classified",
+         "note": "proven deleted, content lost" if recovery_performed else "Review 2", "state": "ok" if recovery_performed else "na"},
     ]
+    methodology = list(text.METHODOLOGY)
+    limitations = list(text.LIMITATIONS)
+    if recovery_performed:
+        methodology[-1] = ("Recovery, carving and correlation (this review)", text.RECOVERY_PERFORMED_METHODOLOGY)
+        limitations[0] = text.RECOVERY_PERFORMED_LIMITATION
     model = ReportModel(
         meta={
             "case_id": case.id, "case_name": case.name, "examiner": case.examiner, "description": case.description,
             "created_at": case.created_at, "generated_at": utcnow(), "tool_name": TOOL_NAME, "tool_version": __version__,
             "python": sys.version.split()[0], "sqlite_library": sqlite3.sqlite_version, "platform": platform.platform(),
-            "review_scope": text.REVIEW_SCOPE,
+            "review_scope": text.REVIEW2_SCOPE if recovery_performed else text.REVIEW_SCOPE,
         },
         at_a_glance=at_a_glance,
         sources=sources,
@@ -220,7 +289,7 @@ def build_report_model(store: CaseStore, html_row_cap: int | None = None) -> Rep
         artifact_summary={"by_type": by_type, "by_status": artifact_status, "by_application": sorted(apps.values(), key=lambda a: a["application"]), "total": counts["artifacts"]},
         databases=databases,
         app_directories=app_directories,
-        recovery={"performed": False, "messages": text.NOT_PERFORMED, "indicators": indicators},
+        recovery=recovery,
         active=active,
         timeline=tl,
         validation={"total": len(val_rows), "by_status": dict(by_status), "by_check": by_check, "results": val_rows},
@@ -228,8 +297,8 @@ def build_report_model(store: CaseStore, html_row_cap: int | None = None) -> Rep
         table_catalog=table_catalog,
         custody=custody,
         runs=runs,
-        methodology=text.METHODOLOGY,
-        limitations=text.LIMITATIONS,
+        methodology=methodology,
+        limitations=limitations,
         disclaimer=text.DISCLAIMER,
         status_glossary=text.STATUS_GLOSSARY,
     )

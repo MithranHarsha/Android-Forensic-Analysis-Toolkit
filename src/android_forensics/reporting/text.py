@@ -16,6 +16,32 @@ REVIEW_SCOPE = (
     "confidence scoring of recovered records are Review 2 and have NOT been performed."
 )
 
+REVIEW2_SCOPE = (
+    "Evidence integrity, filesystem analysis, SQLite discovery, extraction of ACTIVE artifacts, recovery of deleted "
+    "and superseded SQLite records (freelist, unallocated space, WAL and rollback-journal analysis), raw pattern "
+    "carving, cross-artifact correlation, deterministic confidence scoring, validation, timeline and reporting."
+)
+
+RECOVERY_PERFORMED_METHODOLOGY = (
+    "Every page image (the main file's pages by role, WAL frames, rollback-journal pages) is scanned for byte "
+    "sequences that parse as a record of a known table, excluding live cell extents; a freed cell whose first bytes "
+    "were overwritten by SQLite's own freeblock header is reconstructed from the surviving bytes with the lost "
+    "column(s) marked UNKNOWN, never guessed. Raw carving finds pattern candidates (phone numbers, URLs, e-mail "
+    "addresses, timestamps, SMS-like text, loose SQLite-record shapes) in bytes no parser reads; every hit is a "
+    "CARVED CANDIDATE, never confirmed evidence, until validated and corroborated. Correlation links artifacts and "
+    "candidates that share a fact (a phone number, a URL, a timestamp, message text) across independent sources — a "
+    "different database, never the same file's own data seen twice. Confidence is a fixed, explainable, "
+    "deterministic calculation (schema match, structural validity, provenance, corroboration, completeness, "
+    "timestamp plausibility); the same bytes always score the same way, and a carved candidate can never be HIGH."
+)
+
+RECOVERY_PERFORMED_LIMITATION = (
+    "Deleted-data recovery, raw carving and cross-artifact correlation WERE performed for this report (sections 7, "
+    "9, 10 and 12). Recoverability still depends on everything the disclaimer above describes — acquisition "
+    "completeness, filesystem behaviour, database state, encryption, overwriting: the absence of a recovered record "
+    "here is not evidence that it never existed."
+)
+
 NOT_PERFORMED = {
     "recovered": "Deleted-record recovery (freelist, unallocated space, WAL and rollback-journal analysis, raw page scanning) was NOT performed in Review 1. No claim is made, either way, about whether deleted data exists in this evidence.",
     "partial": "No partial recoveries exist because record recovery was not performed (Review 2).",

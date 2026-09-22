@@ -608,7 +608,7 @@ def timeline(
 def report(
     case: CaseArg,
     cases_dir: CasesDir = Path("cases"),
-    formats: Annotated[str, typer.Option("--format", help="Comma list: html,json,csv")] = "html,json,csv",
+    formats: Annotated[str, typer.Option("--format", help="Comma list: html,json,csv,pdf")] = "html,json,csv",
     out: Annotated[Optional[Path], typer.Option(help="Output directory (default: <case>/reports/<timestamp>).")] = None,
 ) -> None:
     """Generate the forensic report (HTML, JSON, CSV)."""
