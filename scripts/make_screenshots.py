@@ -29,7 +29,11 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)
-        generate(td / "ev", SynthSpec())
+        committed = Path(__file__).resolve().parents[1] / "synthetic_evidence" / "android_dump"   # the dataset the README's numbers describe
+        if committed.is_dir():
+            shutil.copytree(committed, td / "ev" / "android_dump")
+        else:
+            generate(td / "ev", SynthSpec())
         settings = ServerSettings(cases_dir=td / "cases", data_dir=td / "data", workers=1, allowed_hosts=("127.0.0.1", "localhost"))
         token = new_token()
         db = ServerDB(settings.db_path)

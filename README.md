@@ -151,17 +151,29 @@ android-forensics serve     --cases-dir ./cases --data-dir ./server-data        
 `android-forensics analyze ./acquisition.zip`. Cases live under `./cases` (override with `--cases-dir` or
 `ANDROID_FORENSICS_CASES`). Re-running any stage is idempotent and invalidates only what was built on it.
 
-Example output of `analyze` on the synthetic case (`--with-deletions`, the default):
+Example output of `analyze` on the committed synthetic dataset (`synthetic_evidence/android_dump`; real output, 0.3.0):
 
 ```
 Files discovered: 16      SQLite databases: 8 (6 readable, 1 encrypted suspect, 1 unreadable)
-Artifacts (ACTIVE): 373   (SMS 108 · calls 60 · contacts 30 · browser visits 137 · downloads 4 · app summaries 6)
-Deleted-data recovery (Review 2)
-  Deleted/superseded records found: 31    reconstructed → RECOVERED: 5   → PARTIAL: 26
-  Corroborated by another source: 2       Carved candidates: 118 (corroborated: 6)
-Validation: 58 checks — VALID 53 · PARTIAL 2 · INVALID 0 · UNVERIFIED 3
-Timeline events: 402
+Artifacts (ACTIVE): 346   (SMS 108 · calls 60 · contacts 30 · browser visits 137 · downloads 4 · app summaries 6 …)
+Deleted-data recovery
+  Deleted/superseded records found: 8,244   reconstructed → RECOVERED: 8,218   → PARTIAL: 26
+  Corroborated by another source: 10        Unrecoverable regions (proven): 4       Carved candidates: 177
+Validation: 76 checks — VALID 56 · PARTIAL 12 · INVALID 0 · UNVERIFIED 8
+Timeline events: 382
 ```
+
+The 8,244 is larger than the ~31 rows the lab genuinely deletes *on purpose*: `calllog.db` is written in WAL mode with a mid-stream
+checkpoint, which leaves thousands of superseded page versions in the log, each a legitimate recoverable finding. The report keeps
+them in their own category, separate from active data. [docs/FINAL_SUMMARY.md](docs/FINAL_SUMMARY.md) explains the figure.
+
+## Screenshots
+
+The web UI (`android-forensics serve`) on that dataset — [more in docs/images/](docs/images/):
+
+| Cases | Recovery | Validation |
+|---|---|---|
+| ![cases](docs/images/cases.png) | ![recovery](docs/images/recovery.png) | ![validation](docs/images/validation.png) |
 
 ## Ingestion as a library
 
