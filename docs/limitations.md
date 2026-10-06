@@ -26,9 +26,6 @@
 * **Confidence calibration was measured on a small synthetic sample** (93 recovered artifacts across three seeds of one
   lab) — see [evaluation.md](evaluation.md#e7--confidence-calibration-and-processing-cost). It demonstrates the scoring
   mechanism works as designed, not a generalisable precision curve.
-* **The dashboard's frontend is not packaged for a wheel install.** `web/` sits at the repository root, resolved by a
-  path relative to the source file; running from a checkout (as this project and its tests always do) works, but an
-  installed wheel from PyPI would not find it (D-027).
 * **Recovering a database SQLite cannot open still needs a working copy.** Recovery reads raw file bytes directly, so a
   database ingested with `--preserve none` (hash-only) yields nothing to recover from; this is reported, not silently
   skipped.

@@ -1,52 +1,3 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Android Forensics Dashboard</title>
-<style>
-  :root { color-scheme: light dark; }
-  body { font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif; margin: 0; background: #f4f5f7; color: #1a1a1a; }
-  header { background: #14213d; color: #fff; padding: 14px 20px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
-  header h1 { font-size: 17px; margin: 0; }
-  header .case { opacity: .85; font-size: 13px; }
-  nav { display: flex; gap: 2px; background: #1f2a44; padding: 0 20px; overflow-x: auto; }
-  nav button { background: none; border: none; color: #cfd6e6; padding: 10px 14px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; white-space: nowrap; }
-  nav button.active { color: #fff; border-bottom-color: #4f8cff; }
-  main { padding: 18px 20px 40px; max-width: 1200px; margin: 0 auto; }
-  .cards { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
-  .card { background: #fff; border-radius: 8px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); min-width: 140px; }
-  .card .n { font-size: 22px; font-weight: 600; }
-  .card .l { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .03em; }
-  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); font-size: 13px; }
-  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
-  th { background: #f0f2f5; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: #555; }
-  tr:hover td { background: #f8fafc; }
-  .pill { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-  .pill.ACTIVE, .pill.VALID { background: #d7f5e1; color: #14663a; }
-  .pill.RECOVERED { background: #d7e8f5; color: #1c4f7a; }
-  .pill.PARTIAL, .pill.UNVERIFIED { background: #fdf0cc; color: #7a5b0f; }
-  .pill.CORRUPTED, .pill.INVALID { background: #f8d7da; color: #7a1c26; }
-  .pill.candidate { background: #ece4fb; color: #4b2e83; }
-  .toolbar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-  .toolbar input, .toolbar select { padding: 5px 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; }
-  .muted { color: #777; font-size: 12px; margin-top: 8px; }
-  .err { background: #f8d7da; color: #7a1c26; padding: 10px 14px; border-radius: 6px; }
-  .explain { font-size: 12px; color: #444; }
-  #view { min-height: 200px; }
-</style>
-</head>
-<body>
-<header>
-  <h1>Android Forensics Dashboard</h1>
-  <span class="case" id="case-label">loading…</span>
-</header>
-<nav id="tabs"></nav>
-<main>
-  <div class="cards" id="cards"></div>
-  <div id="view"></div>
-</main>
-<script>
 const TABS = ["summary", "artifacts", "recovery", "carved", "correlation", "validation", "timeline"];
 let state = { tab: "summary", filters: {} };
 
@@ -57,8 +8,12 @@ async function api(path, params) {
   if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
   return r.json();
 }
-function pill(text) { return `<span class="pill ${text === 'CARVED CANDIDATE' ? 'candidate' : text}">${text}</span>`; }
-function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+// Every value that originates in evidence goes through esc() before it reaches innerHTML.
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function pill(text) {
+  const cls = text === 'CARVED CANDIDATE' ? 'candidate' : String(text ?? "").replace(/[^A-Za-z_-]/g, "");
+  return `<span class="pill ${cls}">${esc(text)}</span>`;
+}
 function table(cols, rows, renderers) {
   const head = cols.map(c => `<th>${c}</th>`).join("");
   const body = rows.map(r => `<tr>${cols.map((c, i) => `<td>${(renderers && renderers[i]) ? renderers[i](r) : esc(r[c.toLowerCase().replace(/ /g,"_")])}</td>`).join("")}</tr>`).join("");
@@ -80,7 +35,7 @@ async function renderSummary() {
     ["Recovered records", c.recovered_records], ["Reconstructed", c.recovered_artifacts],
     ["Carved candidates", c.carved_candidates], ["Correlation edges", c.correlation_edges],
     ["Validation results", c.validation_results],
-  ].map(([l, n]) => `<div class="card"><div class="n">${n.toLocaleString()}</div><div class="l">${l}</div></div>`).join("");
+  ].map(([l, n]) => `<div class="card"><div class="n">${esc(n.toLocaleString())}</div><div class="l">${esc(l)}</div></div>`).join("");
   document.getElementById("view").innerHTML = "<h3>Analysis runs</h3>" + table(
     ["Stage", "Status", "Started", "Finished"], s.runs,
     [r => esc(r.stage), r => pill(r.status), r => esc(r.started_at), r => esc(r.finished_at || "-")]);
@@ -96,7 +51,7 @@ async function renderArtifacts() {
       <select id="f-status"><option value="">All statuses</option>${["ACTIVE","RECOVERED","PARTIAL","CORRUPTED"].map(t=>`<option ${f.status===t?"selected":""}>${t}</option>`).join("")}</select>
     </div>
     ${table(["ID","Type","Status","Confidence","Timestamp","Summary"], d.artifacts,
-      [r=>r.id, r=>esc(r.artifact_type), r=>pill(r.status), r=>esc(r.confidence||"-"), r=>esc(r.ts_utc||"-"), r=>esc((r.summary||"").slice(0,90))])}
+      [r=>esc(r.id), r=>esc(r.artifact_type), r=>pill(r.status), r=>esc(r.confidence||"-"), r=>esc(r.ts_utc||"-"), r=>esc((r.summary||"").slice(0,90))])}
     <div class="muted">${d.total.toLocaleString()} total (showing ${d.artifacts.length})</div>`;
   document.getElementById("f-type").onchange = e => { state.filters.type = e.target.value; renderArtifacts(); };
   document.getElementById("f-status").onchange = e => { state.filters.status = e.target.value; renderArtifacts(); };
@@ -105,13 +60,13 @@ async function renderArtifacts() {
 async function renderRecovery() {
   const r = await api("/api/recovery");
   document.getElementById("cards").innerHTML = Object.entries(r.by_status).map(([k,n]) =>
-    `<div class="card"><div class="n">${n}</div><div class="l">${k}</div></div>`).join("")
+    `<div class="card"><div class="n">${esc(n)}</div><div class="l">${esc(k)}</div></div>`).join("")
     + `<div class="card"><div class="n">${r.corroborated}</div><div class="l">Corroborated</div></div>`
     + `<div class="card"><div class="n">${r.unrecovered_regions}</div><div class="l">Unrecoverable (proven)</div></div>`;
   const rec = await api("/api/recovered", { limit: 50 });
   document.getElementById("view").innerHTML = table(
     ["ID","Table","Status","Method","Rowid","Region","Fit"], rec.records,
-    [x=>x.id, x=>esc(x.table_name), x=>pill(x.status), x=>esc(x.method), x=>x.rowid_value ?? "unknown", x=>esc(x.region), x=>x.fit])
+    [x=>esc(x.id), x=>esc(x.table_name), x=>pill(x.status), x=>esc(x.method), x=>esc(x.rowid_value ?? "unknown"), x=>esc(x.region), x=>esc(x.fit)])
     + `<div class="muted">${rec.total} recovered records — see the report for each one's full confidence explanation.</div>`;
 }
 
@@ -120,7 +75,7 @@ async function renderCarved() {
   document.getElementById("cards").innerHTML = "";
   document.getElementById("view").innerHTML = `<p class="explain">A carved candidate is never confirmed evidence: it stays <b>CARVED CANDIDATE</b> whatever its confidence.</p>`
     + table(["ID","Kind","Status","Confidence","Matched","Corroborated by"], c.candidates,
-      [x=>x.id, x=>esc(x.kind), x=>pill(x.status), x=>esc(x.confidence||"-"), x=>esc((x.matched||"").slice(0,60)), x=>(x.corroborated_by||[]).length])
+      [x=>esc(x.id), x=>esc(x.kind), x=>pill(x.status), x=>esc(x.confidence||"-"), x=>esc((x.matched||"").slice(0,60)), x=>esc((x.corroborated_by||[]).length)])
     + `<div class="muted">${c.total} candidates.</div>`;
 }
 
@@ -136,7 +91,7 @@ async function renderCorrelation() {
 async function renderValidation() {
   const v = await api("/api/validation", { limit: 100 });
   document.getElementById("cards").innerHTML = Object.entries(v.by_status).map(([k,n]) =>
-    `<div class="card"><div class="n">${n}</div><div class="l">${k}</div></div>`).join("");
+    `<div class="card"><div class="n">${esc(n)}</div><div class="l">${esc(k)}</div></div>`).join("");
   document.getElementById("view").innerHTML = table(
     ["Status","Check","Target","Detail"], v.results,
     [r=>pill(r.status), r=>esc(r.check_name), r=>esc((r.target_label||"").slice(0,50)), r=>esc((r.detail||"").slice(0,140))]);
@@ -163,6 +118,3 @@ async function render() {
   }
 }
 render();
-</script>
-</body>
-</html>

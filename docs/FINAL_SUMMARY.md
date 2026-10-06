@@ -27,7 +27,7 @@ in the decision path, no network calls, no cloud dependency.
 | 8 | The deterministic confidence scorer (`confidence/scorer.py`) |
 | 9 | Migration 002/003 (recovered_records, carved_candidates, wal_frames, freelist_pages, correlations, corroboration), the `recover`/`carve`/`correlate`/`reconstruct` pipeline stages, recovery/carving integrity validation, the five-bad-data-class test |
 | 10 | CLI: `analyze` runs recovery by default (`--no-recover` to opt out), standalone `recover` command, real-numbers summary panels |
-| 11 | FastAPI dashboard (`dashboard/api.py`) + static frontend (`web/index.html`) |
+| 11 | FastAPI dashboard (`dashboard/api.py`) + static frontend (`src/android_forensics/dashboard/web/index.html`) |
 | 12 | Report sections 7/9/10/12 render real recovered/carved/correlated content when those stages ran; PDF format (`reporting/pdf.py`) |
 | 13 | The synthetic lab gains genuine deletions with physically-derived ground truth (`lab/synth.py`, `SynthSpec.with_deletions`) |
 | 14 | Full green suite, measured coverage |
@@ -191,7 +191,6 @@ Full list: [`docs/limitations.md`](limitations.md). Highlights:
 * Correlation matches by identity of a value, not by meaning.
 * Confidence calibration was measured on a small synthetic sample (93 artifacts, 3 seeds) — it demonstrates the
   mechanism works as designed, not a generalisable precision curve.
-* The dashboard's frontend (`web/`) is resolved relative to the source tree; it is not packaged for an installed wheel.
 * Recovering a database ingested with `--preserve none` (hash-only) has no working copy to recover from.
 * Everything inherited from Review 1: damaged databases SQLite refuses to open yield no *active* artifacts (page-level
   recovery still attempts them directly); encrypted databases are flagged, never opened; ABX XML and MMS attachments

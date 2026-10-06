@@ -35,7 +35,7 @@ android-forensics = "android_forensics.cli.app:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-android_forensics = ["reporting/templates/*.j2"]
+android_forensics = ["reporting/templates/*.j2", "dashboard/web/*", "py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

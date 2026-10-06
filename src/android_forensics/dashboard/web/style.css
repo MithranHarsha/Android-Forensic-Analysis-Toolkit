@@ -1,0 +1,29 @@
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif; margin: 0; background: #f4f5f7; color: #1a1a1a; }
+  header { background: #14213d; color: #fff; padding: 14px 20px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  header h1 { font-size: 17px; margin: 0; }
+  header .case { opacity: .85; font-size: 13px; }
+  nav { display: flex; gap: 2px; background: #1f2a44; padding: 0 20px; overflow-x: auto; }
+  nav button { background: none; border: none; color: #cfd6e6; padding: 10px 14px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; white-space: nowrap; }
+  nav button.active { color: #fff; border-bottom-color: #4f8cff; }
+  main { padding: 18px 20px 40px; max-width: 1200px; margin: 0 auto; }
+  .cards { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+  .card { background: #fff; border-radius: 8px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); min-width: 140px; }
+  .card .n { font-size: 22px; font-weight: 600; }
+  .card .l { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .03em; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); font-size: 13px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+  th { background: #f0f2f5; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: #555; }
+  tr:hover td { background: #f8fafc; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .pill.ACTIVE, .pill.VALID { background: #d7f5e1; color: #14663a; }
+  .pill.RECOVERED { background: #d7e8f5; color: #1c4f7a; }
+  .pill.PARTIAL, .pill.UNVERIFIED { background: #fdf0cc; color: #7a5b0f; }
+  .pill.CORRUPTED, .pill.INVALID { background: #f8d7da; color: #7a1c26; }
+  .pill.candidate { background: #ece4fb; color: #4b2e83; }
+  .toolbar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .toolbar input, .toolbar select { padding: 5px 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; }
+  .muted { color: #777; font-size: 12px; margin-top: 8px; }
+  .err { background: #f8d7da; color: #7a1c26; padding: 10px 14px; border-radius: 6px; }
+  .explain { font-size: 12px; color: #444; }
+  #view { min-height: 200px; }

@@ -9,3 +9,8 @@ cases/
 scratch/
 .DS_Store
 .coverage
+
+*.spec
+.mypy_cache/
+.ruff_cache/
+.hypothesis/

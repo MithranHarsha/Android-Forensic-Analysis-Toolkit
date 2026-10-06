@@ -1,7 +1,7 @@
 # The dashboard (Phase 11)
 
 `android-forensics dashboard CASE` serves a small FastAPI application over one case's results: a REST API
-(`src/android_forensics/dashboard/api.py`) and a static single-page frontend (`web/index.html`, vanilla HTML/CSS/JS, no
+(`src/android_forensics/dashboard/api.py`) and a static single-page frontend (`src/android_forensics/dashboard/web/index.html`, vanilla HTML/CSS/JS, no
 build step, no external network dependency). It is **read-only**: no endpoint runs a pipeline stage or writes to the case
 database, so opening the dashboard can never change what a report or the CLI would show. Every number it displays comes
 straight from the same case database `analyze` / `recover` / `report` already populated.
@@ -30,7 +30,7 @@ has to guess whether it has seen everything.
 
 ## The frontend
 
-`web/index.html` has one tab per major result: Summary, Artifacts, Recovery, Carved, Correlation, Validation, Timeline.
+`src/android_forensics/dashboard/web/index.html` has one tab per major result: Summary, Artifacts, Recovery, Carved, Correlation, Validation, Timeline.
 Every carved row renders its status as the literal pill `CARVED CANDIDATE`; there is no code path in the page that turns a
 carved or recovered entry into anything resembling `ACTIVE`. The page never talks to anything but this case's own API.
 

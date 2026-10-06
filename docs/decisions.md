@@ -155,11 +155,10 @@ connection for the app's lifetime. No endpoint calls `run_stage` or writes to th
 what `analyze` / `recover` / `report` already produced, never analyse on its own, so opening it can never change a case's
 recorded state.
 
-**D-027 · `web/` lives at the repository root, not inside the installed package.** `dashboard.create_app` locates it via a
-path relative to the source file (`parents[3] / "web"`), which works for the way this project is actually run — from a
-repository checkout, as the capstone and its tests always do — but would not resolve inside a wheel installed from PyPI
-(setuptools `package-data` only bundles files inside the package). Packaging the frontend as installable data is future
-work; noted here rather than left as a silent gap.
+**D-027 · The dashboard frontend ships inside the package.** *(Superseded in 0.2.0.)* It originally lived at the repository
+root and was found via `parents[3] / "web"`, which broke in an installed wheel. It now lives at
+`src/android_forensics/dashboard/web/` and is declared in setuptools `package-data`, so wheel, Docker and PyInstaller
+builds all find it.
 
 **D-028 · The report reflects exactly what ran, never what the tool can do.** `ReportModel.recovery["stages_run"]` is read
 directly from `CaseStore.last_run(stage)`, one bool per `recover`/`carve`/`correlate`/`reconstruct` — not from whether any

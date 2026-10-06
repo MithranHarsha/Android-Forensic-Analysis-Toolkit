@@ -264,7 +264,6 @@ confirmed evidence; confidence calibration was measured on a small synthetic sam
 │   ├── lab/           synthetic evidence generator (+ genuine deletions) · ground-truth comparator · deletion matrix ·
 │   │                  matrix scorer · hot-journal builder
 │   └── cli/           Typer app + Rich helpers
-├── web/                dashboard frontend (index.html)
 ├── tests/             unit/ · integration/
 ├── synthetic_evidence/  generated dataset (dir, .zip, .tar.gz, ground_truth.json — with genuine deletions)
 ├── experiments/       r1_*.py, r2_*.py · results/ (CSV, JSON, PNG charts)

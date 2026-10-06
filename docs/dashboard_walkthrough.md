@@ -1,6 +1,6 @@
 # Dashboard UI walkthrough
 
-A plain-language guide to every screen in `web/index.html` — what it shows, what each control does, and why it matters
+A plain-language guide to every screen in `src/android_forensics/dashboard/web/index.html` — what it shows, what each control does, and why it matters
 forensically. Written to be read from while presenting the live dashboard (`android-forensics dashboard CASE`,
 `http://127.0.0.1:8765/`). For the underlying REST API each screen calls, see [dashboard.md](dashboard.md).
 

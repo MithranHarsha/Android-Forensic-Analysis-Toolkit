@@ -22,7 +22,7 @@ from android_forensics import __version__
 from android_forensics.errors import CaseError
 from android_forensics.storage.case_store import CaseStore
 
-WEB_DIR = Path(__file__).resolve().parents[3] / "web"
+WEB_DIR = Path(__file__).resolve().parent / "web"
 
 
 def _row(r) -> dict[str, Any]:
