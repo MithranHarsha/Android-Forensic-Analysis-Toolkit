@@ -31,7 +31,6 @@ import subprocess
 import sys
 import tempfile
 import time
-from collections import Counter
 from pathlib import Path
 
 from android_forensics import __version__
@@ -99,6 +98,8 @@ def main() -> None:
     ap.add_argument("--cases-dir", default=None)
     ap.add_argument("--keep", action="store_true")
     ap.add_argument("--max-ref-db-mb", type=float, default=40.0)
+    ap.add_argument("--agreement-limit", type=int, default=25, help="compare with reference tools on the N databases with the most recovered records")
+    ap.add_argument("--ref-timeout", type=int, default=240)
     args = ap.parse_args()
     cases_dir = Path(args.cases_dir or tempfile.mkdtemp(prefix="v1_cases_"))
     exe = os.environ.get("AF_SQLD")
@@ -134,7 +135,11 @@ def main() -> None:
         db = copy_db(store, t, scratch)
         try:
             con = sqlite3.connect(db)
-            expected = con.execute(f'SELECT COUNT(*) FROM "{t["name"]}"').fetchone()[0]
+            if t["parsed_by"] == "browser" and t["name"] == "urls":
+                # one artifact per *visit* (table 'visits') plus one per URL that has no visit at all: that remainder is what 'urls' yields
+                expected = con.execute('SELECT COUNT(*) FROM urls WHERE id NOT IN (SELECT url FROM visits)').fetchone()[0]
+            else:
+                expected = con.execute(f'SELECT COUNT(*) FROM "{t["name"]}"').fetchone()[0]
             con.close()
         except sqlite3.DatabaseError as exc:
             fidelity.append({"database": t["path"], "table": t["name"], "parser": t["parsed_by"], "expected": None, "extracted": None, "error": str(exc)[:80]})
@@ -150,8 +155,8 @@ def main() -> None:
     # ---- C. agreement with reference tools on deleted content
     agree = []
     work = Path(tempfile.mkdtemp(prefix="v1_ref_"))
-    dbs = store.q("SELECT DISTINCT d.evidence_file_id AS fid, f.path, f.preserved_copy, f.size, f.source_id FROM recovered_records r JOIN evidence_files f ON f.id=r.database_file_id "
-                  "JOIN databases d ON d.evidence_file_id=f.id")
+    dbs = store.q("SELECT d.evidence_file_id AS fid, f.path, f.preserved_copy, f.size, f.source_id, COUNT(*) AS n FROM recovered_records r JOIN evidence_files f ON f.id=r.database_file_id "
+                  "JOIN databases d ON d.evidence_file_id=f.id GROUP BY d.evidence_file_id ORDER BY n DESC")[: args.agreement_limit]
     for d in dbs:
         if d["size"] > args.max_ref_db_mb * 1e6:
             continue
@@ -164,16 +169,19 @@ def main() -> None:
         live = live_tokens(db)
         ours = ours_vals - live
         ref: dict[str, set[str]] = {}
-        sql = subprocess.run(["sqlite3", str(db), ".recover"], capture_output=True, timeout=600).stdout.decode("utf-8", "replace")
+        sql = subprocess.run(["sqlite3", str(db), ".recover"], capture_output=True, timeout=args.ref_timeout).stdout.decode("utf-8", "replace")
         ref["sqlite3_recover"] = cells("\n".join(line for line in sql.splitlines() if "lost_and_found" in line)) - live
         if exe:
             outdir = work / "dissect"
             shutil.rmtree(outdir, ignore_errors=True)
             outdir.mkdir()
-            subprocess.run([exe, str(db), "-d", str(outdir), "-e", "csv", "-c", "-f", "-l", "off"], capture_output=True, timeout=1800)
+            try:
+                subprocess.run([exe, str(db), "-d", str(outdir), "-e", "csv", "-c", "-f", "-l", "off"], capture_output=True, timeout=args.ref_timeout)
+            except subprocess.TimeoutExpired:
+                print("   (sqlite_dissect timed out on", d["path"], ")", flush=True)
             txt = "\n".join(f.read_text("utf-8", "replace") for f in outdir.rglob("*") if f.is_file())
             ref["sqlite_dissect"] = cells(txt) - live
-        row = {"database": d["path"], "size_mb": round(d["size"] / 1e6, 2), "ours_deleted_values": len(ours)}
+        row = {"database": d["path"], "size_mb": round(d["size"] / 1e6, 2), "recovered_records": d["n"], "ours_deleted_values": len(ours)}
         for name, toks in ref.items():
             row[f"{name}_deleted_values"] = len(toks)
             row[f"both_ours_and_{name}"] = len(ours & toks)

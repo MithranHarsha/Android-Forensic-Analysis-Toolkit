@@ -15,6 +15,9 @@
 
 * ext4 and f2fs are parsed read-only; **deleted files are not recovered at the file-system level**, only deleted records inside
   SQLite databases. Not supported: ext4 `inline_data`/`meta_bg`, f2fs compression, AFF/AFF4, VMDK/VHD, FAT/exFAT SD-card images.
+* ext4 **hash-tree (`dir_index`) directories** are read by linear scan (index nodes look like empty entries), which is correct by design but
+  was not exercised by a fixture (the fixtures' directories are too small to be indexed); f2fs double-indirect addressing (files > ~8 GiB)
+  is likewise untested.
 * The ext4/f2fs readers were validated against images produced by one `mke2fs`/`mkfs.f2fs` version and one Linux kernel
   (6.10) and, for corpora, against public acquisitions listed in [validation.md](validation.md); other kernels/vendors vary.
 * **Encrypted `/data` is common on real phones.** Detected and reported (`file_based_encryption_detected`, `ENCRYPTED_SUSPECT`),

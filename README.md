@@ -54,7 +54,7 @@ is a self-assessment. Read [Limitations](#limitations) before relying on it in c
 | **Reporting** | Self-contained HTML (16 sections), JSON, CSV and PDF ([docs/reporting.md](docs/reporting.md)); every section shows real recovery/carving/correlation content when those stages ran, or an explicit `NOT PERFORMED` box when they did not — never both |
 | **Dashboard** | A read-only FastAPI REST API + static frontend ([docs/dashboard.md](docs/dashboard.md)) over one case's results; `android-forensics dashboard CASE` (the web server reuses the same router per case) |
 | **Typed data models** | Immutable, validated pydantic models — see [docs/data_models.md](docs/data_models.md) — for every artifact status (`ACTIVE`, `RECOVERED`, `PARTIAL`, `CORRUPTED`, `CARVED CANDIDATE`, `INVALID`), `RecoveredRecord`, `CarvedCandidate`, `CorrelationEdge` and `ConfidenceAssessment` |
-| **Test laboratory** | Deterministic synthetic Android evidence generator with ground truth, now including genuine deletions and physically-derived recovery expectations ([docs/synthetic_lab.md](docs/synthetic_lab.md)); 1,482 automated tests; reproducible experiments |
+| **Test laboratory** | Deterministic synthetic Android evidence generator with ground truth, now including genuine deletions and physically-derived recovery expectations ([docs/synthetic_lab.md](docs/synthetic_lab.md)); 1,644 automated tests (unit, integration, fuzz, hostile-evidence, sandbox, browser end-to-end); reproducible experiments |
 
 ## Architecture
 
@@ -234,13 +234,20 @@ match their digest; a carved row is still, in the database, exactly `CARVED CAND
 ## Testing
 
 ```bash
-pytest                                          # 1,482 tests (1 platform-dependent skip)
-coverage run -m pytest && coverage report       # 95.7% line coverage of src/android_forensics
+pytest                                          # 1,644 tests (2 platform-dependent skips); `--ignore=tests/e2e` without Playwright
+HYPOTHESIS_PROFILE=ci pytest tests/security     # a longer fuzzing campaign (soak = 5,000 examples per property)
+coverage run -m pytest && coverage report       # 94.0% line coverage of src/android_forensics (docs/coverage.txt)
+scripts/test_linux_matrix.sh                    # the suite in Linux containers on Python 3.11 / 3.12 / 3.13 (needs Docker)
+python experiments/b1_scaling.py                # scaling + peak memory → docs/performance.md
+python experiments/v2_cross_tool.py             # recovery vs other tools on the deletion matrix → docs/validation.md
+python experiments/v1_real_corpus.py FILE --name android9   # a real public acquisition (see docs/validation.md)
 python experiments/r1_extraction_accuracy.py    # Review 1: measured accuracy + scaling → experiments/results/
 python experiments/r1_inspection.py             # Review 1: inspector throughput/memory + fidelity fuzz
 python experiments/r2_recovery.py               # Review 2: recovery matrix + confidence calibration + timing
 python experiments/r2_charts.py                 # → experiments/results/*.png
 ```
+
+The suite also fuzzes every parser (property-based, found a real DDL-parser crash), mutates ext4/f2fs/E01/sparse images, feeds archive bombs, injection, control-character and XSS payloads, tests the job sandbox's CPU / memory / file-size / wall-clock limits, and drives the real web UI in headless Chromium.
 
 The suite covers hashing, archive attacks, filesystem discovery, SQLite header/sidecar/reader behaviour, pure-row
 parsers, ground-truth extraction accuracy, the page-level recovery engine (untouched cells, freeblocks, WAL, journals,

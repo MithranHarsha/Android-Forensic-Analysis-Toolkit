@@ -1,0 +1,22 @@
+{
+  "dataset": "Digital Corpora Android 9 (Pixel 3) - Google Pixel 3.tar",
+  "command": "android-forensics analyze <tar> --no-report",
+  "seconds": 545.8,
+  "peak_rss_mb": 2593,
+  "exit": 0,
+  "machine": "Apple M-series, 12 cores, macOS, CPython 3.12",
+  "tool": "0.3.0",
+  "note": "measured by v1_real_corpus.py (wait4 peak RSS); the later reruns reuse this case for the fidelity and agreement stages",
+  "stage_seconds": {
+    "scan": 9.9,
+    "extract": 9.8,
+    "recover": 181.1,
+    "carve": 165.6,
+    "correlate": 55.6,
+    "reconstruct": 73.0,
+    "validate": 17.7,
+    "timeline": 0.3
+  },
+  "before_the_recovery_speedup": "recover stage had not finished after 35 minutes on the same 605 databases",
+  "ingest_and_hash_seconds_approx": 32.8
+}

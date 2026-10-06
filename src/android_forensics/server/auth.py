@@ -14,7 +14,7 @@ from android_forensics.server.db import ServerDB
 
 ROLES = ("viewer", "analyst", "admin")
 _RANK = {r: i for i, r in enumerate(ROLES)}
-TOKEN_PREFIX = "afk_"
+TOKEN_PREFIX = "afk_"  # nosec B105 - a public prefix that makes tokens recognisable, not a secret
 
 
 def new_token() -> str:

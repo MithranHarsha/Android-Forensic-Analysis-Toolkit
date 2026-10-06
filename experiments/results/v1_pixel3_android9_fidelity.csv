@@ -1,0 +1,12 @@
+database,table,parser,expected,extracted,match,error
+Google Pixel 3 Logical Image - Data/data/data/com.android.chrome/app_chrome/Default/History,urls,browser,1,1,True,
+Google Pixel 3 Logical Image - Data/data/data/com.android.chrome/app_chrome/Default/History,visits,browser,22,22,True,
+Google Pixel 3 Logical Image - Data/data/data/com.android.chrome/app_chrome/Default/History,downloads,browser,1,1,True,
+Google Pixel 3 Logical Image - Data/data/data/com.android.providers.contacts/databases/calllog.db,calls,calls,9,9,True,
+Google Pixel 3 Logical Image - Data/data/data/com.android.providers.telephony/databases/mmssms.db,sms,sms,29,29,True,
+Google Pixel 3 Logical Image - Data/data/data/com.android.providers.telephony/databases/mmssms.db,raw,sms,0,0,True,
+Google Pixel 3 Logical Image - Data/data/data/com.google.android.gms/databases/icing_mmssms.db,mmssms,sms,176,176,True,
+Google Pixel 3 Logical Image - Data/data/data/com.viber.voip/databases/viber_data,calls,calls,2,2,True,
+Google Pixel 3 Logical Image - Data/data/user_de/0/com.android.providers.contacts/databases/calllog_shadow.db,calls,calls,0,0,True,
+Google Pixel 3 Logical Image - Data/data/user_de/0/com.android.providers.telephony/databases/mmssms.db,sms,sms,0,0,True,
+Google Pixel 3 Logical Image - Data/data/user_de/0/com.android.providers.telephony/databases/mmssms.db,raw,sms,3,3,True,

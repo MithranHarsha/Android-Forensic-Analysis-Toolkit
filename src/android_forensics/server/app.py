@@ -72,7 +72,10 @@ def create_server_app(settings: ServerSettings) -> FastAPI:
     s = settings
     for d in (s.cases_dir, s.data_dir, s.uploads_dir, s.jobs_dir):
         d.mkdir(parents=True, exist_ok=True)
-    os.chmod(s.data_dir, 0o700)
+    try:
+        os.chmod(s.data_dir, 0o700)   # tokens' hashes, uploads and logs: owner only (best effort on shared/network mounts)
+    except OSError:
+        pass
     db = ServerDB(s.db_path)
     audit = AuditLog(s.audit_path)
     jobs = JobManager(s, db, audit)
@@ -144,7 +147,7 @@ def create_server_app(settings: ServerSettings) -> FastAPI:
             store.close()
 
     # ------------------------------------------------------------------ unauthenticated (minimal)
-    @app.get("/api/health")
+    @app.api_route("/api/health", methods=["GET", "HEAD"])
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
@@ -353,7 +356,7 @@ def create_server_app(settings: ServerSettings) -> FastAPI:
     if WEB_DIR.is_dir():
         app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 
-        @app.get("/")
+        @app.api_route("/", methods=["GET", "HEAD"])
         def index() -> FileResponse:
             return FileResponse(WEB_DIR / "index.html")
 

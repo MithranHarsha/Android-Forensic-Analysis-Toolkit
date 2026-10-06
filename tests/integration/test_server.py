@@ -281,3 +281,21 @@ def test_server_state_is_private_and_orphan_jobs_are_interrupted_on_restart(tmp_
     assert conn.execute("PRAGMA foreign_keys").fetchone()[0] in (0, 1)
     assert AuditLog(settings.audit_path).verify().ok
     assert json.loads(settings.audit_path.read_text().splitlines()[0])["event"] == "jobs_interrupted_at_startup"
+
+
+def test_head_requests_work_for_health_checks(srv):
+    c, _t, _s = srv
+    assert c.head("/api/health").status_code == 200 and c.head("/").status_code == 200
+    assert "default-src 'none'" in c.head("/").headers["content-security-policy"]
+
+
+def test_public_host_names_still_allow_loopback_for_health_checks(tmp_path):
+    from android_forensics.cli.app import allowed_hosts
+
+    hosts = allowed_hosts(["forensics.example.org"])
+    assert hosts[0] == "forensics.example.org" and {"localhost", "127.0.0.1", "[::1]"} <= set(hosts)
+    assert allowed_hosts(None) == ("localhost", "127.0.0.1", "[::1]")
+    with TestClient(create_server_app(make_settings(tmp_path, allowed_hosts=hosts)), base_url="http://forensics.example.org") as c:
+        assert c.get("/api/health").status_code == 200
+        assert c.get("/api/health", headers={"Host": "127.0.0.1:8765"}).status_code == 200      # the compose healthcheck
+        assert c.get("/api/health", headers={"Host": "evil.example"}).status_code == 400

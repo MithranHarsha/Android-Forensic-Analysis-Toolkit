@@ -425,10 +425,10 @@ def scan_page_detailed(
         if covered[s]:
             continue
         if data[s] != 0:  # an untouched cell starts with its payload size, which is never 0
-            h = cell_header(data, s, limit)
-            if h is not None:
-                for model in by_width.get(len(h.types), ()):  # same models, same order as before: only those with this column count can fit
-                    c = full_from_header(data, h, model, encoding)
+            hdr = cell_header(data, s, limit)
+            if hdr is not None:
+                for model in by_width.get(len(hdr.types), ()):  # same models, same order as before: only those with this column count can fit
+                    c = full_from_header(data, hdr, model, encoding)
                     if c is not None:
                         candidates.append(c)
         head = heads.get(s)

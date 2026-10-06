@@ -34,7 +34,7 @@ from android_forensics.util import now_iso
 
 SIGNATURE_FILE = "signature.json"
 SUMS_FILE = "sha256sums.txt"
-PASSPHRASE_ENV = "ANDROID_FORENSICS_KEY_PASSPHRASE"
+PASSPHRASE_ENV = "ANDROID_FORENSICS_KEY_PASSPHRASE"  # nosec B105 - the *name* of an environment variable, not a secret
 
 
 class SigningError(ForensicsError):

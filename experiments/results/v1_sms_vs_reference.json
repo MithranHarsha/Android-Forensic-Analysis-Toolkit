@@ -1,0 +1,494 @@
+{
+  "summary": {
+    "reference_messages": 35,
+    "reference_flagged_deleted": 4,
+    "found": {
+      "ACTIVE": 30,
+      "NOT FOUND": 3,
+      "RECOVERED": 2
+    },
+    "by_deleted_flag": {
+      "deleted/NOT FOUND": 2,
+      "deleted/RECOVERED": 2,
+      "live/ACTIVE": 30,
+      "live/NOT FOUND": 1
+    },
+    "not_found_and_only_in_bugle_db": 3,
+    "reference_messages_with_a_telephony_mmssms_source": 30,
+    "of_those_found": {
+      "ACTIVE": 30
+    },
+    "our_sms_artifacts": {
+      "ACTIVE": 208,
+      "RECOVERED": 2
+    }
+  },
+  "messages": [
+    {
+      "id": 1,
+      "deleted": "",
+      "carved": "",
+      "body": "This is your second test message.",
+      "direction": "Outgoing",
+      "sources": [
+        "bugle_db",
+        "bugle_db-wal",
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 2,
+      "deleted": "",
+      "carved": "",
+      "body": "Thank you. I will make sure to read it when I get to work.",
+      "direction": "Outgoing",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 3,
+      "deleted": "",
+      "carved": "",
+      "body": "Driving, can't text Sent from Rouge",
+      "direction": "Outgoing",
+      "sources": [
+        "bugle_db-wal",
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 4,
+      "deleted": "",
+      "carved": "",
+      "body": "This is test message 1.",
+      "direction": "Incoming",
+      "sources": [
+        "bugle_db-wal",
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 5,
+      "deleted": "Yes",
+      "carved": "",
+      "body": "",
+      "direction": "Incoming",
+      "sources": [
+        "bugle_db",
+        "bugle_db-wal"
+      ],
+      "found_as": null,
+      "found_in": null
+    },
+    {
+      "id": 6,
+      "deleted": "Yes",
+      "carved": "",
+      "body": "Got it.",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal"
+      ],
+      "found_as": "RECOVERED",
+      "found_in": "icing_mmssms.db"
+    },
+    {
+      "id": 7,
+      "deleted": "",
+      "carved": "",
+      "body": "Test message 1",
+      "direction": "Outgoing",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 8,
+      "deleted": "",
+      "carved": "",
+      "body": "Your phone is activated! Reply HELP to learn more. Reply OFF to stop receiving notifications. Std msg&data rates may apply.",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 9,
+      "deleted": "",
+      "carved": "",
+      "body": "<#> Your 6-digit Twitter confirmation code is 006710. /XGYNXWncmi",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 10,
+      "deleted": "",
+      "carved": "",
+      "body": "Hey, let's chat on Wickr Me. Download the private messenger for free at https://me-download.wickr.com/#/version/me. My Wickr ID is thisisdfir",
+      "direction": "Outgoing",
+      "sources": [
+        "bugle_db-wal",
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 11,
+      "deleted": "",
+      "carved": "",
+      "body": "",
+      "direction": "Outgoing",
+      "sources": [
+        "bugle_db-wal"
+      ],
+      "found_as": null,
+      "found_in": null
+    },
+    {
+      "id": 12,
+      "deleted": "",
+      "carved": "",
+      "body": "<#> Your Viber code: 181896 You can also tap this link to finish your activation: https://unv.viber.com/a/181896 6EQbNfKgO8O",
+      "direction": "Incoming",
+      "sources": [
+        "bugle_db-wal",
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 13,
+      "deleted": "",
+      "carved": "",
+      "body": "Free VZW Msg: Your account balance of $53.57 is due by 04/02/2019. You can pay your bill at m.vzw.com/m/paybill",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 14,
+      "deleted": "",
+      "carved": "",
+      "body": "Free VZW Msg: Your account balance of $53.57 is due by 04/02/2019. You can pay your bill at m.vzw.com/m/paybill",
+      "direction": "Incoming",
+      "sources": [
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 15,
+      "deleted": "",
+      "carved": "",
+      "body": "119511 is your verification code for Dust - Private Texting & Secret Text App.",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 16,
+      "deleted": "",
+      "carved": "",
+      "body": "Verification code: 9121. The code is only used for removing WeChat restrictions. Do not share it with anyone.",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 17,
+      "deleted": "",
+      "carved": "",
+      "body": "Your Wickr Me confirmation code is 8617325",
+      "direction": "Incoming",
+      "sources": [
+        "bugle_db",
+        "bugle_db-wal",
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 18,
+      "deleted": "",
+      "carved": "",
+      "body": "Use 4972 as Microsoft account security code",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 19,
+      "deleted": "",
+      "carved": "",
+      "body": "Free VZW Msg: Your bill is ready to view. $86.14 due immediately.$53.57 due on 04/02/2019. Dial #PMT to pay it now or visit m.vzw.com/m/mybill",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 20,
+      "deleted": "",
+      "carved": "",
+      "body": "Free VZW Msg: Thanks for your $86.14 payment from card ending in 0743. For balance info, dial #BAL. Did you know you can earn rewards just for paying your monthly wireless bills? Join Verizon Up today by visiting m.vzw.com/m/VZup",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 21,
+      "deleted": "",
+      "carved": "",
+      "body": "Free VZW Msg: We noticed you updated your My Verizon password or requested a one-time password. If it wasn't you, please give us a call at 1.800.922.0204.",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 22,
+      "deleted": "",
+      "carved": "",
+      "body": "Free VZW Msg: Your first paper-free bill will be ready in a few days. We'll send another reminder when it's available to view and pay on vzw.com/myvz",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 23,
+      "deleted": "",
+      "carved": "",
+      "body": "Free VZW Msg: Your account balance of $86.14 is due by 03/02/2019. You can pay your bill at m.vzw.com/m/paybill",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 24,
+      "deleted": "",
+      "carved": "",
+      "body": "549556 is your Messenger code to verify your phone number",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 25,
+      "deleted": "",
+      "carved": "",
+      "body": "\u200b\u200bYour imo code is 2139 9K+9OFePKE9",
+      "direction": "Incoming",
+      "sources": [
+        "bugle_db",
+        "bugle_db-wal",
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 26,
+      "deleted": "",
+      "carved": "",
+      "body": "[#][TikTok] 8933 is your verification code fJpzQvK2eu1",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 27,
+      "deleted": "",
+      "carved": "",
+      "body": "LINE OTP Service: Please enter 5189 into LINE within the next 30 mins. Reply STOP to Cancel.",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 28,
+      "deleted": "",
+      "carved": "",
+      "body": "<#> Your Signal verification code: 486-734 doDiFGKPO1r",
+      "direction": "Incoming",
+      "sources": [
+        "bugle_db",
+        "bugle_db-wal",
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 29,
+      "deleted": "",
+      "carved": "",
+      "body": "Verification code: 3444. The code is only used for removing WeChat restrictions. Do not share it with anyone.",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 30,
+      "deleted": "",
+      "carved": "",
+      "body": "Verification code: 3444. The code is only used for removing WeChat restrictions. Do not share it with anyone.",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 31,
+      "deleted": "",
+      "carved": "",
+      "body": "WeChat verification code (1948) may only be used once to verify mobile number. For account safety, don't forward the code to others.",
+      "direction": "Incoming",
+      "sources": [
+        "bugle_db",
+        "bugle_db-wal",
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 32,
+      "deleted": "",
+      "carved": "",
+      "body": "<#> Your WhatsApp code: 657-825 You can also tap on this link to verify your phone: v.whatsapp.com/657825 Don't share this code with others 4sgLq1p5sV6",
+      "direction": "Incoming",
+      "sources": [
+        "bugle_db",
+        "bugle_db-wal",
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 33,
+      "deleted": "Yes",
+      "carved": "",
+      "body": "Your Messenger verification code is G-816393",
+      "direction": "Incoming",
+      "sources": [
+        "icing_mmssms.db"
+      ],
+      "found_as": "RECOVERED",
+      "found_in": "icing_mmssms.db"
+    },
+    {
+      "id": 34,
+      "deleted": "",
+      "carved": "",
+      "body": "(wYBvgVoFlymq) Google is verifying the phone# of this device as part of setup. Learn more: https://goo.gl/LHCS9W",
+      "direction": "Outgoing",
+      "sources": [
+        "icing_mmssms.db-wal",
+        "mmssms.db"
+      ],
+      "found_as": "ACTIVE",
+      "found_in": "mmssms.db"
+    },
+    {
+      "id": 35,
+      "deleted": "Yes",
+      "carved": "",
+      "body": "",
+      "direction": "",
+      "sources": [
+        "bugle_db"
+      ],
+      "found_as": null,
+      "found_in": null
+    }
+  ]
+}

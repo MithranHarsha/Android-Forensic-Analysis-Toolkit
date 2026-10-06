@@ -5,7 +5,45 @@ the format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-## [0.2.0]
+## [0.3.0] — deployable release
+
+0.2.0 was never published; everything since 0.1.0 is described here.
+
+### Added
+- **Disk images**: raw / Android-sparse / EnCase **E01** (multi-segment, checksummed, stored-hash verification); GPT and MBR; read-only
+  **ext2/3/4** and **f2fs** parsers hardened for hostile input (f2fs validated against images written by a real kernel, including the
+  NAT-journal override); file-based-encryption detection (`file_based_encryption_*` issues).
+- **Chain of custody**: external append-only hash-chained audit log of every command (`audit-verify`), Ed25519 report signing
+  (`keygen`, `report --sign`, `verify-report`), build/dependency/plugin stamp in every report.
+- **Authenticated multi-case server** (`serve`, `server-token`): roles, token auth, rate limiting and lockout, strict CSP and security
+  headers, streamed uploads, sandboxed resource-limited analysis jobs, server audit log, browser UI.
+- **Parser plugins** (`--plugin`, entry points) with SHA-256 attribution; **config file**; **structured logging**; **case details** and an
+  examiner certification block for court-oriented reports.
+- **Assurance**: property-based fuzzing, mutated-image tests, archive-bomb/injection/XSS/control-character tests, sandbox tests, a
+  real-browser end-to-end test; cross-tool comparison (`experiments/v2_cross_tool.py`), real-corpus validation
+  (`experiments/v1_real_corpus.py`), scaling benchmark (`experiments/b1_scaling.py`).
+- **Packaging/ops**: hash-pinned lock files, non-root read-only Docker image, PyInstaller single-file binary, GitHub Actions (lint, types,
+  bandit, pip-audit, 3-OS x 3-Python tests, e2e, nightly fuzz, docker, binaries, docs, release), docker-compose + Caddy/nginx/systemd, MkDocs site.
+
+### Changed
+- `shared_prefs` XML is parsed with `defusedxml`; SQLite evidence copies are opened with a **read-only authorizer**, `trusted_schema=OFF`,
+  a heap cap and per-statement deadlines; the CLI console neutralises control characters in evidence text.
+- The dashboard frontend ships **inside** the package (wheel/Docker/binary installs now work) and is CSP-clean (no inline script/style).
+- Recovery scanning is 7–10x faster on real databases (cell header parsed once per offset, not once per table); the carver's neighbour
+  search is O(log n) instead of O(n) per hit; correlation keeps only the facts it needs (~15 GB -> ~4.7 GB per million artifacts).
+- WAL/journal sidecars over 1 GiB are reported instead of read into memory.
+- Runtime `requirements.txt` no longer lists test tooling (moved to the `dev` extra).
+
+### Fixed
+- DDL parser raised `IndexError` on malformed `CREATE TABLE` text (found by fuzzing); now always `DdlError`.
+- A test opened the shared synthetic evidence with SQLite directly (creating `-shm` files); it now works on a copy.
+
+### Known limitations
+- Windows untested; encrypted `/data` is reported, not decrypted; f2fs compression and ext4 `inline_data` unsupported; the Linux test
+  matrix and compose smoke test could not be run in the development environment (see `scripts/test_linux_matrix.sh`).
+
+
+## [0.2.0] — unreleased (folded into 0.3.0)
 
 ### Added
 - Review 2 capabilities are now part of the package description and version: deleted/superseded SQLite record

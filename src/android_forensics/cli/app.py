@@ -913,6 +913,12 @@ def audit_verify(
 _LOOPBACK = {"127.0.0.1", "::1", "localhost"}
 
 
+def allowed_hosts(configured: list[str] | None) -> tuple[str, ...]:
+    """Host headers the server answers to: the configured public names plus loopback (container health checks and the proxy's
+    upstream probe call it as 127.0.0.1; a browser on another machine cannot make *this* name arrive from outside)."""
+    return tuple(dict.fromkeys([*(configured or ()), "localhost", "127.0.0.1", "[::1]"]))
+
+
 @app.command()
 @handle_errors
 def serve(
@@ -951,7 +957,7 @@ def serve(
     data_dir, cases_dir = data_dir.resolve(), cases_dir.resolve()
     if data_dir == cases_dir or cases_dir in data_dir.parents or data_dir in cases_dir.parents:
         raise CaseError("--data-dir and --cases-dir must be separate, non-nested directories")
-    hosts = tuple(allowed_host or ()) or ("localhost", "127.0.0.1", "[::1]")
+    hosts = allowed_hosts(allowed_host)
     gib = 1024 ** 3
     settings = ServerSettings(
         cases_dir=cases_dir, data_dir=data_dir, max_upload_bytes=int(max_upload_gb * gib), workers=workers,

@@ -1,5 +1,9 @@
 # Final Summary — Android Deleted Data Recovery and Evidence Reconstruction Framework
 
+> **Historical document — the Review 2 acceptance record (v0.1/Phase 17).** It is kept exactly as written because its numbers come from
+> that run. For the current state of the tool (disk images, signing, the server, real-corpus validation, performance fixes, packaging)
+> see the [README](../README.md), [validation.md](validation.md), [performance.md](performance.md) and the [CHANGELOG](../CHANGELOG.md).
+
 B.Tech Cyber Forensics Capstone. This document is written from an actual, real, end-to-end run of the tool (Phase 17
 acceptance run, `cases/acceptance`, `reports/acceptance/`) executed against the synthetic evidence set committed at
 `synthetic_evidence/` — not from what the pipeline is expected to do. Every number below is either the literal output of
