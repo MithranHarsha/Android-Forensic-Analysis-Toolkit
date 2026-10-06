@@ -14,6 +14,7 @@ import re
 import shutil
 import sqlite3
 import tempfile
+import time
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -30,6 +31,34 @@ APPROXIMATED_COLLATIONS = ("LOCALIZED", "PHONEBOOK", "UNICODE", "LOCALE")
 _ANDROID_COLLATIONS = APPROXIMATED_COLLATIONS
 _WITHOUT_ROWID = re.compile(r"\bWITHOUT\s+ROWID\b", re.I)
 _VIRTUAL = re.compile(r"^\s*CREATE\s+VIRTUAL\s+TABLE", re.I)
+
+
+# ---------------------------------------------------------------- hostile-database hardening
+# A database from a compromised device is attacker-controlled *code* as well as data: views, triggers, CHECK constraints,
+# generated columns and DEFAULTs can call SQL functions, and a crafted query plan can burn unbounded CPU or memory. The
+# session therefore (1) distrusts the schema (PRAGMA trusted_schema=OFF: schema-embedded SQL may not call "unsafe" functions),
+# (2) installs an authorizer that permits reading and nothing else, (3) caps the heap, and (4) aborts any statement that runs
+# past a deadline.
+_ALLOWED_PRAGMAS = frozenset({
+    "table_info", "table_xinfo", "table_list", "index_list", "index_info", "index_xinfo", "foreign_key_list", "integrity_check",
+    "quick_check", "query_only", "page_size", "page_count", "freelist_count", "encoding", "user_version", "application_id",
+    "schema_version", "data_version", "auto_vacuum", "journal_mode", "trusted_schema", "hard_heap_limit", "soft_heap_limit", "collation_list",
+})
+_DENIED_FUNCTIONS = frozenset({"load_extension", "fts3_tokenizer", "readfile", "writefile", "edit", "zipfile", "sqlar_compress"})
+_READ_ACTIONS = frozenset({sqlite3.SQLITE_SELECT, sqlite3.SQLITE_READ, sqlite3.SQLITE_RECURSIVE, sqlite3.SQLITE_TRANSACTION,
+                           sqlite3.SQLITE_SAVEPOINT})
+DEFAULT_STATEMENT_SECONDS = 300.0
+HEAP_LIMIT_BYTES = 1 << 30
+
+
+def _read_only_authorizer(action: int, arg1: str | None, arg2: str | None, db_name: str | None, trigger: str | None) -> int:
+    if action in _READ_ACTIONS:
+        return sqlite3.SQLITE_OK
+    if action == sqlite3.SQLITE_FUNCTION:
+        return sqlite3.SQLITE_DENY if (arg2 or "").lower() in _DENIED_FUNCTIONS else sqlite3.SQLITE_OK
+    if action == sqlite3.SQLITE_PRAGMA:
+        return sqlite3.SQLITE_OK if (arg1 or "").lower() in _ALLOWED_PRAGMAS else sqlite3.SQLITE_DENY
+    return sqlite3.SQLITE_DENY  # INSERT/UPDATE/DELETE/CREATE/DROP/ALTER/ATTACH/DETACH/ANALYZE/REINDEX/... all refused
 
 
 def q(identifier: str) -> str:
@@ -100,13 +129,15 @@ class SQLiteSession:
 
     def __init__(
         self, db_path: Path, sidecars: dict[str, Path] | None, scratch_root: Path,
-        *, track_undecodable: bool = False, follow_symlinks: bool = False,
+        *, track_undecodable: bool = False, follow_symlinks: bool = False, statement_seconds: float = DEFAULT_STATEMENT_SECONDS,
     ):
         self.db_path = db_path
         self.sidecars = sidecars or {}
         self.scratch_root = scratch_root
         self.track_undecodable = track_undecodable
         self.follow_symlinks = follow_symlinks
+        self.statement_seconds = statement_seconds
+        self._deadline = float("inf")
         self.decode_errors = 0
         self.notes: list[str] = []
         self.db_sha256: str | None = None
@@ -151,10 +182,26 @@ class SQLiteSession:
             for name in _ANDROID_COLLATIONS:
                 self.conn.create_collation(name, lambda a, b: (a > b) - (a < b))
             self.conn.execute("PRAGMA query_only=ON")
+            self._harden()
         except sqlite3.DatabaseError as exc:
             self.close()
             raise SQLiteOpenError(f"{type(exc).__name__}: {exc}") from exc
         return self
+
+    def _harden(self) -> None:
+        assert self.conn is not None
+        self.conn.execute("PRAGMA trusted_schema=OFF")
+        try:
+            self.conn.execute(f"PRAGMA hard_heap_limit={HEAP_LIMIT_BYTES}")
+        except sqlite3.DatabaseError:  # pragma: no cover - SQLite < 3.31
+            pass
+        self.conn.set_authorizer(_read_only_authorizer)
+        self.arm()
+        self.conn.set_progress_handler(lambda: 1 if time.monotonic() > self._deadline else 0, 10_000)
+
+    def arm(self) -> None:
+        """Restart the statement clock; a statement that runs longer than ``statement_seconds`` is aborted."""
+        self._deadline = time.monotonic() + self.statement_seconds
 
     def close(self) -> None:
         if self.conn is not None:
@@ -171,6 +218,7 @@ class SQLiteSession:
 
     def schema(self) -> list[SchemaObject]:
         assert self.conn is not None
+        self.arm()
         objs: list[SchemaObject] = []
         for row in self.conn.execute("SELECT type, name, tbl_name, rootpage, sql FROM sqlite_master ORDER BY rowid"):
             obj = SchemaObject(row[0], row[1], row[2], row[3], row[4])
@@ -208,9 +256,11 @@ class SQLiteSession:
             rowid_name = rowid_expression(c.name for c in table.columns) if table.columns else "rowid"
         cols = "*" if not columns else ", ".join(q(c) for c in columns)
         rid = rowid_name if (has_rowid and rowid_name) else "NULL"
+        self.arm()
         cur = self.conn.execute(f"SELECT {rid} AS __rowid__, {cols} FROM {q(name)}")
         names = [d[0] for d in cur.description][1:]
         for r in cur:
+            self.arm()
             yield r[0], dict(zip(names, r[1:]))
 
     def wal_index(self) -> ShmFacts | None:
@@ -227,6 +277,7 @@ class SQLiteSession:
     def integrity(self, limit: int = 20) -> list[str]:
         assert self.conn is not None
         try:
+            self.arm()
             return [r[0] for r in self.conn.execute(f"PRAGMA integrity_check({int(limit)})")]
         except sqlite3.DatabaseError as exc:
             return [f"integrity_check aborted: {exc}"]
@@ -235,6 +286,7 @@ class SQLiteSession:
         """Like ``integrity``, but without comparing index contents to table contents (b-tree structure only)."""
         assert self.conn is not None
         try:
+            self.arm()
             return [r[0] for r in self.conn.execute(f"PRAGMA quick_check({int(limit)})")]
         except sqlite3.DatabaseError as exc:
             return [f"quick_check aborted: {exc}"]

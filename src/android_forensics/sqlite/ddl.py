@@ -187,6 +187,17 @@ def _type_text(tokens: list[Token]) -> str:
 
 
 def parse_create_table(sql: str) -> TableSql:
+    """Parse a ``CREATE TABLE`` statement from ``sqlite_master``. That text comes straight from the (possibly hostile) database
+    file, so *any* malformed input must surface as :class:`DdlError`, never as an unrelated exception."""
+    try:
+        return _parse_create_table(sql)
+    except (IndexError, ValueError, KeyError) as exc:
+        if isinstance(exc, DdlError):
+            raise
+        raise DdlError(f"malformed CREATE TABLE ({type(exc).__name__}): statement is truncated or structurally invalid") from exc
+
+
+def _parse_create_table(sql: str) -> TableSql:
     tokens = tokenize(sql)
     i = 0
     if not (tokens and tokens[0].is_word("CREATE")):
@@ -207,6 +218,8 @@ def parse_create_table(sql: str) -> TableSql:
     name = tokens[i].text
     i += 1
     if i < len(tokens) and tokens[i].is_punct("."):  # schema.name
+        if i + 1 >= len(tokens):
+            raise DdlError("missing table name after the schema qualifier")
         name = tokens[i + 1].text
         i += 2
     if virtual:
@@ -221,6 +234,8 @@ def parse_create_table(sql: str) -> TableSql:
     table_pk: list[tuple[str, bool]] = []  # (column, descending)
     autoincrement = False
     for item in items:
+        if not item:
+            raise DdlError("empty column definition")
         if item[0].is_word(*_TABLE_CONSTRAINTS) and item[0].kind == "word":
             j = 0
             if item[0].is_word("CONSTRAINT"):
@@ -230,6 +245,8 @@ def parse_create_table(sql: str) -> TableSql:
                 if k < len(item) and item[k].is_punct("("):
                     stop = _skip_parens(item, k)
                     for part in _split_top_level(item[k + 1:stop - 1]):
+                        if not part:
+                            raise DdlError("empty PRIMARY KEY column")
                         table_pk.append((part[0].text, False))  # a table-level DESC does not stop INTEGER PRIMARY KEY being the rowid alias
                     autoincrement = autoincrement or any(t.is_word("AUTOINCREMENT") for t in item[stop:])
             continue

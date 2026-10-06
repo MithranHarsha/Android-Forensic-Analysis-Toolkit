@@ -97,10 +97,14 @@ def test_tokenizer_handles_quotes_comments_and_numbers():
         ("word", "a"), ("string", "it's"), ("quoted", 'q"x'), ("quoted", "br"), ("number", "1.5e3"), ("number", "0x1F"), ("punct", ";")]
 
 
-def test_every_table_of_the_synthetic_android_databases(synth):
+def test_every_table_of_the_synthetic_android_databases(synth, tmp_path):
     out, _ = synth
+    # SQLite itself must never touch the shared evidence: even mode=ro creates -shm files beside a WAL database. Work on a copy.
+    import shutil
+    work = tmp_path / "dump"
+    shutil.copytree(out / "android_dump", work)
     checked = 0
-    for db in sorted(Path(out / "android_dump").rglob("*")):
+    for db in sorted(Path(work).rglob("*")):
         if not db.is_file() or not (db.suffix == ".db" or db.name == "History"):
             continue
         try:

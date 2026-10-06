@@ -61,13 +61,13 @@ async function renderRecovery() {
   const r = await api("/api/recovery");
   document.getElementById("cards").innerHTML = Object.entries(r.by_status).map(([k,n]) =>
     `<div class="card"><div class="n">${esc(n)}</div><div class="l">${esc(k)}</div></div>`).join("")
-    + `<div class="card"><div class="n">${r.corroborated}</div><div class="l">Corroborated</div></div>`
-    + `<div class="card"><div class="n">${r.unrecovered_regions}</div><div class="l">Unrecoverable (proven)</div></div>`;
+    + `<div class="card"><div class="n">${esc(r.corroborated)}</div><div class="l">Corroborated</div></div>`
+    + `<div class="card"><div class="n">${esc(r.unrecovered_regions)}</div><div class="l">Unrecoverable (proven)</div></div>`;
   const rec = await api("/api/recovered", { limit: 50 });
   document.getElementById("view").innerHTML = table(
     ["ID","Table","Status","Method","Rowid","Region","Fit"], rec.records,
     [x=>esc(x.id), x=>esc(x.table_name), x=>pill(x.status), x=>esc(x.method), x=>esc(x.rowid_value ?? "unknown"), x=>esc(x.region), x=>esc(x.fit)])
-    + `<div class="muted">${rec.total} recovered records — see the report for each one's full confidence explanation.</div>`;
+    + `<div class="muted">${esc(rec.total)} recovered records — see the report for each one's full confidence explanation.</div>`;
 }
 
 async function renderCarved() {
@@ -76,13 +76,13 @@ async function renderCarved() {
   document.getElementById("view").innerHTML = `<p class="explain">A carved candidate is never confirmed evidence: it stays <b>CARVED CANDIDATE</b> whatever its confidence.</p>`
     + table(["ID","Kind","Status","Confidence","Matched","Corroborated by"], c.candidates,
       [x=>esc(x.id), x=>esc(x.kind), x=>pill(x.status), x=>esc(x.confidence||"-"), x=>esc((x.matched||"").slice(0,60)), x=>esc((x.corroborated_by||[]).length)])
-    + `<div class="muted">${c.total} candidates.</div>`;
+    + `<div class="muted">${esc(c.total)} candidates.</div>`;
 }
 
 async function renderCorrelation() {
   const g = await api("/api/correlations", { limit: 300 });
   document.getElementById("cards").innerHTML = `<div class="card"><div class="n">${g.nodes.length}</div><div class="l">Entities</div></div>`
-    + `<div class="card"><div class="n">${g.total}</div><div class="l">Edges</div></div>`;
+    + `<div class="card"><div class="n">${esc(g.total)}</div><div class="l">Edges</div></div>`;
   document.getElementById("view").innerHTML = table(
     ["Source","Relation","Target","Explanation"], g.edges,
     [e=>esc(`${e.source_kind}:${e.source_ref}`), e=>esc(e.relation), e=>esc(`${e.target_kind}:${e.target_ref}`), e=>esc(e.explanation)]);
