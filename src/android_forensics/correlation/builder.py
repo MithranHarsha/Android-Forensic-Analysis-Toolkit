@@ -57,14 +57,47 @@ class FileInfo:
 
 @dataclass(frozen=True)
 class Subject:
-    """An artifact taking part in correlation. ``ref`` is ``artifact:<id>`` once stored, ``recovered:<record id>`` while it is a draft."""
+    """An artifact taking part in correlation. ``ref`` is ``artifact:<id>`` once stored, ``recovered:<record id>`` while it is a draft.
+
+    Correlation needs only an artifact's *facts* (phones, names, URLs, text, moment), a label, its status and extraction method —
+    not its raw row, provenance or confidence factors, which weigh ~17 KB per artifact once parsed into models. Callers that hold
+    a million artifacts therefore pass the precomputed ``facts``/``summary``/``status``/``method`` with ``artifact=None`` and drop the
+    heavy model immediately (see :meth:`slim`); tests and small callers can still pass the full artifact."""
 
     ref: str
-    artifact: Artifact
+    artifact: Artifact | None
     origin: str  # "active" | "recovered"
     database: str  # path of the database it belongs to
     file_id: int  # evidence file of that database
     found_in: int | None = None  # recovered only: evidence file whose bytes held it (the database itself, or a sidecar)
+    precomputed: Facts | None = None
+    summary_text: str | None = None
+    status_value: str | None = None
+    method_value: str | None = None
+
+    @staticmethod
+    def slim(ref: str, artifact: Artifact, origin: str, database: str, file_id: int, found_in: int | None = None) -> Subject:
+        return Subject(ref, None, origin, database, file_id, found_in, facts_of(artifact), artifact.summary, artifact.status.value,
+                       artifact.extraction_method.value)
+
+    @property
+    def facts(self) -> Facts:
+        if self.precomputed is not None:
+            return self.precomputed
+        assert self.artifact is not None
+        return facts_of(self.artifact)
+
+    @property
+    def label(self) -> str | None:
+        return self.summary_text if self.artifact is None else self.artifact.summary
+
+    @property
+    def status(self) -> str:
+        return self.status_value or (self.artifact.status.value if self.artifact is not None else "")
+
+    @property
+    def method(self) -> str:
+        return self.method_value or (self.artifact.extraction_method.value if self.artifact is not None else "")
 
 
 @dataclass(frozen=True)
@@ -124,7 +157,7 @@ class _Builder:
         self.files = files
         self.subjects = sorted(subjects, key=lambda s: (s.origin != "active", _natural(s.ref)))
         self.carved = sorted(carved, key=lambda c: c.id or 0)
-        self.facts: dict[str, Facts] = {s.ref: facts_of(s.artifact) for s in self.subjects}
+        self.facts: dict[str, Facts] = {s.ref: s.facts for s in self.subjects}
         self.nodes: dict[str, Node] = {}
         self.by_ref = {s.ref: s for s in self.subjects}
         self.active = [s for s in self.subjects if s.origin == "active"]
@@ -146,7 +179,7 @@ class _Builder:
         for s in self.subjects:
             f = self.facts[s.ref]
             kind = _ROLE_KIND.get(f.role, EntityKind.ARTIFACT)
-            node = self.nodes[s.ref] = self.g.node(kind, s.ref, s.artifact.summary or s.ref, status=s.artifact.status.value,
+            node = self.nodes[s.ref] = self.g.node(kind, s.ref, s.label or s.ref, status=s.status,
                                                    origin=s.origin, database=s.database)
             if s.origin == "active":
                 where = self.file_node(s.file_id)
@@ -154,8 +187,8 @@ class _Builder:
             else:
                 where = self.file_node(s.found_in or s.file_id)
                 self.g.add_edge(node, Relation.RECOVERED_FROM, where,
-                                f"{node.label!r} was {s.artifact.status.value.lower()} from {where.label} ({s.artifact.extraction_method.value})",
-                                status=s.artifact.status.value, method=s.artifact.extraction_method.value)
+                                f"{node.label!r} was {s.status.lower()} from {where.label} ({s.method})",
+                                status=s.status, method=s.method)
 
     def phone_edges(self) -> None:
         for s in self.subjects:
@@ -306,7 +339,7 @@ class _Builder:
                         if t not in found:
                             found.append(t)
                             sentences.append(f"the contact name {value!r}")
-                            self.g.add_edge(node, Relation.CORRELATES_WITH, self.nodes[t.ref], f"a text value of the record is the name of {t.artifact.summary!r}",
+                            self.g.add_edge(node, Relation.CORRELATES_WITH, self.nodes[t.ref], f"a text value of the record is the name of {t.label!r}",
                                             strength=0.5, value=value)
             unique = tuple(dict.fromkeys(sentences))
             self.result.corroboration[ref] = Corroboration(ref, unique, tuple(sorted({t.ref for t in found}, key=_natural)), bool(unique))

@@ -83,13 +83,15 @@ def test_hostile_member_names_never_escape_the_case(tmp_path):
                 z.writestr(n, "x")
             except (ValueError, OSError):
                 pass
-    s = make_case(tmp_path)
+    before = {p for p in tmp_path.rglob("*")}
+    s = CaseStore.create(tmp_path / "box" / "c", "c", "t")
     ingest_source(s, zp)
     stored = [r["path"] for r in s.q("SELECT path FROM evidence_files")]
     assert all(".." not in p.split("/") and not p.startswith("/") and "\\" not in p and "\x00" not in p for p in stored)
-    assert not any(p.name in ("x", "boot.ini") and tmp_path not in p.parents for p in tmp_path.parent.rglob("x"))
-    escaped = [p for p in tmp_path.rglob("*") if p.is_file() and "evidence" not in p.parts and "c" not in p.parts and p != zp]
-    assert escaped == []
+    created = {p for p in tmp_path.rglob("*")} - before
+    outside = [p for p in created if (tmp_path / "box") not in p.parents and p != tmp_path / "box"]
+    assert outside == [], f"files were written outside the case directory: {outside}"
+    assert not any(p.name in ("boot.ini", "x") and p.is_file() and (tmp_path / "box") not in p.parents for p in tmp_path.rglob("*"))
 
 
 # ---------------------------------------------------------------------------- hostile SQLite

@@ -20,6 +20,7 @@ Text in a language that does not separate words with spaces is not recognised by
 from __future__ import annotations
 
 import re
+from bisect import bisect_left, bisect_right
 from dataclasses import dataclass, field
 
 NEAR = 96
@@ -52,8 +53,21 @@ def _reads_like_prose(text: str) -> bool:
     return len(words) >= 4 and letters >= 0.5 * len(text) and max(len(w) for w in words) <= 40 and not text.startswith(("http://", "https://"))
 
 
-def _near(spans: list[tuple[int, int]], start: int, end: int) -> bool:
-    return any(e >= start - NEAR and s <= end + NEAR and not (start < s and e < end) for s, e in spans)
+class _Spans:
+    """Byte spans sorted by start, answering "is there a span near ``[start, end]``?" in O(log n) instead of scanning them all.
+
+    Near means: ends no earlier than ``NEAR`` bytes before ``start``, starts no later than ``NEAR`` bytes after ``end``, and is not
+    strictly inside the run itself. (A linear scan per run made carving quadratic: 100,000 messages took 25 s of pure Python.)"""
+
+    def __init__(self, spans: list[tuple[int, int]]):
+        self.spans = sorted(spans)
+        self.starts = [s for s, _ in self.spans]
+        self.longest = max((e - s for s, e in self.spans), default=0)
+
+    def near(self, start: int, end: int) -> bool:
+        lo = bisect_left(self.starts, start - NEAR - self.longest)
+        hi = bisect_right(self.starts, end + NEAR)
+        return any(e >= start - NEAR and s <= end + NEAR and not (start < s and e < end) for s, e in self.spans[lo:hi])
 
 
 def find_sms_like(data: bytes, lo: int, hi: int, phone_spans: list[tuple[int, int]], millis_spans: list[tuple[int, int]]) -> list[SmsHit]:
@@ -61,6 +75,7 @@ def find_sms_like(data: bytes, lo: int, hi: int, phone_spans: list[tuple[int, in
     numbers and millisecond timestamps already found in ``data``."""
     hits: list[SmsHit] = []
     tags: list[tuple[int, int]] = []
+    phones, millis = _Spans(phone_spans), _Spans(millis_spans)
     for m in _SMS_TAG.finditer(data):
         if not lo <= m.start() < hi:
             continue
@@ -70,20 +85,24 @@ def find_sms_like(data: bytes, lo: int, hi: int, phone_spans: list[tuple[int, in
             body_at = m.group().find(b'body="') + len('body="')
             hits.append(SmsHit(m.start() + body_at, m.start() + body_at + len(attrs["body"].encode("utf-8")), attrs["body"], "sms_backup_xml", notes))
             tags.append((m.start(), m.end()))
+    tag_starts = [a for a, _ in tags]
     for m in _RUN.finditer(data):
         s, e = m.start(), m.end()
-        if not lo <= s < hi or any(a <= s < b for a, b in tags):
+        if not lo <= s < hi:
+            continue
+        k = bisect_right(tag_starts, s) - 1          # tags are found in file order and do not overlap
+        if k >= 0 and s < tags[k][1]:
             continue
         try:
             text = m.group().decode("utf-8")
         except UnicodeDecodeError:
             continue
         found: list[str] = []
-        if _near(phone_spans, s, e):
+        if phones.near(s, e):
             found.append("sms_body_near_address")
         if _OTP.search(text):
             found.append("sms_otp_text")
-        if _near(millis_spans, s, e):
+        if millis.near(s, e):
             found.append("sms_body_near_timestamp")
         prose = _reads_like_prose(text)
         # an OTP message is short and formulaic; the other two supports need the run to read like prose

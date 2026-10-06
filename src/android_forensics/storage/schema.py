@@ -390,8 +390,18 @@ MIGRATION_003 = """
 ALTER TABLE recovered_records ADD COLUMN corroboration_json TEXT NOT NULL DEFAULT '[]';
 """
 
+MIGRATION_004 = """
+-- Court-oriented case details: case number, agency, evidence description, examiner credentials, certification statement.
+CREATE TABLE case_details(
+    key TEXT PRIMARY KEY CHECK (length(key) BETWEEN 1 AND 41),
+    value TEXT NOT NULL CHECK (length(value) <= 4000),
+    updated_at TEXT NOT NULL
+);
+"""
+
 MIGRATIONS: list[tuple[int, str, str]] = [
     (1, "Review 1 foundation schema", MIGRATION_001),
     (2, "Review 2: recovered records, carved candidates, correlations", MIGRATION_002),
     (3, "Review 2: corroboration sentences on a recovered record", MIGRATION_003),
+    (4, "Case details for court-oriented reports", MIGRATION_004),
 ]

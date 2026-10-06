@@ -155,8 +155,14 @@ def _scan(data: bytes, lo: int, hi: int, now: datetime | None, kinds: frozenset[
         support = _text_hits(data, 0, len(data), now, [r for r in RULES if r.kind in (CarveKind.PHONE_NUMBER, CarveKind.TIMESTAMP_UNIX_MILLIS)])
         phones = [(h.start, h.end) for h in support if h.kind is CarveKind.PHONE_NUMBER and h.encoding == "ascii"]
         millis = [(h.start, h.end) for h in support if h.kind is CarveKind.TIMESTAMP_UNIX_MILLIS and h.encoding == "ascii"]
+        by_start = sorted(records, key=lambda r: r.start)
+        rec_starts = [r.start for r in by_start]
+        furthest_end: list[int] = []                     # furthest_end[i] = max end among the i+1 earliest-starting records
+        for r in by_start:
+            furthest_end.append(max(r.end, furthest_end[-1]) if furthest_end else r.end)
         for s in find_sms_like(data, lo, hi, phones, millis):
-            if any(r.start <= s.start and s.end <= r.end for r in records):
+            k = bisect.bisect_right(rec_starts, s.start) - 1    # a record starting at or before the text, ending at or after it?
+            if k >= 0 and furthest_end[k] >= s.end:
                 continue  # a text column of a record-shaped sequence: the record candidate already carries it
             hits.append(_Hit(s.start, s.end, CarveKind.SMS_LIKE_TEXT, s.pattern, s.text, "ascii", True, s.notes))
     for r in records:

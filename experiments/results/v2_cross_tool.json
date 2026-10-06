@@ -1,0 +1,316 @@
+{
+  "meta": {
+    "tool": "0.2.0",
+    "python": "3.12.13",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "sqlite3_cli": "3.51.0",
+    "dissect": "/private/tmp/claude-501/-Users-harshamithran-Documents-cf/d0020428-ed59-4296-b2cb-9f2800f32467/scratchpad/dissect_venv/bin/sqlite_dissect",
+    "undark": "inflex/undark (built from source)",
+    "cases": 28,
+    "time": "2026-10-07"
+  },
+  "summary": {
+    "ours": {
+      "found": 507,
+      "expected_recoverable": 511,
+      "recall": 0.9922
+    },
+    "sqlite3_recover": {
+      "found": 9,
+      "expected_recoverable": 511,
+      "recall": 0.0176
+    },
+    "undark": {
+      "found": 223,
+      "expected_recoverable": 511,
+      "recall": 0.4364
+    },
+    "sqlite_dissect": {
+      "found": 469,
+      "expected_recoverable": 511,
+      "recall": 0.9178
+    }
+  },
+  "cases": [
+    {
+      "case": "plain",
+      "condition": "plain",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 16,
+      "sqlite_dissect": 25
+    },
+    {
+      "case": "vacuum",
+      "condition": "vacuum",
+      "expected_recoverable": 0,
+      "ours": 0,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 0,
+      "sqlite_dissect": 0
+    },
+    {
+      "case": "secure_delete",
+      "condition": "secure_delete",
+      "expected_recoverable": 0,
+      "ours": 0,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 0,
+      "sqlite_dissect": 0
+    },
+    {
+      "case": "auto_vacuum",
+      "condition": "auto_vacuum",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 16,
+      "sqlite_dissect": 25
+    },
+    {
+      "case": "journal_persist",
+      "condition": "journal_persist",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 16,
+      "sqlite_dissect": 25
+    },
+    {
+      "case": "journal_truncate",
+      "condition": "journal_truncate",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 16,
+      "sqlite_dissect": 25
+    },
+    {
+      "case": "journal_off",
+      "condition": "journal_off",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 16,
+      "sqlite_dissect": 25
+    },
+    {
+      "case": "wal_uncheckpointed",
+      "condition": "wal_uncheckpointed",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 0,
+      "sqlite_dissect": 25
+    },
+    {
+      "case": "wal_checkpointed",
+      "condition": "wal_checkpointed",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 16,
+      "sqlite_dissect": 25
+    },
+    {
+      "case": "wal_history",
+      "condition": "wal_history",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 0,
+      "sqlite_dissect": 0
+    },
+    {
+      "case": "wal_stale",
+      "condition": "wal_stale",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 0,
+      "sqlite_dissect": 25
+    },
+    {
+      "case": "update",
+      "condition": "update",
+      "expected_recoverable": 13,
+      "ours": 13,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 0,
+      "sqlite_dissect": 13
+    },
+    {
+      "case": "plain_first",
+      "condition": "plain",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 14,
+      "sqlite_dissect": 25
+    },
+    {
+      "case": "plain_middle",
+      "condition": "plain",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 16,
+      "sqlite_dissect": 25
+    },
+    {
+      "case": "plain_last",
+      "condition": "plain",
+      "expected_recoverable": 14,
+      "ours": 14,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 10,
+      "sqlite_dissect": 14
+    },
+    {
+      "case": "plain_random",
+      "condition": "plain",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 3,
+      "sqlite_dissect": 16
+    },
+    {
+      "case": "plain_block",
+      "condition": "plain",
+      "expected_recoverable": 14,
+      "ours": 14,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 10,
+      "sqlite_dissect": 14
+    },
+    {
+      "case": "plain_every_other",
+      "condition": "plain",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 1,
+      "sqlite_dissect": 18
+    },
+    {
+      "case": "plain_medium",
+      "condition": "plain",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 4,
+      "sqlite_dissect": 25
+    },
+    {
+      "case": "plain_large",
+      "condition": "plain",
+      "expected_recoverable": 17,
+      "ours": 17,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 9,
+      "undark": 1,
+      "sqlite_dissect": 17
+    },
+    {
+      "case": "plain_ps1024",
+      "condition": "plain",
+      "expected_recoverable": 4,
+      "ours": 3,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 2,
+      "sqlite_dissect": 4
+    },
+    {
+      "case": "plain_ps2048",
+      "condition": "plain",
+      "expected_recoverable": 9,
+      "ours": 7,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 6,
+      "sqlite_dissect": 8
+    },
+    {
+      "case": "plain_ps8192",
+      "condition": "plain",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 16,
+      "sqlite_dissect": 25
+    },
+    {
+      "case": "plain_ps16384",
+      "condition": "plain",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 16,
+      "sqlite_dissect": 25
+    },
+    {
+      "case": "overwrite_50",
+      "condition": "plain",
+      "expected_recoverable": 13,
+      "ours": 12,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 10,
+      "sqlite_dissect": 13
+    },
+    {
+      "case": "overwrite_100",
+      "condition": "plain",
+      "expected_recoverable": 1,
+      "ours": 1,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 1,
+      "sqlite_dissect": 1
+    },
+    {
+      "case": "overwrite_200",
+      "condition": "plain",
+      "expected_recoverable": 1,
+      "ours": 1,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 1,
+      "sqlite_dissect": 1
+    },
+    {
+      "case": "plain_residue",
+      "condition": "plain",
+      "expected_recoverable": 25,
+      "ours": 25,
+      "ours_false_positives": 0,
+      "sqlite3_recover": 0,
+      "undark": 16,
+      "sqlite_dissect": 25
+    }
+  ]
+}

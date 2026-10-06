@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "tool": "0.2.0",
+    "python": "3.12.13",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "cpu_count": 12,
+    "machine": "arm64"
+  },
+  "rows": [
+    {
+      "experiment": "B1a",
+      "rows": 10000,
+      "db_mb": 1.3,
+      "seconds": 3.83,
+      "peak_rss_mb": 130.8,
+      "exit": 0,
+      "stderr_tail": "",
+      "mb_per_s": 0.34
+    },
+    {
+      "experiment": "B1a",
+      "rows": 100000,
+      "db_mb": 13.0,
+      "seconds": 38.42,
+      "peak_rss_mb": 661.6,
+      "exit": 0,
+      "stderr_tail": "",
+      "mb_per_s": 0.34
+    },
+    {
+      "experiment": "B1a",
+      "rows": 300000,
+      "db_mb": 39.3,
+      "seconds": 126.69,
+      "peak_rss_mb": 1709.2,
+      "exit": 0,
+      "stderr_tail": "",
+      "mb_per_s": 0.31
+    },
+    {
+      "experiment": "B1a",
+      "rows": 1000000,
+      "db_mb": 131.2,
+      "seconds": 558.23,
+      "peak_rss_mb": 4712.7,
+      "exit": 0,
+      "stderr_tail": "",
+      "mb_per_s": 0.24
+    },
+    {
+      "experiment": "B1b",
+      "image_mb": 1304,
+      "file_mb": 1024,
+      "preserve": "none",
+      "seconds": 4.55,
+      "peak_rss_mb": 69.8,
+      "exit": 0,
+      "stderr_tail": "",
+      "mb_per_s": 286.7
+    },
+    {
+      "experiment": "B1b",
+      "image_mb": 1304,
+      "file_mb": 1024,
+      "preserve": "all",
+      "seconds": 4.86,
+      "peak_rss_mb": 66.9,
+      "exit": 0,
+      "stderr_tail": "",
+      "mb_per_s": 268.4
+    }
+  ]
+}

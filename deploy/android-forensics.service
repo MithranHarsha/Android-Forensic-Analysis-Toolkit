@@ -1,0 +1,40 @@
+# /etc/systemd/system/android-forensics.service — bare-metal / VM install behind nginx or Caddy.
+#   useradd --system --home /var/lib/android-forensics --shell /usr/sbin/nologin forensic
+#   python -m venv /opt/android-forensics && /opt/android-forensics/bin/pip install --require-hashes --no-deps -r requirements.lock && /opt/android-forensics/bin/pip install --no-deps .
+[Unit]
+Description=Android Forensics server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=forensic
+Group=forensic
+StateDirectory=android-forensics
+WorkingDirectory=/var/lib/android-forensics
+ExecStart=/opt/android-forensics/bin/android-forensics serve --host 127.0.0.1 --port 8765 --cases-dir /var/lib/android-forensics/cases --data-dir /var/lib/android-forensics/data --behind-proxy --allowed-host forensics.example.org
+Restart=on-failure
+RestartSec=5
+
+# Sandboxing: the service (and every analysis job it spawns) inherits these.
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/android-forensics
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+UMask=0077
+MemoryMax=12G
+TasksMax=512
+
+[Install]
+WantedBy=multi-user.target

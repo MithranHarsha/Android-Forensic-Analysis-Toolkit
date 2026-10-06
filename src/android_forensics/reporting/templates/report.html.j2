@@ -70,6 +70,7 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 {% endfor %}
 </nav>
 <main>
+{% if r.details.get('classification') %}<div class="banner" style="text-align:center;font-weight:700;letter-spacing:.06em">{{ r.details.get('classification') }}</div>{% endif %}
 <header class="top">
 <h1>Android Forensic Examination Report</h1>
 <p>{{ r.meta.case_name }} · generated {{ r.meta.generated_at }} · {{ r.meta.tool_name }} {{ r.meta.tool_version }}</p>
@@ -97,7 +98,19 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 <dl class="kv">
 <dt>Examiner</dt><dd>{{ r.meta.examiner|cell }}</dd><dt>Tool</dt><dd>{{ r.meta.tool_name }} {{ r.meta.tool_version }}</dd>
 <dt>Python</dt><dd>{{ r.meta.python }}</dd><dt>SQLite library</dt><dd>{{ r.meta.sqlite_library }}</dd><dt>Platform</dt><dd>{{ r.meta.platform }}</dd>
-</dl></section>
+</dl>
+{% set d = r.details %}
+{% if d %}
+<h3>Case details and examiner credentials</h3>
+<dl class="kv">
+{% for key, label in [('case_number','Case / reference number'),('agency','Requesting agency'),('requested_by','Requested by'),('jurisdiction','Jurisdiction'),('evidence_description','Evidence description'),('evidence_received_on','Evidence received'),('examination_started','Examination started'),('examiner_title','Examiner title'),('examiner_organisation','Organisation / laboratory'),('examiner_accreditation','Accreditation'),('examiner_email','Contact e-mail'),('examiner_phone','Contact phone')] %}{% if d.get(key) %}<dt>{{ label }}</dt><dd>{{ d[key] }}</dd>{% endif %}{% endfor %}
+{% for key, value in d.items() %}{% if key not in ('case_number','agency','requested_by','jurisdiction','evidence_description','evidence_received_on','examination_started','examiner_title','examiner_organisation','examiner_accreditation','examiner_email','examiner_phone','classification','footer','statement') %}<dt>{{ key|replace('_',' ')|capitalize }}</dt><dd>{{ value }}</dd>{% endif %}{% endfor %}
+</dl>
+{% endif %}
+<h3>Examiner certification</h3>
+<p>{{ d.get('statement') or 'I certify that this report accurately describes the examination performed and its results. Every finding is derived from the evidence hashes listed in section 4 using the tool and build identified above.' }}</p>
+<table class="sig"><tr><td>Examiner signature: ______________________________</td><td>Name: {{ r.meta.examiner|cell }}</td><td>Date: ______________</td></tr></table>
+</section>
 
 <section id="s3"><h2><span class="n">3</span>Evidence sources</h2>
 <div class="scroll"><table><thead><tr><th>#</th><th>Original path / container hash</th><th>Type</th><th>Files</th><th>Bytes</th><th>Acquisition time</th><th>Ingested (UTC)</th><th>Complete</th></tr></thead><tbody>
@@ -249,6 +262,7 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 <dt>Dependencies</dt><dd>{% for k, v in r.provenance.tool_stamp.dependencies.items() %}{{ k }} {{ v }}{% if not loop.last %}, {% endif %}{% endfor %}</dd>
 <dt>Lock-file SHA-256</dt><dd class="hash">{{ r.provenance.tool_stamp.lock_sha256|cell }}</dd>
 <dt>Source commit</dt><dd class="hash">{{ r.provenance.tool_stamp.git_commit|cell }}</dd>
+<dt>Parser plugins</dt><dd>{% if r.provenance.plugins %}{% for p in r.provenance.plugins %}{{ p.name }} <span class="hash">{{ (p.sha256 or p.origin)[:24] }}…</span> ({{ p.parsers|join(', ') }}){% if not loop.last %}; {% endif %}{% endfor %}{% else %}none loaded (built-in parsers only){% endif %}</dd>
 <dt>Command audit log</dt><dd>{% if r.provenance.audit.present %}{{ badge('VALID' if r.provenance.audit.intact else 'INVALID') }} {{ r.provenance.audit.entries }} entries · chain head <span class="hash">{{ r.provenance.audit.head }}</span>{% else %}none recorded{% endif %}</dd>
 </dl>
 <h3>C. Chain of custody</h3>
@@ -263,6 +277,7 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 <h3>F. Verifying this evidence independently</h3>
 <p>Recompute the SHA-256 of any original file (for example <code>shasum -a 256 &lt;file&gt;</code>) and compare it with section 4 or <code>evidence_manifest.json</code>. The hashes of the report files themselves are listed in <code>sha256sums.txt</code> beside this report.</p>
 </section>
+{% if r.details.get('footer') %}<footer style="text-align:center;color:var(--muted,#666);font-size:12px;margin:24px 0">{{ r.details.get('footer') }}</footer>{% endif %}
 </main></div>
 <script>
 function ftab(input,id){var q=input.value.toLowerCase(),rows=document.querySelectorAll('#'+id+' tbody tr');for(var i=0;i<rows.length;i++){rows[i].style.display=rows[i].textContent.toLowerCase().indexOf(q)>-1?'':'none'}}

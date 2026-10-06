@@ -1,0 +1,66 @@
+# Android Forensics server behind a TLS-terminating reverse proxy (Caddy obtains and renews certificates automatically).
+#
+#   cp deploy/.env.example deploy/.env && $EDITOR deploy/.env      # set AF_DOMAIN
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+#   docker compose -f deploy/docker-compose.yml exec app android-forensics server-token create --name admin --role admin
+#
+# The app container has no published port (only Caddy can reach it), a read-only root filesystem, no capabilities and
+# a non-root user. Case data and server state live in named volumes.
+
+name: android-forensics
+
+services:
+  app:
+    build: ..
+    image: android-forensics:${AF_VERSION:-latest}
+    command: >
+      serve --host 0.0.0.0 --port 8765 --cases-dir /cases --data-dir /data --behind-proxy
+      --allowed-host ${AF_DOMAIN} --max-upload-gb ${AF_MAX_UPLOAD_GB:-64} --workers ${AF_WORKERS:-2}
+      --job-memory-gb ${AF_JOB_MEMORY_GB:-8}
+    environment:
+      ANDROID_FORENSICS_LOG_LEVEL: INFO
+      ANDROID_FORENSICS_LOG_FORMAT: json
+    volumes:
+      - cases:/cases
+      - data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=2g,mode=1777
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 512
+    mem_limit: ${AF_MEM_LIMIT:-12g}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8765/api/health', timeout=3).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    expose: ["8765"]
+    networks: [internal]
+
+  caddy:
+    image: caddy:2
+    ports: ["80:80", "443:443"]
+    environment:
+      AF_DOMAIN: ${AF_DOMAIN}
+      AF_MAX_UPLOAD_GB: ${AF_MAX_UPLOAD_GB:-64}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app: {condition: service_healthy}
+    restart: unless-stopped
+    networks: [internal, public]
+
+volumes:
+  cases:
+  data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+    internal: true    # the app (and every evidence-parsing job it spawns) has NO route to the internet
+  public: {}

@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from android_forensics import TOOL_NAME, __version__
 from android_forensics.config import HTML_ROW_CAP
 from android_forensics.filesystem.android_paths import KNOWN_APPS
+from android_forensics.plugins import LOADED as _LOADED_PLUGINS
 from android_forensics.reporting import text
 from android_forensics.storage.case_store import CaseStore, utcnow
 
@@ -35,6 +36,7 @@ class ReportModel(BaseModel):
     table_catalog: list[dict[str, Any]]
     custody: dict[str, Any]
     provenance: dict[str, Any] = Field(default_factory=dict)
+    details: dict[str, str] = Field(default_factory=dict)
     runs: list[dict[str, Any]]
     methodology: list[tuple[str, str]]
     limitations: list[str]
@@ -304,12 +306,13 @@ def build_report_model(store: CaseStore, html_row_cap: int | None = None) -> Rep
         status_glossary=text.STATUS_GLOSSARY,
     )
     model.html_row_cap = cap
+    model.details = store.details()
     from android_forensics.custody.audit import AUDIT_FILENAME, AuditLog
     from android_forensics.custody.stamp import tool_stamp
 
     audit = AuditLog(store.case_dir / AUDIT_FILENAME).verify()
     model.provenance = {
-        "tool_stamp": tool_stamp(),
+        "tool_stamp": tool_stamp(), "plugins": [p.as_dict() for p in _LOADED_PLUGINS],
         "audit": {"present": audit.entries > 0, "entries": audit.entries, "intact": audit.ok, "head": audit.head,
                   "problem": audit.reason or None},
     }

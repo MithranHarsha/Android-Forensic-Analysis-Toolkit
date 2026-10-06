@@ -282,8 +282,9 @@ def _load_active_subjects(store: CaseStore) -> list[Subject]:
     subjects = []
     for row in store.q("SELECT id FROM artifacts WHERE artifact_type != 'app_summary' ORDER BY id"):
         art = store.get_artifact(row["id"])
-        subjects.append(Subject(f"artifact:{row['id']}", art, "active",
-                                art.provenance.source_database or art.provenance.source_file, art.provenance.evidence_file_id))
+        # keep only what correlation reads: at a million artifacts the parsed models alone would need ~15 GB
+        subjects.append(Subject.slim(f"artifact:{row['id']}", art, "active",
+                                     art.provenance.source_database or art.provenance.source_file, art.provenance.evidence_file_id))
     return subjects
 
 
@@ -298,7 +299,7 @@ def _recovered_drafts(store: CaseStore) -> tuple[list[Subject], dict[str, int]]:
             continue
         draft = reconstruct(record, ctx)
         ref = f"recovered:{record.id}"
-        subjects.append(Subject(ref, draft, "recovered", ctx.database_path, record.database_file_id, record.source_file_id))
+        subjects.append(Subject.slim(ref, draft, "recovered", ctx.database_path, record.database_file_id, record.source_file_id))
         record_id_by_ref[ref] = record.id
     return subjects, record_id_by_ref
 

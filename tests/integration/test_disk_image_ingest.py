@@ -135,3 +135,26 @@ def test_tampered_e01_fails_acquisition_integrity(tmp_path):
     s = ingest_source(store, p)
     types = {r["issue_type"] for r in store.q("SELECT issue_type FROM scan_issues WHERE stage='ingest'")}
     assert "image_hash_mismatch" in types and not s.complete
+
+
+# ---------------------------------------------------------------------------- f2fs
+
+
+def test_f2fs_image_is_acquired_like_a_directory_and_noted(tmp_path):
+    import hashlib
+
+    from tests.tools.f2fs_tree import expected_files
+
+    img = tmp_path / "userdata.img"
+    img.write_bytes(gzip.decompress((FIXTURES / "f2fs" / "kernel_extra_dirty.img.gz").read_bytes()))
+    store = CaseStore.create(tmp_path / "c", "c", "t")
+    s = ingest_source(store, img)
+    assert s.source_type is SourceType.DISK_IMAGE and s.complete
+    got = {r["path"]: r["sha256"] for r in store.q("SELECT path, sha256 FROM evidence_files")}
+    # the volume's root holds "data" and "system", so it is recognised as an Android /data partition and mounted at data/
+    want = {f"data/{p}": hashlib.sha256(d).hexdigest() for p, d in expected_files().items()}
+    assert got == want                                    # paths and bytes identical to what the kernel was asked to write
+    issues = {r["issue_type"]: r["detail"] for r in store.q("SELECT issue_type, detail FROM scan_issues WHERE stage='ingest'")}
+    assert "f2fs" in issues["filesystem_found"] and "userdata" in issues["filesystem_found"]
+    assert "not cleanly unmounted" in issues["filesystem_note"]
+    assert "symlink_skipped" in {r["issue_type"] for r in store.q("SELECT issue_type FROM scan_issues WHERE stage='ingest'")}

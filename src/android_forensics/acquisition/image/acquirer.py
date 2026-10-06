@@ -7,7 +7,8 @@ from collections.abc import Iterator
 from pathlib import Path
 
 from android_forensics.acquisition.base import AcquireContext, AcquiredFile, AcquisitionIssue, ingest_stream
-from android_forensics.acquisition.image.ext4 import ROOT_INODE, Ext4Error, Ext4FileSystem, Ext4Inode, WalkIssue, looks_like_ext
+from android_forensics.acquisition.image.ext4 import ROOT_INODE, Ext4Error, Ext4FileSystem, WalkIssue, looks_like_ext
+from android_forensics.acquisition.image.f2fs import F2fsError, F2fsFileSystem
 from android_forensics.acquisition.image.partitions import FsLocation, find_filesystems
 from android_forensics.acquisition.image.source import EWF_MAGIC, SPARSE_MAGIC, ImageError, ImageSource, open_image
 from android_forensics.acquisition.safety import BudgetExceeded, UnsafePathError, normalize_member_path
@@ -37,13 +38,13 @@ def is_disk_image(path: Path) -> bool:
         return False
 
 
-def _times(ino: Ext4Inode) -> FileTimes:
+def _times(ino, fs_name: str) -> FileTimes:  # noqa: ANN001 - Ext4Inode | F2fsInode (same time attributes)
     crtime = f"; crtime={iso_from_epoch(ino.crtime)}" if ino.crtime else ""
     return FileTimes(
         mtime=iso_from_epoch(ino.mtime) if ino.mtime is not None else None,
         atime=iso_from_epoch(ino.atime) if ino.atime is not None else None,
         ctime=iso_from_epoch(ino.ctime) if ino.ctime is not None else None,
-        basis=f"ext4_inode (UTC epoch seconds; ctime = inode change time{crtime})",
+        basis=f"{fs_name}_inode (UTC epoch seconds; ctime = inode change time{crtime})",
     )
 
 
@@ -77,13 +78,8 @@ class ImageAcquirer:
                 label = f"partition {loc.index}" + (f" '{loc.name}'" if loc.name else "") if loc.index else "image"
                 if loc.note:
                     yield AcquisitionIssue(label, "partition_note", loc.note)
-                if loc.fstype == "ext":
-                    produced = yield from self._acquire_ext(ctx, src, loc, label, ordinal)
-                    ordinal = produced
-                elif loc.fstype == "f2fs":
-                    from android_forensics.acquisition.image.f2fs import acquire_f2fs
-
-                    ordinal = yield from acquire_f2fs(self, ctx, src, loc, label, ordinal)
+                if loc.fstype in ("ext", "f2fs"):
+                    ordinal = yield from self._acquire_fs(ctx, src, loc, label, ordinal)
                 else:
                     yield AcquisitionIssue(label, "filesystem_not_recognised",
                                            f"{loc.length:,} bytes at offset {loc.offset:,}: neither ext nor f2fs (encrypted, FAT, raw or another format); not read")
@@ -98,22 +94,28 @@ class ImageAcquirer:
             return "".join(c if c.isalnum() or c in "._-" else "_" for c in loc.name)
         return f"partition{loc.index}" if loc.index else ""
 
-    # ------------------------------------------------------------------ ext2/3/4
-    def _acquire_ext(self, ctx: AcquireContext, src: ImageSource, loc: FsLocation, label: str, ordinal: int):
+    # ------------------------------------------------------------------ ext2/3/4 and f2fs
+    def _acquire_fs(self, ctx: AcquireContext, src: ImageSource, loc: FsLocation, label: str, ordinal: int):
+        name = "ext4" if loc.fstype == "ext" else "f2fs"
         try:
-            fs = Ext4FileSystem(src, loc.offset, loc.length)
+            fs: Ext4FileSystem | F2fsFileSystem
+            if loc.fstype == "ext":
+                ext = fs = Ext4FileSystem(src, loc.offset, loc.length)
+                sb = ext.sb
+                desc = (f"ext2/3/4, block size {sb.block_size}, {sb.blocks_count:,} blocks, label '{safe_text(sb.label)}', "
+                        f"uuid {sb.uuid}, last mounted at '{safe_text(sb.last_mounted)}'")
+                root_names = self._ext_root_names(ext)
+            else:
+                f2 = fs = F2fsFileSystem(src, loc.offset, loc.length)
+                desc = (f"f2fs {safe_text(f2.sb.version)}, {f2.sb.block_count:,} blocks, label '{safe_text(f2.sb.label)}', "
+                        f"uuid {f2.sb.uuid}, checkpoint version {f2.cp_ver}")
+                root_names = f2.root_names()
         except ImageError as exc:
-            yield AcquisitionIssue(label, "filesystem_unreadable", f"ext: {exc}", incomplete=True)
+            yield AcquisitionIssue(label, "filesystem_unreadable", f"{name}: {exc}", incomplete=True)
             return ordinal
-        sb = fs.sb
-        yield AcquisitionIssue(label, "filesystem_found", f"ext2/3/4, block size {sb.block_size}, {sb.blocks_count:,} blocks, "
-                               f"label '{safe_text(sb.label)}', uuid {sb.uuid}, last mounted at '{safe_text(sb.last_mounted)}'")
+        yield AcquisitionIssue(label, "filesystem_found", desc)
         for note in fs.notes:
             yield AcquisitionIssue(label, "filesystem_note", note)
-        try:
-            root_names = {e.name.decode("utf-8", "replace") for e in fs.entries(fs.inode(ROOT_INODE))}
-        except ImageError:
-            root_names = set()
         prefix = self.prefix_for(loc, root_names)
         walk_issues: list[WalkIssue] = []
         for entry in fs.walk(walk_issues):
@@ -141,12 +143,12 @@ class ImageAcquirer:
                 yield AcquisitionIssue(rel, "file_based_encryption_detected", "inode carries the fscrypt flag; contents are ciphertext and were not read")
                 continue
             try:
-                reader = fs.open_file(ino)
-                acquired = ingest_stream(ctx, ordinal, rel, reader, ino.size, _times(ino))  # type: ignore[arg-type]
+                reader = fs.open_file(ino)  # type: ignore[arg-type]
+                acquired = ingest_stream(ctx, ordinal, rel, reader, ino.size, _times(ino, name))  # type: ignore[arg-type]
             except BudgetExceeded as exc:
                 yield AcquisitionIssue(rel, "budget_exceeded", str(exc), incomplete=True)
                 return ordinal
-            except (Ext4Error, ImageError, OSError, struct.error) as exc:
+            except (Ext4Error, F2fsError, ImageError, OSError, struct.error) as exc:
                 yield AcquisitionIssue(rel, "member_read_error", f"{type(exc).__name__}: {exc}")
                 continue
             ordinal += 1
@@ -155,6 +157,13 @@ class ImageAcquirer:
             w = walk_issues.pop(0)
             yield AcquisitionIssue(self._join(prefix, w.path), w.issue_type, w.detail)
         return ordinal
+
+    @staticmethod
+    def _ext_root_names(fs: Ext4FileSystem) -> set[str]:
+        try:
+            return {e.name.decode("utf-8", "replace") for e in fs.entries(fs.inode(ROOT_INODE))}
+        except ImageError:
+            return set()
 
     @staticmethod
     def _join(prefix: str, path: str) -> str:

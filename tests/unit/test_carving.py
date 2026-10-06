@@ -383,3 +383,43 @@ def test_utf16_text_is_carved_with_offsets_in_bytes():
     data = b"\xff" * 7 + raw + b"\xff" * 7
     (c,) = carve_bytes(data, SOURCE, now=NOW).candidates
     assert (c.offset, c.length, c.encoding, c.matched) == (7, len(raw), "utf-16le", "+14155552671")
+
+
+# ---------------------------------------------------------------------------- performance rewrite must not change results
+
+
+def test_spans_near_matches_the_naive_definition():
+    from hypothesis import given
+    from hypothesis import strategies as st
+
+    from android_forensics.carving.sms import NEAR, _Spans
+
+    def naive(spans, start, end):
+        return any(e >= start - NEAR and s <= end + NEAR and not (start < s and e < end) for s, e in spans)
+
+    span = st.tuples(st.integers(0, 3000), st.integers(1, 40)).map(lambda t: (t[0], t[0] + t[1]))
+
+    @given(st.lists(span, max_size=60), st.integers(0, 3200), st.integers(1, 700))
+    def check(spans, start, length):
+        assert _Spans(spans).near(start, start + length) == naive(spans, start, start + length)
+
+    check()
+
+
+def test_carving_cost_grows_linearly_not_quadratically():
+    """100k phone-number / timestamp / prose neighbours used to cost O(n*m); doubling the input must roughly double the time."""
+    import time
+
+    from android_forensics.carving.carver import CarveSource, carve_bytes
+
+    def blob(n):
+        return b"\x00".join(b"+1202555%04d some words that read like a message %d 1709280000000" % (i % 10000, i) for i in range(n))
+
+    src = CarveSource(evidence_file_id=1, source_file="f", source_sha256="0" * 64, container="file")
+    t = {}
+    for n in (4000, 8000):
+        data = blob(n)
+        t0 = time.perf_counter()
+        carve_bytes(data, src)
+        t[n] = time.perf_counter() - t0
+    assert t[8000] < t[4000] * 3.2, f"carving looks super-linear: {t}"

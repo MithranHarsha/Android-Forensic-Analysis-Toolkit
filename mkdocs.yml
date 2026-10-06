@@ -1,0 +1,39 @@
+site_name: Android Forensics Toolkit
+site_description: Android deleted-data recovery and evidence reconstruction — documentation
+repo_url: https://github.com/MithranHarsha/Android-Forensic-Analysis-Toolkit
+edit_uri: edit/main/docs/
+docs_dir: docs
+site_dir: site
+strict: true
+theme:
+  name: readthedocs
+nav:
+  - Home: index.md
+  - Using the tool:
+      - Examiner's guide: user_guide.md
+      - Disk images (raw, sparse, E01): disk_images.md
+      - Plugins: plugins.md
+      - Deploying the server: deployment.md
+      - Performance: performance.md
+  - How it works:
+      - Architecture: architecture.md
+      - Pipeline stages: pipeline_stages.md
+      - Evidence ingestion: evidence_ingestion.md
+      - Filesystem discovery: filesystem_discovery.md
+      - SQLite inspection: sqlite_inspection.md
+      - SQLite recovery: sqlite_recovery.md
+      - Carving: carving.md
+      - Correlation: correlation.md
+      - Reporting: reporting.md
+      - Dashboard: dashboard.md
+      - Data models: data_models.md
+      - Artifact formats: artifact_formats.md
+      - Forensic methodology: forensic_methodology.md
+  - Assurance:
+      - Validation: validation.md
+      - Evaluation: evaluation.md
+      - Standards alignment: standards_alignment.md
+      - Limitations: limitations.md
+      - Design decisions: decisions.md
+      - Synthetic lab: synthetic_lab.md
+      - Final summary: FINAL_SUMMARY.md

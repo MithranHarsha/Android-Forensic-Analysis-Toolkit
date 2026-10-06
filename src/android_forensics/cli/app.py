@@ -8,7 +8,7 @@ import re
 import time
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 from rich.panel import Panel
@@ -46,6 +46,7 @@ _NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 
 _audit_ctx: dict[str, CaseStore | None] = {"store": None}
+_state: dict[str, Any] = {"config": None}
 
 
 def _note_case(store: CaseStore) -> CaseStore:
@@ -110,8 +111,27 @@ def _version(value: bool) -> None:
 
 
 @app.callback()
-def _root(version: Annotated[bool, typer.Option("--version", callback=_version, is_eager=True, help="Show version.")] = False) -> None:
-    pass
+def _root(
+    version: Annotated[bool, typer.Option("--version", callback=_version, is_eager=True, help="Show version.")] = False,
+    config: Annotated[Path | None, typer.Option("--config", envvar="ANDROID_FORENSICS_CONFIG", help="TOML config file (default: ./android-forensics.toml or ~/.config/android-forensics/config.toml).")] = None,
+    plugin: Annotated[list[Path] | None, typer.Option("--plugin", help="Load a parser plugin file (repeatable; see docs/plugins.md). Plugins are code: load only ones you trust.")] = None,
+    log_level: Annotated[str | None, typer.Option("--log-level", envvar="ANDROID_FORENSICS_LOG_LEVEL", help="DEBUG, INFO, WARNING or ERROR (default: logging off).")] = None,
+    log_file: Annotated[Path | None, typer.Option("--log-file", envvar="ANDROID_FORENSICS_LOG_FILE", help="Write logs here (rotating) instead of stderr.")] = None,
+    log_format: Annotated[str | None, typer.Option("--log-format", envvar="ANDROID_FORENSICS_LOG_FORMAT", help="text or json (one JSON object per line).")] = None,
+) -> None:
+    from android_forensics import logs, plugins, userconfig
+
+    try:
+        cfg = userconfig.load(config)
+        userconfig.apply_to_environment(cfg)
+        _state["config"] = cfg
+        level = log_level or cfg.logging.get("level")
+        if level or log_file or cfg.logging.get("file"):
+            logs.configure(level or "INFO", log_file or cfg.logging.get("file"), log_format or cfg.logging.get("format", "text"))
+        plugins.load_all([*cfg.plugins, *(plugin or [])])
+    except ForensicsError as exc:
+        err_console.print(f"[bold red]error:[/] {escape(str(exc))}")
+        raise typer.Exit(2) from exc
 
 
 # ------------------------------------------------------------------ case + evidence
@@ -122,15 +142,55 @@ def _root(version: Annotated[bool, typer.Option("--version", callback=_version, 
 def init_case(
     name: Annotated[str, typer.Argument(help="Case identifier, e.g. case001")],
     cases_dir: CasesDir = Path("cases"),
-    examiner: Annotated[str | None, typer.Option(help="Examiner name for the report.")] = None,
+    examiner: Annotated[str | None, typer.Option(envvar="ANDROID_FORENSICS_EXAMINER", help="Examiner name for the report.")] = None,
     description: Annotated[str | None, typer.Option(help="Short case description.")] = None,
+    detail: Annotated[list[str] | None, typer.Option("--detail", help="Case detail as key=value, repeatable (case_number, agency, evidence_description, …).")] = None,
 ) -> None:
     """Create a new case (database, evidence store, report directory)."""
     if not _NAME_RE.match(name):
         raise CaseError("Case name may contain letters, digits, '.', '_' and '-' only")
     store = _note_case(CaseStore.create(cases_dir / name, name, examiner, description))
+    cfg = _state.get("config")
+    for k, v in {**(cfg.court_defaults() if cfg else {}), **_parse_details(detail)}.items():
+        store.set_detail(k, v)
     console.print(stats_panel("Case created", [("Case", name), ("Location", str(store.case_dir)), ("Examiner", examiner or "-"), ("Tool", f"{TOOL_NAME} {__version__}")]))
     console.print(f"Next: [bold]{TOOL_NAME} ingest {name} /path/to/evidence[/]")
+
+
+def _parse_details(items: list[str] | None) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for item in items or []:
+        key, sep, value = item.partition("=")
+        if not sep or not key.strip():
+            raise CaseError(f"--detail expects key=value, got {item!r}")
+        out[key.strip()] = value.strip()
+    return out
+
+
+@app.command("case-details")
+@handle_errors
+def case_details(
+    case: CaseArg,
+    cases_dir: CasesDir = Path("cases"),
+    set_: Annotated[list[str] | None, typer.Option("--set", help="key=value, repeatable. Standard keys: case_number, agency, requested_by, jurisdiction, evidence_description, evidence_received_on, examination_started, examiner_title, examiner_organisation, examiner_accreditation, classification, footer, statement.")] = None,
+    from_config: Annotated[bool, typer.Option("--from-config", help="Fill examiner/agency defaults from the config file for keys not yet set.")] = False,
+) -> None:
+    """Show or set the details printed in the report's certification block (case number, agency, examiner credentials …)."""
+    store = open_case(case, cases_dir)
+    existing = store.details()
+    if from_config:
+        cfg = _state.get("config")
+        for k, v in (cfg.court_defaults() if cfg else {}).items():
+            if k not in existing:
+                store.set_detail(k, v)
+    for k, v in _parse_details(set_).items():
+        store.set_detail(k, v)
+    t = SafeTable(title=f"Case details: {case}", header_style="bold")
+    t.add_column("Key")
+    t.add_column("Value", overflow="fold")
+    for k, v in store.details().items():
+        t.add_row(k, v)
+    console.print(t)
 
 
 @app.command()
@@ -955,3 +1015,20 @@ def token_revoke(token_id: Annotated[int, typer.Argument(help="Token id (see 'se
     if not ServerDB(data_dir / "server.db").revoke_token(token_id):
         raise CaseError(f"no active token with id {token_id}")
     console.print(f"[green]✓[/] token {token_id} revoked")
+
+
+@app.command("plugins")
+@handle_errors
+def plugins_cmd() -> None:
+    """List the parsers in effect: built-in ones and any plugins loaded for this run."""
+    from android_forensics import plugins
+    from android_forensics.artifacts.registry import get_parsers
+
+    t = SafeTable(title="Parsers", header_style="bold")
+    for c in ("Name", "Version", "Origin"):
+        t.add_column(c)
+    for p in get_parsers():
+        t.add_row(p.name, p.version, "built-in" if plugins.is_builtin(p) else "plugin")
+    console.print(t)
+    for lp in plugins.LOADED:
+        console.print(escape(f"plugin {lp.name}: {lp.origin}  sha256={lp.sha256 or '-'}  parsers={', '.join(lp.parsers) or '-'}"), soft_wrap=True)

@@ -1,0 +1,26 @@
+# Automatic HTTPS (Let's Encrypt / ZeroSSL). AF_DOMAIN must resolve to this host and ports 80/443 must be reachable.
+{$AF_DOMAIN} {
+	encode zstd gzip
+
+	# Evidence uploads are large: allow them, but never unbounded.
+	request_body {
+		max_size {$AF_MAX_UPLOAD_GB}GB
+	}
+
+	reverse_proxy app:8765 {
+		# one trusted hop: the app reads the client address from X-Forwarded-For (--behind-proxy)
+		header_up X-Forwarded-For {remote_host}
+		transport http {
+			read_timeout 6h
+			write_timeout 6h
+		}
+	}
+
+	header {
+		-Server
+	}
+	log {
+		output stdout
+		format json
+	}
+}

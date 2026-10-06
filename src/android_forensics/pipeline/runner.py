@@ -9,6 +9,7 @@ default pipeline: ``run_pipeline(store)`` with no ``names`` still runs exactly R
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -142,12 +143,17 @@ def run_stage(store: CaseStore, name: str, options: StageOptions | None = None) 
         BY_NAME[dep].reset(store)
     run_id = store.start_run(name, {"timeline_files": options.timeline_files, "rehash_originals": options.rehash_originals})
     t0 = time.monotonic()
+    log = logging.getLogger("android_forensics.pipeline")
+    log.info("stage started", extra={"fields": {"stage": name, "case": store.case_id, "run_id": run_id}})
     try:
         stats = stage.run(store, run_id, options)
     except BaseException as exc:
         store.finish_run(run_id, "FAILED", error=f"{type(exc).__name__}: {exc}")
+        log.error("stage failed", extra={"fields": {"stage": name, "case": store.case_id, "error": f"{type(exc).__name__}: {exc}"}})
         raise
     stats["seconds"] = round(time.monotonic() - t0, 3)
+    log.info("stage completed", extra={"fields": {"stage": name, "case": store.case_id, "seconds": stats["seconds"],
+                                                  **{k: v for k, v in stats.items() if isinstance(v, (int, float, str))}}})
     store.finish_run(run_id, "COMPLETED", stats)
     store.log(f"stage_{name}_completed", None, {k: v for k, v in stats.items() if not isinstance(v, (dict, list))})
     return stats

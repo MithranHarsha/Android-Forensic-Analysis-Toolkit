@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sqlite3
 import uuid
 from collections.abc import Iterable, Iterator, Mapping, Sequence
@@ -266,6 +267,23 @@ class CaseStore:
                 "VALUES(?,?,?,?,?,?,?)",
                 (ts, actor, action, target, detail_json, prev, entry_hash),
             )
+
+    DETAIL_KEY = re.compile(r"^[a-z][a-z0-9_]{0,40}$")
+
+    def set_detail(self, key: str, value: str) -> None:
+        """Record a case detail (case number, agency, examiner credentials …). Every change is written to the custody log."""
+        if not self.DETAIL_KEY.match(key):
+            raise CaseError(f"invalid detail name {key!r}: use lowercase letters, digits and '_' (max 41 characters)")
+        if len(value) > 4000:
+            raise CaseError(f"detail {key!r} is longer than 4000 characters")
+        old = self.scalar("SELECT value FROM case_details WHERE key=?", (key,))
+        with self.transaction():
+            self.conn.execute("INSERT INTO case_details(key,value,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, "
+                              "updated_at=excluded.updated_at", (key, value, utcnow()))
+        self.log("case_detail_set", key, {"previous": old, "new": value})
+
+    def details(self) -> dict[str, str]:
+        return {r["key"]: r["value"] for r in self.q("SELECT key, value FROM case_details ORDER BY key")}
 
     def verify_custody_chain(self) -> tuple[bool, str]:
         prev = GENESIS_HASH

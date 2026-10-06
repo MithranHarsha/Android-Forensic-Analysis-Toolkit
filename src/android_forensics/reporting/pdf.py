@@ -127,6 +127,10 @@ def render_pdf(model: ReportModel, path: Path) -> None:
                   new_x="LMARGIN", new_y="NEXT")
     pdf.ln(6)
     pdf.set_font("helvetica", "I", 9)
+    if r.details.get("classification"):
+        pdf.set_font("helvetica", "B", 11)
+        pdf.multi_cell(0, 6, _txt(r.details["classification"]), align="C", new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font("helvetica", "I", 9)
     banner = "Review 1 + Review 2 - deleted-data recovery performed." if r.recovery["performed"] else "Review 1 - forensic foundation."
     pdf.multi_cell(0, 6, _txt(f"{banner} {r.meta['review_scope']}"), align="C", new_x="LMARGIN", new_y="NEXT")
 
@@ -143,6 +147,20 @@ def render_pdf(model: ReportModel, path: Path) -> None:
     _section(pdf, 2, "Examiner and tool information")
     _kv(pdf, [("Examiner", r.meta["examiner"]), ("Tool", f"{r.meta['tool_name']} {r.meta['tool_version']}"),
               ("Python", r.meta["python"]), ("SQLite library", r.meta["sqlite_library"]), ("Platform", r.meta["platform"])])
+    labels = [("case_number", "Case / reference number"), ("agency", "Requesting agency"), ("requested_by", "Requested by"),
+              ("jurisdiction", "Jurisdiction"), ("evidence_description", "Evidence description"), ("evidence_received_on", "Evidence received"),
+              ("examination_started", "Examination started"), ("examiner_title", "Examiner title"),
+              ("examiner_organisation", "Organisation / laboratory"), ("examiner_accreditation", "Accreditation"),
+              ("examiner_email", "Contact e-mail"), ("examiner_phone", "Contact phone")]
+    if r.details:
+        _para(pdf, "Case details and examiner credentials:", style="B")
+        shown = {k for k, _ in labels} | {"classification", "footer", "statement"}
+        _kv(pdf, [(lab, r.details[k]) for k, lab in labels if r.details.get(k)]
+            + [(k.replace("_", " ").capitalize(), v) for k, v in r.details.items() if k not in shown])
+    _para(pdf, "Examiner certification:", style="B")
+    _para(pdf, r.details.get("statement") or "I certify that this report accurately describes the examination performed and its results. "
+          "Every finding is derived from the evidence hashes listed in section 4 using the tool and build identified above.")
+    _para(pdf, f"Examiner signature: ______________________   Name: {r.meta['examiner'] or '-'}   Date: ____________")
 
     # 3. Evidence sources
     _section(pdf, 3, "Evidence sources")

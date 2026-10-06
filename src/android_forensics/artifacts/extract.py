@@ -11,6 +11,7 @@ from datetime import datetime
 from android_forensics.artifacts.base import DbContext
 from android_forensics.artifacts.generic import build_app_summaries, column_hints
 from android_forensics.artifacts.registry import get_parsers
+from android_forensics.plugins import is_builtin
 from android_forensics.progress import NullProgress, Progress
 from android_forensics.sqlite.discovery import preserved_path, sidecar_rows
 from android_forensics.sqlite.reader import SQLiteOpenError, SQLiteSession
@@ -32,6 +33,13 @@ class ExtractionStats:
     @property
     def total(self) -> int:
         return sum(self.artifacts.values())
+
+
+def _plugin_issue(store: CaseStore, d, parser, detail: str) -> None:  # noqa: ANN001
+    with store.transaction():
+        store.conn.execute(
+            "INSERT INTO scan_issues(source_id,path,issue_type,detail,stage,created_at) VALUES(?,?,?,?,?,?)",
+            (d["src_id"], d["fpath"], "parser_plugin_error", f"{parser.name} {parser.version}: {detail}", "extract", utcnow()))
 
 
 def run_extraction(store: CaseStore, run_id: int, progress: Progress | None = None, now: datetime | None = None) -> ExtractionStats:
@@ -60,7 +68,15 @@ def run_extraction(store: CaseStore, run_id: int, progress: Progress | None = No
                 )
                 matched_tables: set[str] = set()
                 for parser in parsers:
-                    for match in parser.identify(objects, ctx):
+                    try:
+                        matches = parser.identify(objects, ctx)
+                    except Exception as exc:  # noqa: BLE001
+                        if is_builtin(parser):
+                            raise
+                        stats.errors += 1
+                        _plugin_issue(store, d, parser, f"identify() failed: {type(exc).__name__}: {exc}")
+                        continue
+                    for match in matches:
                         buffer = []
                         err = None
                         try:
@@ -72,6 +88,11 @@ def run_extraction(store: CaseStore, run_id: int, progress: Progress | None = No
                                     buffer.clear()
                         except sqlite3.DatabaseError as exc:
                             err = f"{type(exc).__name__}: {exc}"
+                            stats.errors += 1
+                        except Exception as exc:  # noqa: BLE001 - a third-party parser must never abort the case
+                            if is_builtin(parser):
+                                raise
+                            err = f"plugin parser raised {type(exc).__name__}: {exc}"
                             stats.errors += 1
                         insert_artifacts(store, run_id, d["id"], buffer)
                         for role in match.roles.values():
