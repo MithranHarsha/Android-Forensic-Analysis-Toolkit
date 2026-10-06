@@ -34,6 +34,7 @@ class ReportModel(BaseModel):
     scan_issues: list[dict[str, Any]]
     table_catalog: list[dict[str, Any]]
     custody: dict[str, Any]
+    provenance: dict[str, Any] = Field(default_factory=dict)
     runs: list[dict[str, Any]]
     methodology: list[tuple[str, str]]
     limitations: list[str]
@@ -303,6 +304,15 @@ def build_report_model(store: CaseStore, html_row_cap: int | None = None) -> Rep
         status_glossary=text.STATUS_GLOSSARY,
     )
     model.html_row_cap = cap
+    from android_forensics.custody.audit import AUDIT_FILENAME, AuditLog
+    from android_forensics.custody.stamp import tool_stamp
+
+    audit = AuditLog(store.case_dir / AUDIT_FILENAME).verify()
+    model.provenance = {
+        "tool_stamp": tool_stamp(),
+        "audit": {"present": audit.entries > 0, "entries": audit.entries, "intact": audit.ok, "head": audit.head,
+                  "problem": audit.reason or None},
+    }
     model.truncation = {
         "evidence_files": [min(len(files), cap), len(files)], "timeline": [min(len(tl), cap), len(tl)],
         **{k: [min(len(v["rows"]), cap), len(v["rows"])] for k, v in active.items()},

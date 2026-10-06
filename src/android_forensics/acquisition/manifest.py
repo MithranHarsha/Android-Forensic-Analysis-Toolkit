@@ -99,7 +99,7 @@ def verify_manifest(manifest: Manifest, workspace: Workspace | None = None) -> V
             note(f"{subject}_modified", shown, "SHA-256 differs from the manifest")
 
     for src in manifest.sources:
-        if src.source_type in (SourceType.ZIP, SourceType.TAR):
+        if src.source_type in (SourceType.ZIP, SourceType.TAR, SourceType.DISK_IMAGE):
             p = Path(src.original_path)
             report.checked += 1
             if not p.is_file():

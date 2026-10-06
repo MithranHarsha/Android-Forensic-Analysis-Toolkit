@@ -271,6 +271,7 @@ class SourceType(StrEnum):
     ZIP = "zip"
     TAR = "tar"
     SINGLE_FILE = "single_file"
+    DISK_IMAGE = "disk_image"  # raw/sparse/E01 image with a file system inside
 
 
 class TimestampFormat(StrEnum):

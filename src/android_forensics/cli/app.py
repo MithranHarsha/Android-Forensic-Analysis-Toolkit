@@ -5,6 +5,7 @@ from __future__ import annotations
 import functools
 import json
 import re
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
@@ -44,17 +45,53 @@ CaseArg = Annotated[str, typer.Argument(help="Case name (under --cases-dir) or p
 _NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 
+_audit_ctx: dict[str, CaseStore | None] = {"store": None}
+
+
+def _note_case(store: CaseStore) -> CaseStore:
+    """Remember which case the running command touched so its execution can be written to that case's audit log."""
+    _audit_ctx["store"] = store
+    return store
+
+
+def _audit(fn_name: str, params: dict, outcome: str, started: float) -> None:
+    store = _audit_ctx["store"]
+    _audit_ctx["store"] = None
+    if store is None:
+        return
+    try:
+        from android_forensics.custody import record_command
+
+        head = store.scalar("SELECT entry_hash FROM custody_log ORDER BY id DESC LIMIT 1")
+        record_command(store.case_dir, fn_name.replace("_", "-"), [f"{k}={v}" for k, v in sorted(params.items())], outcome,
+                       detail={}, db_chain_head=head, seconds=time.monotonic() - started)
+    except Exception as exc:  # noqa: BLE001 - an audit failure must be loud but must not destroy the analysis result
+        err_console.print(f"[bold yellow]warning:[/] could not write the command audit log: {escape(str(exc))}")
+
+
 def handle_errors(fn):
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
+        started = time.monotonic()
+        _audit_ctx["store"] = None
         try:
-            return fn(*args, **kwargs)
+            result = fn(*args, **kwargs)
         except ForensicsError as exc:
+            _audit(fn.__name__, kwargs, f"error: {exc}", started)
             err_console.print(f"[bold red]error:[/] {escape(str(exc))}")
             raise typer.Exit(2) from exc
         except OSError as exc:
+            _audit(fn.__name__, kwargs, f"error: {exc}", started)
             err_console.print(f"[bold red]error:[/] {escape(str(exc))}")
             raise typer.Exit(2) from exc
+        except typer.Exit as exc:
+            _audit(fn.__name__, kwargs, f"exit {exc.exit_code}", started)
+            raise
+        except BaseException as exc:
+            _audit(fn.__name__, kwargs, f"crashed: {type(exc).__name__}", started)
+            raise
+        _audit(fn.__name__, kwargs, "ok", started)
+        return result
 
     return wrapper
 
@@ -62,7 +99,7 @@ def handle_errors(fn):
 def open_case(ref: str, cases_dir: Path) -> CaseStore:
     for candidate in (Path(ref), cases_dir / ref):
         if CaseStore.is_case_dir(candidate):
-            return CaseStore.open(candidate)
+            return _note_case(CaseStore.open(candidate))
     raise CaseError(f"No case '{ref}' found (looked in ./{ref} and {cases_dir}/{ref}). Create one with: {TOOL_NAME} init-case NAME")
 
 
@@ -91,7 +128,7 @@ def init_case(
     """Create a new case (database, evidence store, report directory)."""
     if not _NAME_RE.match(name):
         raise CaseError("Case name may contain letters, digits, '.', '_' and '-' only")
-    store = CaseStore.create(cases_dir / name, name, examiner, description)
+    store = _note_case(CaseStore.create(cases_dir / name, name, examiner, description))
     console.print(stats_panel("Case created", [("Case", name), ("Location", str(store.case_dir)), ("Examiner", examiner or "-"), ("Tool", f"{TOOL_NAME} {__version__}")]))
     console.print(f"Next: [bold]{TOOL_NAME} ingest {name} /path/to/evidence[/]")
 
@@ -104,10 +141,11 @@ def ingest(
     cases_dir: CasesDir = Path("cases"),
     acquired_at: Annotated[str | None, typer.Option("--acquired-at", help="Acquisition time (ISO 8601 with timezone) if known.")] = None,
     preserve: Annotated[PreservePolicy, typer.Option("--preserve", help="Which files are copied into the working directory: analysis (databases + small text/XML/JSON), all, or none (hash only).")] = PreservePolicy.ANALYSIS,
+    mount_point: Annotated[str | None, typer.Option("--mount-point", help="For disk images: the Android path the image is mounted at (e.g. 'data'). Default: detected.")] = None,
 ) -> None:
     """Hash and ingest evidence. The original is only ever read; write-protected working copies are made where needed."""
     store = open_case(case, cases_dir)
-    r = ingest_source(store, path, acquired_at, RichProgress(), preserve=preserve)
+    r = ingest_source(store, path, acquired_at, RichProgress(), preserve=preserve, mount_point=mount_point)
     rows: list[tuple[str, object]] = [
         ("Source type", r.source_type.value), ("Files hashed", r.files), ("Bytes", fmt_bytes(r.total_bytes)),
         ("Preserved copies", r.preserved_copies), ("Skipped/flagged entries", r.issues),
@@ -402,22 +440,23 @@ def analyze(
     no_rehash: Annotated[bool, typer.Option("--no-rehash", help="Skip re-hashing originals during validation (faster, less assurance).")] = False,
     recover: Annotated[bool, typer.Option("--recover/--no-recover", help="Recover deleted/superseded records and carve raw bytes (Review 2). On by default.")] = True,
     report: Annotated[bool, typer.Option("--report/--no-report", help="Generate the report at the end.")] = True,
+    mount_point: Annotated[str | None, typer.Option("--mount-point", help="For disk images: the Android path the image is mounted at (e.g. 'data'). Default: detected.")] = None,
 ) -> None:
     """Run the full pipeline: scan → extract → recover → carve → correlate → reconstruct → validate → timeline → report."""
     p = Path(target)
     store: CaseStore | None = None
     for candidate in (p, cases_dir / target):
         if CaseStore.is_case_dir(candidate):
-            store = CaseStore.open(candidate)
+            store = _note_case(CaseStore.open(candidate))
             break
     if store is None:
         if not p.exists():
             raise CaseError(f"'{target}' is neither a case nor an existing evidence path")
         stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
         case_name = name or f"{re.sub(r'[^A-Za-z0-9_.-]', '_', p.stem or 'evidence')}-{stamp}"
-        store = CaseStore.create(cases_dir / case_name, case_name)
+        store = _note_case(CaseStore.create(cases_dir / case_name, case_name))
         console.print(Text.assemble(("Case created: ", "bold"), str(store.case_dir)), soft_wrap=True)
-        r = ingest_source(store, p, progress=RichProgress())
+        r = ingest_source(store, p, progress=RichProgress(), mount_point=mount_point)
         console.print(f"[green]✓[/] ingested {r.files:,} files ({fmt_bytes(r.total_bytes)}), manifest SHA-256 {r.manifest_sha256[:16]}…")
 
     opts = _options(no_rehash, timeline_files)
@@ -610,8 +649,12 @@ def report(
     cases_dir: CasesDir = Path("cases"),
     formats: Annotated[str, typer.Option("--format", help="Comma list: html,json,csv,pdf")] = "html,json,csv",
     out: Annotated[Path | None, typer.Option(help="Output directory (default: <case>/reports/<timestamp>).")] = None,
+    sign: Annotated[bool, typer.Option("--sign", help="Sign the report with your Ed25519 key (create one with 'keygen').")] = False,
+    key: Annotated[Path | None, typer.Option("--key", help="Signing key (default: ~/.config/android-forensics/signing_key.pem).")] = None,
+    signer: Annotated[str | None, typer.Option("--signer", help="Name recorded in the signature (default: the case examiner).")] = None,
+    gpg_key: Annotated[str | None, typer.Option("--gpg-key", help="Also create a detached GPG signature with this key id.")] = None,
 ) -> None:
-    """Generate the forensic report (HTML, JSON, CSV)."""
+    """Generate the forensic report (HTML, JSON, CSV, PDF); optionally sign it."""
     from android_forensics.reporting.generate import generate_report
 
     store = open_case(case, cases_dir)
@@ -623,6 +666,12 @@ def report(
     for label, p in (("HTML", res.html), ("JSON", res.json), ("CSV dir", res.csv_dir), ("PDF", res.pdf)):
         if p:
             console.print(Text.assemble((f"{label}: ", "bold green"), str(p)), soft_wrap=True)
+    if sign or gpg_key:
+        from android_forensics.custody import sign_report
+
+        doc = sign_report(res.out_dir, key, signer=signer or store.case().examiner, gpg_key=gpg_key)
+        store.log("report_signed", str(res.out_dir), {"fingerprint": doc["public_key_fingerprint"]})
+        console.print(Text.assemble(("Signed: ", "bold green"), f"Ed25519 key {doc['public_key_fingerprint'][:16]}… → {res.out_dir / 'signature.json'}"), soft_wrap=True)
 
 
 @app.command()
@@ -731,3 +780,69 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+# ------------------------------------------------------------------ custody: keys, signatures, audit
+
+
+@app.command()
+@handle_errors
+def keygen(
+    key: Annotated[Path | None, typer.Option("--key", help="Where to write the private key (default: ~/.config/android-forensics/signing_key.pem).")] = None,
+    force: Annotated[bool, typer.Option("--force", help="Replace an existing key (the old one is lost).")] = False,
+) -> None:
+    """Create an Ed25519 key pair for signing reports. Set ANDROID_FORENSICS_KEY_PASSPHRASE to encrypt the private key."""
+    from android_forensics.custody import generate_keypair
+
+    priv, pub, fp = generate_keypair(key, overwrite=force)
+    console.print(stats_panel("Signing key created", [("Private key (keep secret, mode 0600)", str(priv)), ("Public key (share this)", str(pub)), ("Fingerprint", fp)]))
+
+
+@app.command("verify-report")
+@handle_errors
+def verify_report_cmd(
+    report_dir: Annotated[Path, typer.Argument(help="A report directory containing signature.json.")],
+    trusted_key: Annotated[Path | None, typer.Option("--trusted-key", help="Public key (PEM) the signer must match.")] = None,
+    fingerprint: Annotated[str | None, typer.Option("--fingerprint", help="Expected signer key fingerprint (hex).")] = None,
+) -> None:
+    """Verify a signed report: every file hash, the signature, and (optionally) that the signer is who you expect."""
+    from android_forensics.custody import verify_report
+
+    v = verify_report(report_dir, trusted_key, fingerprint)
+    rows: list[tuple[str, object]] = [("Result", "VALID" if v.ok else "NOT VALID"), ("Signature", "valid" if v.signature_valid else "invalid"),
+                                      ("Files checked", v.files_checked), ("Files that do not match", len(v.files_bad)),
+                                      ("Signer", v.signer or "-"), ("Signed at", v.signed_at or "-"), ("Key fingerprint", v.key_fingerprint or "-"),
+                                      ("Key pinned", {True: "yes - matches", False: "NO - mismatch", None: "no (self-consistent only)"}[v.key_trusted])]
+    console.print(stats_panel("Report signature", rows))
+    for m in v.messages:
+        console.print(f"[yellow]•[/] {escape(m)}")
+    if not v.ok:
+        raise typer.Exit(1)
+
+
+@app.command("audit-verify")
+@handle_errors
+def audit_verify(
+    case: CaseArg,
+    cases_dir: CasesDir = Path("cases"),
+    harden: Annotated[bool, typer.Option("--harden", help="Also try to set the OS append-only flag on the audit log (may need privileges).")] = False,
+    show: Annotated[int, typer.Option("--show", help="Print the last N audit entries.")] = 0,
+) -> None:
+    """Verify the case's command audit log (who ran what, when) and the database's custody chain."""
+    from android_forensics.custody.audit import AUDIT_FILENAME, AuditLog
+    from android_forensics.custody.audit import harden as harden_fn
+
+    store = open_case(case, cases_dir)
+    log = AuditLog(store.case_dir / AUDIT_FILENAME)
+    v = log.verify()
+    ok_db, msg_db = store.verify_custody_chain()
+    console.print(stats_panel("Audit verification", [
+        ("Command audit log", "intact" if v.ok else f"BROKEN at line {v.error_line}: {v.reason}"), ("Entries", v.entries), ("Chain head", v.head),
+        ("Database custody chain", "intact" if ok_db else "BROKEN"), ("Database detail", msg_db)]))
+    if show:
+        for e in log.entries()[-show:]:
+            console.print(escape(f"{e['seq']:>4} {e['ts']} {e['user']}@{e['host']} {e['command']} -> {e['outcome']}"), soft_wrap=True)
+    if harden:
+        console.print(escape(harden_fn(log.path)))
+    if not (v.ok and ok_db):
+        raise typer.Exit(1)

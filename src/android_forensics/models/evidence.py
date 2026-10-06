@@ -67,7 +67,7 @@ class EvidenceSource(BaseModel):
 
     @model_validator(mode="after")
     def _container_hash_iff_archive(self) -> Self:
-        is_archive = self.source_type in (SourceType.ZIP, SourceType.TAR)
+        is_archive = self.source_type in (SourceType.ZIP, SourceType.TAR, SourceType.DISK_IMAGE)
         if is_archive and (self.container_hashes is None or self.container_size is None):
             raise ValueError(f"a {self.source_type.value} source must record its container size and hashes")
         if not is_archive and (self.container_hashes is not None or self.container_size is not None):

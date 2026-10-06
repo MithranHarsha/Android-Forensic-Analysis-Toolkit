@@ -8,3 +8,4 @@ fastapi>=0.110
 uvicorn>=0.29
 fpdf2>=2.7
 defusedxml>=0.7
+cryptography>=42

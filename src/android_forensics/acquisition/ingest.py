@@ -54,13 +54,14 @@ def ingest_source(
     progress: Progress | None = None,
     budget: ExtractionBudget | None = None,
     preserve: PreservePolicy = PreservePolicy.ANALYSIS,
+    mount_point: str | None = None,
 ) -> IngestSummary:
     """Ingest evidence (directory, zip, tar, tar.gz or a single database) into the case."""
     t0 = time.monotonic()
     progress = progress or NullProgress()
     session = IngestionSession(
         source_path, store.workspace, case_id=store.case_id, acquired_at=acquired_at, budget=budget,
-        preserve=preserve, progress=progress,
+        preserve=preserve, progress=progress, mount_point=mount_point,
     )
     source = session.prepare()
     source_id = store.add_source(source)

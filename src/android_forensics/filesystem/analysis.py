@@ -15,6 +15,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 
 from android_forensics.filesystem.android_paths import KNOWN_APPS, AndroidPath, analyze_layout, is_app_subdir
+from android_forensics.filesystem.encryption import find_fbe_directories
 from android_forensics.filesystem.sidecars import sidecar_paths, split_sidecar
 from android_forensics.models import (
     AndroidAppDirectory,
@@ -278,6 +279,10 @@ def analyze_files(
         for g in sorted(aggs.values(), key=lambda g: g.path)
     ]
     issues += _alias_issues(aggs)
+
+    # ---- encrypted evidence: say so rather than silently reporting an empty result
+    for enc in find_fbe_directories([*(o.path for o in obs), *dirs]):
+        issues.append(ScanIssue(path=enc.path, issue_type="file_based_encryption_suspected", detail=enc.detail))
 
     # ---- layout
     if layout.layout == "multiple_roots":

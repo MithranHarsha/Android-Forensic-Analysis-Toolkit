@@ -242,6 +242,15 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 <div class="scroll"><table id="t-cat"><thead><tr><th>Database</th><th>Table</th><th>Rows</th><th>Recognised as</th><th>Columns</th><th>Primary key · indexes</th></tr></thead><tbody>
 {% for t in r.table_catalog %}<tr><td>{{ t.database.rsplit('/',1)[-1] }}</td><td>{{ t.name }}</td><td>{{ t.row_count|cell }}</td><td>{% if t.parsed_by %}{{ t.parsed_by }} <span class="hash">({{ t.schema_variant }}, {{ t.schema_score }})</span>{% else %}—{% endif %}{% if t.read_error %}<br><span class="flag">{{ t.read_error }}</span>{% endif %}</td><td class="hash">{{ t.columns|join(', ') }}</td><td class="hash">{% if t.flags %}{{ t.flags|join(' · ') }}<br>{% endif %}{% if t.primary_key %}PK({{ t.primary_key|join(', ') }}){% else %}no primary key{% endif %}{% for i in t.indexes %}<br>{{ 'UNIQUE ' if i.unique }}{{ 'partial ' if i.partial }}index {{ i.name }}({{ i.columns|join(', ') }}){% endfor %}{% for f in t.foreign_keys %}<br>FK({{ f.columns|join(', ') }}) → {{ f.references }}{% endfor %}</td></tr>{% endfor %}
 </tbody></table></div>
+<h3>C0. Build and audit provenance</h3>
+<dl>
+<dt>Tool build</dt><dd>{{ r.provenance.tool_stamp.tool }} {{ r.provenance.tool_stamp.version }} · build fingerprint <span class="hash">{{ r.provenance.tool_stamp.fingerprint[:24] }}…</span></dd>
+<dt>Interpreter</dt><dd>Python {{ r.provenance.tool_stamp.python }} · SQLite {{ r.provenance.tool_stamp.sqlite_library }}</dd>
+<dt>Dependencies</dt><dd>{% for k, v in r.provenance.tool_stamp.dependencies.items() %}{{ k }} {{ v }}{% if not loop.last %}, {% endif %}{% endfor %}</dd>
+<dt>Lock-file SHA-256</dt><dd class="hash">{{ r.provenance.tool_stamp.lock_sha256|cell }}</dd>
+<dt>Source commit</dt><dd class="hash">{{ r.provenance.tool_stamp.git_commit|cell }}</dd>
+<dt>Command audit log</dt><dd>{% if r.provenance.audit.present %}{{ badge('VALID' if r.provenance.audit.intact else 'INVALID') }} {{ r.provenance.audit.entries }} entries · chain head <span class="hash">{{ r.provenance.audit.head }}</span>{% else %}none recorded{% endif %}</dd>
+</dl>
 <h3>C. Chain of custody</h3>
 <p>{{ badge('VALID' if r.custody.intact else 'INVALID') }} {{ r.custody.message }}. Each entry commits to the hash of the previous one.</p>
 <div class="scroll"><table><thead><tr><th>#</th><th>Time (UTC)</th><th>Actor</th><th>Action</th><th>Target</th><th>Entry hash</th></tr></thead><tbody>

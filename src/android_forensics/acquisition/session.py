@@ -56,6 +56,7 @@ class IngestionSession:
         budget: ExtractionBudget | None = None,
         preserve: PreservePolicy = PreservePolicy.ANALYSIS,
         progress: Progress | None = None,
+        mount_point: str | None = None,
     ):
         path = Path(source_path).expanduser()
         if not path.exists():
@@ -69,7 +70,7 @@ class IngestionSession:
         self.preserve = preserve
         self.progress = progress or NullProgress()
         self.totals = IngestionTotals()
-        self._acquirer = make_acquirer(self.resolved)
+        self._acquirer = make_acquirer(self.resolved, mount_point)
         self._source: EvidenceSource | None = None
         self._source_id: int | None = None
         self._finished = False
@@ -81,7 +82,7 @@ class IngestionSession:
         if self._source is None:
             stype = self._acquirer.source_type
             container = None
-            if self.resolved.is_file() and stype in (SourceType.ZIP, SourceType.TAR):
+            if self.resolved.is_file() and stype in (SourceType.ZIP, SourceType.TAR, SourceType.DISK_IMAGE):
                 self.progress.start(f"Hashing container {self.resolved.name}", None)
                 try:
                     container = hash_file(self.resolved)
