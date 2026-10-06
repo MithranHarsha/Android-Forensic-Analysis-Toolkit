@@ -62,6 +62,8 @@ class ImageAcquirer:
             return
         with src:
             yield AcquisitionIssue(self.path.name, "image_format", src.describe())
+            for note in getattr(src, "notes", []):
+                yield AcquisitionIssue(self.path.name, "image_incomplete", note, incomplete=True)
             verdict = getattr(src, "verify", None)
             if callable(verdict):
                 ok, detail = verdict()

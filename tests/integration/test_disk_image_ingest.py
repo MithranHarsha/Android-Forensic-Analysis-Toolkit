@@ -102,3 +102,36 @@ def test_unrecognised_filesystem_in_a_partition_is_reported_not_guessed(tmp_path
     s = ingest_source(store, img)
     types = {r["issue_type"] for r in store.q("SELECT issue_type FROM scan_issues WHERE stage='ingest'")}
     assert s.source_type is SourceType.DISK_IMAGE and "filesystem_not_recognised" in types and s.files == 0
+
+
+# ---------------------------------------------------------------------------- E01
+
+
+def _ewf(tmp_path: Path) -> Path:
+    import shutil
+    p = tmp_path / "userdata.E01"
+    shutil.copy(FIXTURES / "ewf" / "android_userdata.E01", p)
+    return p
+
+
+def test_e01_acquisition_equals_the_raw_image_and_verifies_its_stored_hash(userdata_img, tmp_path):
+    raw_store = CaseStore.create(tmp_path / "raw", "raw", "t")
+    ingest_source(raw_store, userdata_img)
+    e01_store = CaseStore.create(tmp_path / "e01", "e01", "t")
+    s = ingest_source(e01_store, _ewf(tmp_path))
+    assert s.source_type is SourceType.DISK_IMAGE and s.complete
+    assert _files(e01_store) == _files(raw_store)           # identical bytes through a different container
+    issues = {r["issue_type"]: r["detail"] for r in e01_store.q("SELECT issue_type, detail FROM scan_issues WHERE stage='ingest'")}
+    assert "E01" in issues["image_format"] and "matches" in issues["image_hash_verified"]
+
+
+def test_tampered_e01_fails_acquisition_integrity(tmp_path):
+    p = _ewf(tmp_path)
+    data = bytearray(p.read_bytes())
+    at = data.rindex(b"hash\0")                    # the hash section descriptor near the end
+    data[at + 76 + 3] ^= 0xFF                      # first bytes of the stored MD5
+    p.write_bytes(bytes(data))
+    store = CaseStore.create(tmp_path / "c", "c", "t")
+    s = ingest_source(store, p)
+    types = {r["issue_type"] for r in store.q("SELECT issue_type FROM scan_issues WHERE stage='ingest'")}
+    assert "image_hash_mismatch" in types and not s.complete
