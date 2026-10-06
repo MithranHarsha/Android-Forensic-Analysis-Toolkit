@@ -18,6 +18,7 @@ jobs:
           python-version: "3.12"
       - run: pip install build
       - run: python -m build
+      - run: pip install dist/*.whl && android-forensics --version
       - uses: actions/upload-artifact@v4
         with:
           name: dist

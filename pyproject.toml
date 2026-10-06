@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "android-deleted-data-recovery"
-version = "0.2.0"
+version = "0.3.0"
 description = "Android forensic toolkit: evidence ingestion, SQLite discovery, active-artifact extraction, deleted-record recovery, carving, correlation, confidence scoring, timeline and reporting."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -27,6 +27,7 @@ dev = [
     "ruff>=0.5", "mypy>=1.10", "bandit>=1.7", "hypothesis>=6.100", "pip-audit>=2.7", "pip-tools>=7",
 ]
 binary = ["pyinstaller>=6"]
+e2e = ["playwright>=1.40"]
 docs = ["mkdocs>=1.6"]
 
 [project.scripts]

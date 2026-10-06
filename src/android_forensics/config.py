@@ -22,3 +22,7 @@ PLAUSIBLE_FUTURE_SLACK_DAYS = 2
 
 SCHEMA_MATCH_THRESHOLD = 0.5
 HTML_ROW_CAP = 3000
+
+# A -wal / -journal sidecar is read into memory whole. Phone sidecars are megabytes; anything past this is treated as hostile or
+# damaged and reported instead of parsed, so one file cannot exhaust the machine (raise it deliberately if you really have one).
+MAX_SIDECAR_BYTES = 1024 * 1024 * 1024

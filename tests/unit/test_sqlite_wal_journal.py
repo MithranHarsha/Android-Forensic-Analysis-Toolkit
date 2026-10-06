@@ -268,3 +268,18 @@ def test_a_journal_whose_page_size_disagrees_with_the_database_is_flagged(tmp_pa
     j = parse_journal(journal, db_page_size=1024)
     assert any("differs from the database" in p for p in j.problems)
     assert MAGIC == journal.read_bytes()[:8]
+
+
+def test_oversized_sidecars_are_reported_not_read_into_memory(tmp_path, monkeypatch):
+    from android_forensics import config
+    from android_forensics.sqlite.journal import parse_journal
+    from android_forensics.sqlite.wal import parse_wal
+
+    monkeypatch.setattr(config, "MAX_SIDECAR_BYTES", 1000)
+    (tmp_path / "x-wal").write_bytes(b"\x00" * 5000)
+    (tmp_path / "x-journal").write_bytes(b"\x00" * 5000)
+    w = parse_wal(tmp_path / "x-wal", expected_page_size=4096)
+    j = parse_journal(tmp_path / "x-journal", db_page_size=4096)
+    for info in (w, j):
+        assert info.size == 5000 and info.problems and "over the 1,000-byte limit" in info.problems[0]
+    assert w.frames == [] and w.data == b"" and j.data == b""

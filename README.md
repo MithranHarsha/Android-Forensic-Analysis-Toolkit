@@ -1,25 +1,34 @@
 # Android Deleted Data Recovery and Evidence Reconstruction Framework
 
-**B.Tech Cyber Forensics Capstone — Review 1 (forensic foundation) + Review 2 (deleted-data recovery)**
+**B.Tech Cyber Forensics Capstone — Review 1 (forensic foundation) + Review 2 (deleted-data recovery) + release 0.3 (deployable)**
 
-A Python forensic toolkit that takes an Android acquisition (filesystem dump, TAR/ZIP archive, or a single SQLite
-database), proves the integrity of the evidence, discovers and validates every SQLite database, extracts and normalises
-**active** artifacts (SMS, call log, contacts, browser history, application data), **recovers deleted and superseded
-SQLite records** (freelist, unallocated space, WAL and rollback-journal analysis), **carves raw patterns** outside
-structured records, **correlates** evidence across sources, assigns every recovered or carved item a **deterministic,
-explainable confidence level**, validates the result, builds a unified timeline, and produces a provenance-rich forensic
-report (HTML, JSON, CSV, PDF) plus a live read-only dashboard.
+A Python forensic toolkit that takes an Android acquisition — a filesystem dump, ZIP/TAR archive, **raw / sparse disk image (ext4 and
+f2fs) or EnCase E01** — proves the integrity of the evidence, discovers and validates every SQLite database, extracts and normalises
+**active** artifacts (SMS, call log, contacts, browser history, application data), **recovers deleted and superseded SQLite
+records** (freelist, unallocated space, WAL and rollback-journal analysis), **carves raw patterns** outside structured records,
+**correlates** evidence across sources, assigns every recovered or carved item a **deterministic, explainable confidence level**,
+validates the result, builds a unified timeline, and produces a provenance-rich, optionally **signed** forensic report (HTML, JSON,
+CSV, PDF). It runs as a CLI, a Docker image, a single-file binary, or an **authenticated multi-case web server** with sandboxed
+background analysis jobs.
 
 > **Recovery is opt-in but on by default.** `analyze` runs the full pipeline — scan, extract, recover, carve, correlate,
 > reconstruct, validate, timeline — unless `--no-recover` is given, in which case it behaves exactly as Review 1 always
-> did (nothing about Review 1's own stages or results changes either way). A recovered record is never presented as
-> confirmed evidence without its physical location, its raw bytes and a confidence level with the sentence that justifies
-> it; a carved candidate's status is always the literal `CARVED CANDIDATE` and its confidence can never be `HIGH`. See
-> [docs/sqlite_recovery.md](docs/sqlite_recovery.md), [docs/carving.md](docs/carving.md) and
-> [docs/correlation.md](docs/correlation.md).
+> did. A recovered record is never presented as confirmed evidence without its physical location, its raw bytes and a
+> confidence level with the sentence that justifies it; a carved candidate's status is always the literal `CARVED CANDIDATE` and
+> its confidence can never be `HIGH`. See [docs/sqlite_recovery.md](docs/sqlite_recovery.md), [docs/carving.md](docs/carving.md)
+> and [docs/correlation.md](docs/correlation.md).
 
 > **Use only on evidence you are legally authorised to examine.** The tool does not bypass locks, decrypt data, harvest
-> credentials, or access devices. See [Legal and ethical considerations](#legal-and-ethical-considerations).
+> credentials, or access devices. Encrypted evidence is *detected and reported*, never attacked. See
+> [Legal and ethical considerations](#legal-and-ethical-considerations).
+
+**What "deployable" means here, and what it does not.** Hash-pinned dependency locks, a non-root read-only Docker image, a
+PyInstaller single-file binary, CI (lint, types, security scan, dependency audit, 3-OS × 3-Python tests), an external
+append-only audit log, Ed25519-signed reports, hostile-input hardening verified by fuzzing and adversarial tests, an authenticated
+server with rate limits, strict CSP and sandboxed jobs, and measured performance. It is **not** a certified or accredited product:
+nobody outside the author has reviewed it, real-world validation is limited to the corpora listed in
+[docs/validation.md](docs/validation.md), and the standards mapping in [docs/standards_alignment.md](docs/standards_alignment.md)
+is a self-assessment. Read [Limitations](#limitations) before relying on it in casework.
 
 ---
 
@@ -28,6 +37,10 @@ report (HTML, JSON, CSV, PDF) plus a live read-only dashboard.
 | Area | What it does |
 |---|---|
 | **Evidence ingestion** | A reusable, database-independent library ([docs/evidence_ingestion.md](docs/evidence_ingestion.md)): directory, `.zip`, `.tar` / `.tar.gz` / `.tar.bz2` / `.tar.xz` or a single SQLite file; SHA-256 (anchor) + SHA-1 + MD5 in one read-only pass; size and timestamps with their basis; `evidence_manifest.json` with a `.sha256` and a standalone `verify_manifest`; originals opened read-only and never written; change-during-read detection; write-protected (0444) working copies; hash-chained chain-of-custody log |
+| **Disk images** | Raw / Android-sparse / **E01 (multi-segment)** images, GPT and MBR; read-only **ext2/3/4 and f2fs** parsers written for hostile input (bounds-checked, cycle-guarded; f2fs applies the checkpoint's NAT journal and cross-checks every node); encrypted directories are *reported*, never decrypted ([docs/disk_images.md](docs/disk_images.md)) |
+| **Chain of custody & signing** | In-database hash chain **plus** an external append-only audit log (who, host, command, outcome, evidence hash) whose head goes into the report; Ed25519-signed reports with offline `verify-report`; exact build/dependency/plugin stamp in every report ([docs/standards_alignment.md](docs/standards_alignment.md)) |
+| **Web server** | Token-authenticated roles (viewer / analyst / admin), multi-case registry, streamed hash-while-uploading evidence, **resource-limited child-process jobs**, rate limiting + lockout, strict CSP, server audit log, browser UI ([docs/deployment.md](docs/deployment.md)) |
+| **Plugins, config, logging** | Parser plugins (`--plugin`, entry points) with SHA-256 attribution in the report ([docs/plugins.md](docs/plugins.md)); TOML config for examiner details; structured JSON logs; court-oriented case details and certification block |
 | **Filesystem discovery** | A standalone `discover` command and library ([docs/filesystem_discovery.md](docs/filesystem_discovery.md)): recursive, read-only, content-signature classification of SQLite databases, sidecars, XML, JSON, logs and media; Android layout *detected* not assumed; application directories with package / user attribution |
 | **SQLite inspection** | `SQLiteInspector.inspect(path)` ([docs/sqlite_inspection.md](docs/sqlite_inspection.md)): header, version info, tables, columns, keys, indexes, foreign keys, every **active** record with its storage class, WAL/journal facts, integrity check. Damaged, encrypted and non-SQLite files are described, not refused |
 | **Active extraction** | Schema-scored parsers for SMS, call log, contacts, Chromium/Android browser history and downloads; generic column-hint parser and application summaries for everything else |
@@ -39,7 +52,7 @@ report (HTML, JSON, CSV, PDF) plus a live read-only dashboard.
 | **Validation** | 15 automated checks (incl. recovery/carving integrity), four outcomes (`VALID` / `PARTIAL` / `INVALID` / `UNVERIFIED`), failures kept and explained |
 | **Timeline** | Artifact events (active and recovered) + file-system times, sortable, status-tagged |
 | **Reporting** | Self-contained HTML (16 sections), JSON, CSV and PDF ([docs/reporting.md](docs/reporting.md)); every section shows real recovery/carving/correlation content when those stages ran, or an explicit `NOT PERFORMED` box when they did not — never both |
-| **Dashboard** | A read-only FastAPI REST API + static frontend ([docs/dashboard.md](docs/dashboard.md)) over one case's results; `android-forensics dashboard CASE` |
+| **Dashboard** | A read-only FastAPI REST API + static frontend ([docs/dashboard.md](docs/dashboard.md)) over one case's results; `android-forensics dashboard CASE` (the web server reuses the same router per case) |
 | **Typed data models** | Immutable, validated pydantic models — see [docs/data_models.md](docs/data_models.md) — for every artifact status (`ACTIVE`, `RECOVERED`, `PARTIAL`, `CORRUPTED`, `CARVED CANDIDATE`, `INVALID`), `RecoveredRecord`, `CarvedCandidate`, `CorrelationEdge` and `ConfidenceAssessment` |
 | **Test laboratory** | Deterministic synthetic Android evidence generator with ground truth, now including genuine deletions and physically-derived recovery expectations ([docs/synthetic_lab.md](docs/synthetic_lab.md)); 1,482 automated tests; reproducible experiments |
 
@@ -69,14 +82,27 @@ and [docs/pipeline_stages.md](docs/pipeline_stages.md).
 
 ## Installation
 
-Requires Python 3.11+. No cloud services. Runtime dependencies: `typer`, `rich`, `pydantic`, `jinja2`, `fastapi`,
-`uvicorn`, `fpdf2`; development adds `pytest`, `httpx`, `pypdf`, `coverage`, `matplotlib`.
+Requires Python 3.11+ (tested on 3.11–3.13 on Linux and macOS; **Windows is untested**). No cloud services.
 
 ```bash
+# from source
 python3 -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -e ".[dev]"                       # dev = tests + lint + type-check + fuzzing tools
 android-forensics --version
+
+# reproducible, hash-verified runtime install
+pip install --require-hashes --no-deps -r requirements.lock && pip install --no-deps .
+
+# container (non-root, read-only evidence, no network)
+docker build -t android-forensics .
+docker run --rm --network none --read-only --tmpfs /tmp -v "$PWD/evidence:/evidence:ro" -v "$PWD/cases:/cases" \
+    android-forensics analyze /evidence/userdata.img --cases-dir /cases --name case1
+
+# single-file binary (no Python needed)
+pip install ".[binary]" && python packaging/build_binary.py && ./dist/android-forensics --version
 ```
+
+Optional extras: `.[docs]` (MkDocs), `.[e2e]` (Playwright browser tests), `.[binary]` (PyInstaller).
 
 ## Quick start (synthetic evidence)
 
@@ -108,6 +134,17 @@ android-forensics discover  ./evidence                      # standalone filesys
 android-forensics inspect   ./mmssms.db                     # one database: header, version, sidecars, tables, keys, indexes, active rows
 android-forensics info      case001                         # case overview, recovery/carving/correlation counts, custody-chain check
 android-forensics info      ./mmssms.db                     # header + WAL/journal facts for one database
+
+# release 0.3
+android-forensics ingest    case001 ./userdata.img          # raw/sparse image (ext4, f2fs) or .E01; --mount-point to override /data detection
+android-forensics keygen                                    # Ed25519 key for signing reports
+android-forensics report    case001 --sign --signer "Dr. Doe"        # …and, offline:
+android-forensics verify-report cases/case001/reports/report-… --trusted-key doe.pub.pem
+android-forensics audit-verify case001                      # tamper-evidence of the command history
+android-forensics case-details case001 --set case_number=2026-042 --set agency="City PD"
+android-forensics --plugin ./acme_calls.py plugins          # parsers in effect (built-in + plugins)
+android-forensics server-token create --name alice --role analyst --data-dir ./server-data
+android-forensics serve     --cases-dir ./cases --data-dir ./server-data                # authenticated multi-case server
 ```
 
 `analyze` accepts either a case or a raw evidence path (a case is created automatically):
@@ -224,13 +261,27 @@ this run: 29 HIGH and 64 MEDIUM recovered artifacts, both **100%** matching the 
 dominant cost (≈41s of a ≈60s full-pipeline run on the synthetic lab; ≈147 MB peak memory) because it scans every page
 of every database rather than issuing an indexed query.
 
+**Release 0.3 additions** (all reproducible; details in [docs/validation.md](docs/validation.md) and
+[docs/performance.md](docs/performance.md)):
+
+* *Cross-tool comparison* on the same 28-condition matrix, over the 511 rows whose bytes physically survive: this tool **99.2 %**,
+  DC3 SQLite Dissect **91.8 %**, undark **43.6 %**, SQLite's `.recover` **1.8 %** (it targets corruption, not deletion). The matrix
+  was authored alongside this tool, so this shows relative behaviour on those conditions, not general superiority.
+* *Real corpus*: the public Android 9 acquisition from Digital Corpora (4.5 GB tar.gz) — see `docs/validation.md` for what was and
+  was not checked.
+* *Fuzzing and hostile evidence*: property-based fuzzing of every parser (found and fixed a real DDL-parser crash), mutated-image
+  tests for ext4/f2fs/E01/sparse, archive bombs, injection, control-character and XSS tests, and a real-browser end-to-end test.
+* *Scaling*: ~0.4–0.6 ms per database row end-to-end (131 MB / 1M rows in 9.3 min, 4.7 GB peak); image ingestion streams at
+  ~280 MB/s with ~70 MB peak memory. The benchmark found and fixed two defects (15 GB-per-million-rows correlation memory; a
+  quadratic carver).
+
 These figures come from `experiments/results/`, are reproducible with the commands above, and — being synthetic data
 built around the parsers' known schemas — demonstrate implementation correctness, **not** real-world coverage. Full
 numbers, charts and threats to validity: [docs/evaluation.md](docs/evaluation.md).
 
 ## Limitations
 
-Highlights (full list in [docs/limitations.md](docs/limitations.md)): databases SQLite refuses to open yield no active
+Highlights (full list in [docs/limitations.md](docs/limitations.md)): **encrypted `/data` (the norm on phones) yields no artifacts — it is reported, not decrypted**; deleted *files* are not recovered at file-system level (only deleted SQLite records); ext4 `inline_data` and f2fs compression are unsupported; Windows is untested and the server's job sandbox is POSIX-only; databases SQLite refuses to open yield no active
 artifacts (page-level recovery still attempts them); encrypted databases are flagged, not opened; ABX XML and MMS
 attachments are not decoded; phone-number matching is heuristic; parsers and the recovery engine were validated on
 synthetic evidence — real devices vary; recovery cannot restore data that was actually overwritten (VACUUM,
@@ -244,6 +295,10 @@ confirmed evidence; confidence calibration was measured on a small synthetic sam
 ├── README.md · LICENSE · pyproject.toml · requirements.txt
 ├── src/android_forensics/
 │   ├── acquisition/   hashing, safety, dir/zip/tar/single-file acquirers, IngestionSession, manifest (+ verify), ingest
+│   │   └── image/     sources (raw/sparse/E01), partitions (GPT/MBR), ext4, f2fs, acquirer
+│   ├── custody/       audit (external hash-chained log), signing (Ed25519/GPG), stamp (build identity)
+│   ├── server/        authenticated multi-case server: app, auth, db, jobs, sandbox + limited_exec, ratelimit, settings
+│   ├── plugins.py · plugin_api.py · userconfig.py · logs.py
 │   ├── readonly.py    the guarded read-only opener used throughout
 │   ├── filesystem/    classifier, sidecars, android_paths (layout model), analysis (pure discovery core), scanner
 │   ├── sqlite/        header, sidecars, reader, inspection/inspector, discovery, pages/records/ddl, recovery (engine),
@@ -256,7 +311,7 @@ confirmed evidence; confidence calibration was measured on a small synthetic sam
 │   ├── validation/    checks, runner
 │   ├── timeline/      builder
 │   ├── reporting/     model, generate, text, pdf, templates/report.html.j2
-│   ├── dashboard/      FastAPI app (api.py)
+│   ├── dashboard/      FastAPI app (api.py), security headers, web/ (index.html, app.js, style.css)
 │   ├── storage/       schema (migrations), case_store, artifact_writer, recovery_store
 │   ├── pipeline/      stage registry + runner, recovery_stages (recover/carve/correlate/reconstruct)
 │   ├── models/        types, enums, provenance, case, evidence, artifacts, recovery (RecoveredRecord/CarvedCandidate/
@@ -264,13 +319,16 @@ confirmed evidence; confidence calibration was measured on a small synthetic sam
 │   ├── lab/           synthetic evidence generator (+ genuine deletions) · ground-truth comparator · deletion matrix ·
 │   │                  matrix scorer · hot-journal builder
 │   └── cli/           Typer app + Rich helpers
-├── tests/             unit/ · integration/
+├── tests/             unit/ · integration/ · security/ (fuzz, hostile evidence, sandbox) · e2e/ (browser) · fixtures/ · tools/
+├── deploy/            docker-compose + Caddy/nginx/systemd · packaging/ (PyInstaller) · examples/plugins/
 ├── synthetic_evidence/  generated dataset (dir, .zip, .tar.gz, ground_truth.json — with genuine deletions)
 ├── experiments/       r1_*.py, r2_*.py · results/ (CSV, JSON, PNG charts)
 ├── reports/           acceptance/ (Phase 17 end-to-end run on synthetic_evidence/, full pipeline, every format)
 └── docs/              architecture · evidence_ingestion · filesystem_discovery · sqlite_inspection · sqlite_recovery ·
                        carving · correlation · dashboard · reporting · pipeline_stages · synthetic_lab · data_models ·
-                       forensic_methodology · artifact_formats · evaluation · limitations · decisions · coverage.txt
+                       forensic_methodology · artifact_formats · evaluation · limitations · decisions · coverage.txt ·
+                       user_guide · disk_images · plugins · deployment · performance · validation · standards_alignment
+                       (browse with `mkdocs serve`)
 ```
 
 ## Legal and ethical considerations

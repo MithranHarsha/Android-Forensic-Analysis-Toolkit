@@ -371,3 +371,36 @@ def test_a_wal_mode_database_uses_the_file_size_when_the_header_count_is_stale(t
     c.close()
     with SQLiteDatabase.open(p) as db:
         assert db.page_count == db.file_page_count == p.stat().st_size // db.page_size
+
+
+def test_serial_type_size_and_varint_fast_paths_match_the_definitions():
+    import pytest
+
+    from android_forensics.sqlite.records import RecordError, encode_varint, read_varint, serial_type_size
+
+    def reference_size(t: int) -> int:
+        fixed = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 6, 6: 8, 7: 8, 8: 0, 9: 0}
+        if t in fixed:
+            return fixed[t]
+        if t in (10, 11):
+            raise RecordError("reserved")
+        if t < 0:
+            raise RecordError("negative")
+        return (t - 12) // 2 if t % 2 == 0 else (t - 13) // 2
+
+    for t in [*range(-3, 400), 1000, 12345, 2**31]:
+        try:
+            expected = reference_size(t)
+        except RecordError:
+            with pytest.raises(RecordError):
+                serial_type_size(t)
+        else:
+            assert serial_type_size(t) == expected, t
+    for v in (0, 1, 127, 128, 255, 16383, 16384, 2**21, 2**56, 2**64 - 1):
+        enc = encode_varint(v)
+        assert read_varint(b"\xff" + enc + b"\x00", 1) == (v, len(enc))
+    for buf, pos in ((b"", 0), (b"\x80", 0), (b"\x01", 5), (b"\x01", -1)):
+        try:
+            read_varint(buf, pos)
+        except RecordError:
+            pass

@@ -28,10 +28,12 @@ frames are checked against *each other* (each frame's checksum must follow from 
 
 from __future__ import annotations
 
+import os
 import struct
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from android_forensics import config
 from android_forensics.readonly import open_readonly
 
 WAL_HEADER = 32
@@ -131,6 +133,10 @@ def parse_wal(path: str | Path, *, expected_page_size: int | None = None) -> Wal
     (the page size then comes from the database)."""
     path = Path(path)
     with open_readonly(path) as fh:
+        size = os.fstat(fh.fileno()).st_size
+        if size > config.MAX_SIDECAR_BYTES:
+            return WalInfo(str(path), size, None, problems=[
+                f"WAL is {size:,} bytes, over the {config.MAX_SIDECAR_BYTES:,}-byte limit for sidecars: not parsed (raise config.MAX_SIDECAR_BYTES to analyse it)"])
         data = fh.read()
     info = WalInfo(str(path), len(data), None, data=data)
     if len(data) < WAL_HEADER:

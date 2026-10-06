@@ -27,10 +27,12 @@ The header's record count reflects only the last sync, so records beyond it are 
 
 from __future__ import annotations
 
+import os
 import struct
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from android_forensics import config
 from android_forensics.readonly import open_readonly
 
 MAGIC = bytes.fromhex("d9d505f920a163d7")
@@ -93,6 +95,10 @@ def parse_journal(path: str | Path, *, db_page_size: int, db_page_count: int | N
     """Parse a ``-journal`` file. ``db_page_size`` (from the database header) is used when the journal's own header is gone."""
     path = Path(path)
     with open_readonly(path) as fh:
+        size = os.fstat(fh.fileno()).st_size
+        if size > config.MAX_SIDECAR_BYTES:
+            return JournalInfo(str(path), size, False, False, db_page_size, 0, None, None, None, problems=[
+                f"journal is {size:,} bytes, over the {config.MAX_SIDECAR_BYTES:,}-byte limit for sidecars: not parsed (raise config.MAX_SIDECAR_BYTES to analyse it)"])
         data = fh.read()
     info = JournalInfo(str(path), len(data), False, False, db_page_size, 0, None, None, None, data=data)
     if not data:

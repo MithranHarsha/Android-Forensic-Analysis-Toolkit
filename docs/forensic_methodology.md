@@ -143,3 +143,20 @@ neutralised with a leading `'` (originals are preserved verbatim in the JSON), a
    it with an independent source and that corroboration is stated.
 7. The absence of a recovered or carved result is not evidence that nothing was deleted: recoverability depends on the
    acquisition, the filesystem, encryption and how much was subsequently overwritten (`docs/limitations.md`).
+
+
+## Write protection and handling (operational guidance)
+
+The tool never opens evidence for writing and parses databases only from disposable scratch copies, but **it cannot control the
+operating system.** To keep the original provably untouched:
+
+1. **Physical media**: connect through a hardware write blocker; verify the blocker (a known-write test) before use.
+2. **Files and images on a workstation**: mount the evidence volume read-only (`mount -o ro,noatime`, or a read-only bind mount /
+   `:ro` Docker volume) so even access times are not updated; the Docker image in this repository is designed to run that way
+   (`--read-only`, `-v evidence:/evidence:ro`, `--network none`).
+3. **Hash first, hash again**: record the acquisition's hash from your acquisition tool; `ingest` records its own and `validate`
+   re-checks the originals — a mismatch is an `INVALID` result, not a warning.
+4. **Work on a copy** whenever the original is irreplaceable; keep the copy's hash with the case.
+5. **Audit trail**: `android-forensics audit-verify CASE` proves the command history has not been edited; record the printed chain
+   head in your case notes (or let the signed report carry it) so a later rewrite of the whole log is detectable.
+6. **Examiner key hygiene**: keep the report-signing private key off shared servers; use `ANDROID_FORENSICS_KEY_PASSPHRASE`.

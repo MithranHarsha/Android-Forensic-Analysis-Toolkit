@@ -1,5 +1,30 @@
 # Limitations
 
+## Deployment and platform (0.3)
+
+* **Windows is untested.** The CI matrix includes Windows, but the author could not run it. Several protections are POSIX-only:
+  `O_NOFOLLOW`/`O_NOATIME` evidence opening (best-effort elsewhere), `flock` on the audit log (single-writer assumed), and — for the
+  server — resource limits and process-group kills (`server/sandbox.py`). Use Linux or macOS, or the Docker image, for casework.
+* **Memory limits for analysis jobs are enforced only where `RLIMIT_AS` works (Linux).** macOS ignores it; rely on container limits.
+* **The server is single-node.** The job queue and rate limiter live in the process; authentication is by bearer token (put an
+  OIDC-aware proxy in front for single sign-on). It has not been load- or penetration-tested by a third party.
+* **Evidence graph memory** grows with the number of artifacts (~4.7 KB each at one million), see [performance.md](performance.md).
+* **WAL/journal sidecars are read fully into memory**, capped at 1 GiB (`config.MAX_SIDECAR_BYTES`); larger ones are reported, not parsed.
+
+## Disk images and encryption
+
+* ext4 and f2fs are parsed read-only; **deleted files are not recovered at the file-system level**, only deleted records inside
+  SQLite databases. Not supported: ext4 `inline_data`/`meta_bg`, f2fs compression, AFF/AFF4, VMDK/VHD, FAT/exFAT SD-card images.
+* The ext4/f2fs readers were validated against images produced by one `mke2fs`/`mkfs.f2fs` version and one Linux kernel
+  (6.10) and, for corpora, against public acquisitions listed in [validation.md](validation.md); other kernels/vendors vary.
+* **Encrypted `/data` is common on real phones.** Detected and reported (`file_based_encryption_detected`, `ENCRYPTED_SUSPECT`),
+  never decrypted; an empty result on encrypted evidence is not evidence of absence.
+
+## Typing debt
+
+`mypy` is clean for every module except the ones listed under `[[tool.mypy.overrides]]` in `pyproject.toml` (annotation-only
+mismatches such as `sqlite3.Row` vs `Mapping`, optional narrowing). New code must not add to that list.
+
 ## Review 2 scope limits (engineering, not fundamental)
 
 * **Recovery does not attempt every table.** Tables with fewer than three stored columns, `WITHOUT ROWID` tables, virtual

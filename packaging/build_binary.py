@@ -19,7 +19,10 @@ def main() -> int:
         "--add-data", f"{PKG / 'reporting' / 'templates'}{SEP}android_forensics/reporting/templates",
         "--add-data", f"{PKG / 'dashboard' / 'web'}{SEP}android_forensics/dashboard/web",
         "--collect-submodules", "android_forensics",
+        "--collect-submodules", "uvicorn",          # uvicorn imports its loops/protocols by name at runtime
+        "--collect-submodules", "cryptography",
         "--collect-data", "fpdf",
+        "--hidden-import", "multipart",
         str(PKG / "__main__.py"),
     ]
     return subprocess.call(cmd, cwd=ROOT)

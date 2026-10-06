@@ -38,8 +38,12 @@ class RecordError(ValueError):
 
 def read_varint(buf: bytes | bytearray | memoryview, pos: int) -> tuple[int, int]:
     """Decode the varint at ``pos``: returns ``(value, length)``. Raises ``RecordError`` if it runs off the buffer."""
-    value = 0
     end = len(buf)
+    if 0 <= pos < end:
+        first = buf[pos]
+        if first < 0x80:  # the overwhelmingly common case (every serial type of a small column, most lengths): one byte
+            return first, 1
+    value = 0
     for i in range(8):
         if pos + i >= end:
             raise RecordError(f"varint at {pos} runs past the end of the buffer")
@@ -86,15 +90,20 @@ def encode_varint(value: int) -> bytes:
 # ------------------------------------------------------------------ serial types
 
 
+_FIXED_SIZES = tuple(SERIAL_FIXED_SIZE.get(t, -1) for t in range(12))  # -1: reserved (10, 11)
+
+
 def serial_type_size(serial_type: int) -> int:
-    """Body bytes taken by a value of this serial type."""
-    if serial_type in SERIAL_FIXED_SIZE:
-        return SERIAL_FIXED_SIZE[serial_type]
-    if serial_type in (10, 11):
-        raise RecordError(f"serial type {serial_type} is reserved")
+    """Body bytes taken by a value of this serial type. (Hot: called for every serial type of every candidate cell at every byte
+    offset of every page scanned, so it is a table lookup and a shift, not dictionary and modulo arithmetic.)"""
+    if 0 <= serial_type < 12:
+        size = _FIXED_SIZES[serial_type]
+        if size < 0:
+            raise RecordError(f"serial type {serial_type} is reserved")
+        return size
     if serial_type < 0:
         raise RecordError("negative serial type")
-    return (serial_type - 12) // 2 if serial_type % 2 == 0 else (serial_type - 13) // 2
+    return (serial_type - 12) >> 1  # even (blob) and odd (text) alike: (t-12)//2 == (t-13)//2 for odd t
 
 
 def serial_type_class(serial_type: int) -> str:

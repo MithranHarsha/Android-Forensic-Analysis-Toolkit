@@ -42,7 +42,7 @@ from __future__ import annotations
 import struct
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, NamedTuple
 
 from android_forensics.models.enums import ArtifactStatus, ExtractionMethod
 from android_forensics.models.unknown import UNKNOWN
@@ -194,11 +194,28 @@ def schema_consistent(model: TableModel, values: Sequence[Any]) -> bool:
     return informative
 
 
-def try_full(data: bytes | memoryview, start: int, limit: int, model: TableModel, encoding: str) -> Candidate | None:
-    """``[payload size][rowid][record]`` at ``start``, ending no later than ``limit``, and *exactly* filling its payload size."""
+class CellHeader(NamedTuple):
+    """The model-independent part of reading ``[payload size][rowid][record]`` at one offset: where the record lies and its serial types."""
+
+    start: int
+    plen: int
+    rowid_raw: int
+    pos: int  # start of the record (its header-size varint)
+    end: int
+    header_size: int
+    types: list[int]
+
+
+def cell_header(data: bytes | memoryview, start: int, limit: int) -> CellHeader | None:
+    """Parse the cell framing at ``start`` once, whatever table it might belong to. None unless a well-formed record header of
+    exactly ``plen`` bytes (header + the bodies its serial types declare) fits before ``limit``.
+
+    Scanning a page tries *every* byte offset against *every* table of the database; a real handset database has dozens of tables
+    and most offsets fail on the first varint or two, so doing this once per offset (and only then dispatching on the number of
+    columns) instead of once per offset *per table* is what keeps recovery tractable on real evidence."""
     try:
         plen, n1 = read_varint(data, start)
-        if plen < model.width or start + n1 + plen > limit:
+        if plen < 1 or start + n1 + plen > limit:
             return None
         rowid_raw, n2 = read_varint(data, start + n1)
         if n2 > MAX_ROWID_BYTES:
@@ -208,28 +225,43 @@ def try_full(data: bytes | memoryview, start: int, limit: int, model: TableModel
         if end > limit:
             return None  # the payload starts after the rowid: check the whole cell against the limit
         header_size, hn = read_varint(data, pos)
-        if header_size < 1 + model.width or header_size > plen:
+        if header_size < 2 or header_size > plen:
             return None
         types: list[int] = []
         p = pos + hn
-        while p < pos + header_size:
+        stop = pos + header_size
+        body = 0
+        while p < stop:
             t, tn = read_varint(data, p)
-            if p + tn > pos + header_size:
+            if p + tn > stop:
                 return None
-            serial_type_size(t)
+            body += serial_type_size(t)
             types.append(t)
             p += tn
-        if len(types) != model.width or header_size + sum(serial_type_size(t) for t in types) != plen:
+        if header_size + body != plen:
             return None
     except RecordError:
         return None
-    values, fit, issues, corrupted = _fit_and_decode(model, types, memoryview(data)[pos + header_size:end], encoding)
+    return CellHeader(start, plen, rowid_raw, pos, end, header_size, types)
+
+
+def full_from_header(data: bytes | memoryview, h: CellHeader, model: TableModel, encoding: str) -> Candidate | None:
+    """``h`` read as a row of ``model`` (None unless its column count, types and values fit the model)."""
+    if len(h.types) != model.width or h.header_size < 1 + model.width:
+        return None
+    values, fit, issues, corrupted = _fit_and_decode(model, h.types, memoryview(data)[h.pos + h.header_size:h.end], encoding)
     if not values or fit < MIN_FIT or not schema_consistent(model, values):
         return None
-    rowid = to_signed64(rowid_raw)
+    rowid = to_signed64(h.rowid_raw)
     if model.alias_index is not None:
         values[model.alias_index] = rowid
-    return Candidate(model.name, "full", start, end - start, rowid, values, fit, issues, corrupted)
+    return Candidate(model.name, "full", h.start, h.end - h.start, rowid, values, fit, issues, corrupted)
+
+
+def try_full(data: bytes | memoryview, start: int, limit: int, model: TableModel, encoding: str) -> Candidate | None:
+    """``[payload size][rowid][record]`` at ``start``, ending no later than ``limit``, and *exactly* filling its payload size."""
+    h = cell_header(data, start, limit)
+    return None if h is None else full_from_header(data, h, model, encoding)
 
 
 def _end_ok(data: bytes | memoryview, at: int, block_end: int, boundaries: frozenset[int], models: Sequence[TableModel], encoding: str) -> bool:
@@ -241,7 +273,8 @@ def _end_ok(data: bytes | memoryview, at: int, block_end: int, boundaries: froze
         return False
     if block_end - at < MIN_CELL:
         return True  # fewer than 4 bytes left: no cell fits, so they are fragment bytes SQLite folded into the freeblock
-    return any(try_full(data, at, block_end, m, encoding) is not None for m in models)
+    h = cell_header(data, at, block_end)
+    return h is not None and any(full_from_header(data, h, m, encoding) is not None for m in models)
 
 
 def try_clobbered(
@@ -382,6 +415,9 @@ def scan_page_detailed(
     limit = len(data)
     ordered = _models_for(models, owner_hint)
     scan_models = [m for m in ordered if m.scannable]
+    by_width: dict[int, list[TableModel]] = {}
+    for m in scan_models:
+        by_width.setdefault(m.width, []).append(m)
     covered = bytearray(limit)
     for a, b in live:
         covered[a:b] = b"\x01" * (b - a)  # bytes that belong to a live cell are not free space
@@ -389,10 +425,12 @@ def scan_page_detailed(
         if covered[s]:
             continue
         if data[s] != 0:  # an untouched cell starts with its payload size, which is never 0
-            for model in scan_models:
-                c = try_full(data, s, limit, model, encoding)
-                if c is not None:
-                    candidates.append(c)
+            h = cell_header(data, s, limit)
+            if h is not None:
+                for model in by_width.get(len(h.types), ()):  # same models, same order as before: only those with this column count can fit
+                    c = full_from_header(data, h, model, encoding)
+                    if c is not None:
+                        candidates.append(c)
         head = heads.get(s)
         if head is None and s + 8 <= limit:
             # A stale freeblock header: when a freed cell borders the unallocated gap SQLite drops it from the chain but leaves its

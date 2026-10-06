@@ -14,3 +14,8 @@ scratch/
 .mypy_cache/
 .ruff_cache/
 .hypothesis/
+site/
+.hypothesis/
+server-data/
+*.log
+.qodo/
