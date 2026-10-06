@@ -10,7 +10,7 @@ import sqlite3
 
 import pytest
 
-from android_forensics.artifacts.recovered import record_from_row, reconstruct
+from android_forensics.artifacts.recovered import reconstruct, record_from_row
 from android_forensics.models import (
     UNKNOWN,
     ArtifactStatus,

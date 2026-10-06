@@ -7,7 +7,7 @@ import sqlite3
 import pytest
 
 from android_forensics.acquisition.ingest import ingest_source
-from android_forensics.artifacts.recovered import DatabaseContext, record_from_row, reconstruct
+from android_forensics.artifacts.recovered import DatabaseContext, reconstruct, record_from_row
 from android_forensics.models import (
     ArtifactStatus,
     CarvedCandidate,

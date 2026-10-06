@@ -10,17 +10,18 @@ from __future__ import annotations
 
 import errno
 import os
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import BinaryIO, Iterator, Protocol
+from typing import BinaryIO, Protocol
 
 from android_forensics.acquisition.hashing import Digests, MultiHasher
-from android_forensics.readonly import fingerprint, open_readonly
 from android_forensics.acquisition.safety import ExtractionBudget
 from android_forensics.config import CHUNK_SIZE, HEAD_BYTES
 from android_forensics.filesystem.classifier import classify, should_preserve
 from android_forensics.models import EvidenceFile, FileHashes, FileKind, FileTimes, SourceType
+from android_forensics.readonly import fingerprint, open_readonly
 from android_forensics.util import safe_basename
 
 

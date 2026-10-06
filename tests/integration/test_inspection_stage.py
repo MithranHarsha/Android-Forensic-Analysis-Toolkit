@@ -1,6 +1,7 @@
 """The case pipeline runs every discovered database through SQLiteInspector and stores what it finds."""
 
 import json
+
 import pytest
 
 from android_forensics.reporting.generate import generate_report

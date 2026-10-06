@@ -44,7 +44,7 @@ class Workspace:
     def manifest_path(self) -> Path:
         return self.root / "evidence_manifest.json"
 
-    def create(self) -> "Workspace":
+    def create(self) -> Workspace:
         if self.root.exists() and not self.root.is_dir():
             raise IngestionError(f"Working directory {self.root} exists and is not a directory")
         for d in (self.root, self.evidence_dir, self.scratch_dir, self.reports_dir):

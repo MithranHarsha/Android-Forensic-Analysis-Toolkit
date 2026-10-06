@@ -12,7 +12,8 @@ value, rowids, and the header / version / sidecar / engine metadata of the file.
 from __future__ import annotations
 
 import hashlib
-from typing import Any, Iterator, Literal, Self, Sequence, Union
+from collections.abc import Iterator, Sequence
+from typing import Any, Literal, Self, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 

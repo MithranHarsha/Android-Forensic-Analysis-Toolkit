@@ -5,7 +5,8 @@ from __future__ import annotations
 from rich.console import Console
 from rich.markup import escape
 from rich.panel import Panel
-from rich.progress import BarColumn, MofNCompleteColumn, Progress as RichProgressBar, SpinnerColumn, TextColumn, TimeElapsedColumn
+from rich.progress import BarColumn, MofNCompleteColumn, SpinnerColumn, TaskID, TextColumn, TimeElapsedColumn
+from rich.progress import Progress as RichProgressBar
 from rich.table import Table
 from rich.text import Text
 
@@ -48,7 +49,7 @@ class RichProgress:
 
     def __init__(self) -> None:
         self._bar: RichProgressBar | None = None
-        self._task = None
+        self._task: TaskID | None = None
 
     def start(self, description: str, total: int | None = None) -> None:
         self.stop()

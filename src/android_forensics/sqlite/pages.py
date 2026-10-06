@@ -129,7 +129,7 @@ class FilePageSource:
     def close(self) -> None:
         self._fh.close()
 
-    def __enter__(self) -> "FilePageSource":
+    def __enter__(self) -> FilePageSource:
         return self
 
     def __exit__(self, *exc: object) -> None:

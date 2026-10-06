@@ -6,8 +6,9 @@ nothing). A recovered row that matches no deleted row is a false positive — in
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+from typing import Any
 
 from android_forensics.models.unknown import UNKNOWN
 

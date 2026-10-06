@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterator
+from collections.abc import Iterator
 
 from android_forensics.artifacts.base import ArtifactParser, DbContext, FieldReader, RowSource, build_envelope
 from android_forensics.artifacts.registry import register

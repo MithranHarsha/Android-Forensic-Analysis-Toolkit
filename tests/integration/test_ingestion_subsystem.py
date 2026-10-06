@@ -64,7 +64,7 @@ def synthetic_contents(tmp: Path) -> dict[str, bytes]:
         "sdcard/DCIM/Camera/IMG_0001.jpg": b"\xff\xd8\xff\xe0\x00\x10JFIF\x00" + bytes(range(256)) * 4 + b"\xff\xd9",
         "sdcard/notes/empty.txt": b"",
         "sdcard/notes/a/b/c/d/e/leaf.txt": b"a leaf, five directories down",
-        "sdcard/Download/café ☃ report.txt": "unicode name".encode(),
+        "sdcard/Download/café ☃ report.txt": b"unicode name",
         "sdcard/.hidden": b"hidden file",
         "sdcard/A/name.txt": b"same basename, first directory",
         "sdcard/B/name.txt": b"same basename, second directory",

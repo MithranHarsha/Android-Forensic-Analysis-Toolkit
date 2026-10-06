@@ -9,9 +9,9 @@ from __future__ import annotations
 
 
 class _Unknown:
-    _instance: "_Unknown | None" = None
+    _instance: _Unknown | None = None
 
-    def __new__(cls) -> "_Unknown":
+    def __new__(cls) -> _Unknown:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
@@ -22,10 +22,10 @@ class _Unknown:
     def __bool__(self) -> bool:
         return False
 
-    def __copy__(self) -> "_Unknown":
+    def __copy__(self) -> _Unknown:
         return self
 
-    def __deepcopy__(self, memo: dict) -> "_Unknown":
+    def __deepcopy__(self, memo: dict) -> _Unknown:
         return self
 
 

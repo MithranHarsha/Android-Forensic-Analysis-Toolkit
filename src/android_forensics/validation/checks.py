@@ -5,9 +5,9 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import defaultdict
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterator
 
 from android_forensics.acquisition.hashing import hash_file
 from android_forensics.models import ValidationResult

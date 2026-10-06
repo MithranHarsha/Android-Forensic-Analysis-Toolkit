@@ -10,8 +10,8 @@ from android_forensics.models import (
     BrowserDownload,
     BrowserHistoryEntry,
     CallRecord,
-    ConfidenceFactor,
     Confidence,
+    ConfidenceFactor,
     Contact,
     ContactEmail,
     ContactPhone,
@@ -23,8 +23,8 @@ from android_forensics.models import (
     RawKind,
     RawReference,
     SMSMessage,
-    TimestampInfo,
     TimestampFormat,
+    TimestampInfo,
 )
 
 SHA = "ab" * 32

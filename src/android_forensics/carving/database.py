@@ -18,8 +18,8 @@ describe, and slack -- the places where bytes outlive their structure. A hit the
 from __future__ import annotations
 
 import struct
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from android_forensics.carving.carver import CarveResult, CarveSource, Exclusions, carve_file
 from android_forensics.sqlite.journal import JournalInfo

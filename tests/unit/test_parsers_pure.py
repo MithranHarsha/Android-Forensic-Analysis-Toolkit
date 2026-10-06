@@ -1,6 +1,6 @@
 """Parsers must work on plain rows (no sqlite3 cursor): this is the seam Review 2 recovery plugs into."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from android_forensics.artifacts.base import DbContext, RowSource
 from android_forensics.artifacts.browser import BrowserParser, decode_transition
@@ -27,7 +27,7 @@ from android_forensics.models import (
     TransitionQualifier,
 )
 
-NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
+NOW = datetime(2026, 1, 1, tzinfo=UTC)
 DB = "data/data/x/databases/a.db"
 CTX = DbContext(1, 1, DB, "ab" * 32, "x", False, now=NOW)
 

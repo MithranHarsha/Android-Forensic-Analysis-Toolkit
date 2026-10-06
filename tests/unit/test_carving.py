@@ -5,7 +5,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import random
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -17,7 +17,7 @@ from android_forensics.carving.rules import trim_url
 from android_forensics.models import CARVED_CANDIDATE, CarvedCandidate, CarveKind, Confidence, ExtractionMethod
 from android_forensics.sqlite.records import encode_record
 
-NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
+NOW = datetime(2026, 1, 1, tzinfo=UTC)
 PATTERNS = {  # what a planted string of each kind must be reported as
     "phone_e164": CarveKind.PHONE_NUMBER, "phone_nanp_formatted": CarveKind.PHONE_NUMBER, "url_http": CarveKind.URL,
     "url_android": CarveKind.URL, "email": CarveKind.EMAIL, "timestamp_unix_seconds": CarveKind.TIMESTAMP_UNIX_SECONDS,

@@ -11,10 +11,13 @@
 from __future__ import annotations
 
 import re
-import xml.etree.ElementTree as ET
 from collections import defaultdict
 from datetime import datetime
 from typing import Any
+from xml.etree.ElementTree import ParseError  # nosec B405 - exception type only; parsing goes through defusedxml
+
+import defusedxml.ElementTree as ET  # hardened parser: entity expansion / external entities are refused
+from defusedxml import DefusedXmlException
 
 from android_forensics.artifacts.timestamps import plausible_formats
 from android_forensics.filesystem.android_paths import KNOWN_APPS
@@ -85,7 +88,7 @@ def _pref_keys(text: str) -> list[str] | None:
         return None
     try:
         root = ET.fromstring(text)
-    except ET.ParseError:
+    except (ParseError, DefusedXmlException):
         return None
     return [el.get("name") for el in root if el.get("name")][:200]
 

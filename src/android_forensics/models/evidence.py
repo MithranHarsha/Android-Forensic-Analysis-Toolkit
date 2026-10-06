@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Mapping, Self, Sequence
+import sqlite3
+from collections.abc import Mapping, Sequence
+from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -103,7 +105,7 @@ class EvidenceSource(BaseModel):
         }
 
     @classmethod
-    def from_record(cls, r: Mapping[str, Any]) -> Self:
+    def from_record(cls, r: Mapping[str, Any] | sqlite3.Row) -> Self:
         hashes = None
         if r["container_sha256"]:
             hashes = FileHashes(md5=r["container_md5"], sha1=r["container_sha1"], sha256=r["container_sha256"])
@@ -165,7 +167,7 @@ class EvidenceFile(BaseModel):
         }
 
     @classmethod
-    def from_record(cls, r: Mapping[str, Any]) -> Self:
+    def from_record(cls, r: Mapping[str, Any] | sqlite3.Row) -> Self:
         return cls(
             id=r["id"], source_id=r["source_id"], ordinal=r["ordinal"], path=r["path"], size=r["size"],
             hashes=FileHashes(md5=r["md5"], sha1=r["sha1"], sha256=r["sha256"]), kind=r["kind"],

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Mapping, Self
+import sqlite3
+from collections.abc import Mapping
+from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -62,7 +64,7 @@ class AnalysisRun(BaseModel):
         }
 
     @classmethod
-    def from_record(cls, r: Mapping[str, Any]) -> Self:
+    def from_record(cls, r: Mapping[str, Any] | sqlite3.Row) -> Self:
         return cls(
             id=r["id"], case_id=r["case_id"], stage=r["stage"], started_at=r["started_at"], finished_at=r["finished_at"],
             status=r["status"], tool_version=r["tool_version"], params=json.loads(r["params_json"] or "{}"),

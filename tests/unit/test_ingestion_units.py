@@ -14,8 +14,8 @@ import pytest
 from android_forensics.acquisition.archive import _tar_times, _zip_times
 from android_forensics.acquisition.hashing import hash_file
 from android_forensics.acquisition.manifest import make_manifest, read_manifest, write_manifest_file
-from android_forensics.readonly import fingerprint, open_readonly
 from android_forensics.errors import CaseError, ForensicsError, IngestionError
+from android_forensics.readonly import fingerprint, open_readonly
 from android_forensics.workspace import Workspace
 
 posix_only = pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")

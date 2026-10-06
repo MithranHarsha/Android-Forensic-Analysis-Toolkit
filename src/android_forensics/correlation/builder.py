@@ -27,8 +27,8 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Mapping, Sequence
 
 from android_forensics.carving.rules import carved_timestamp
 from android_forensics.correlation.facts import Facts, facts_of, normalise_text, normalise_url

@@ -5,7 +5,8 @@ Chromium stores times as microseconds since 1601-01-01 UTC (WebKit epoch).
 
 from __future__ import annotations
 
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
 
 from android_forensics.artifacts.base import ArtifactParser, DbContext, FieldReader, RowSource, build_envelope
 from android_forensics.artifacts.registry import register

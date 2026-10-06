@@ -20,22 +20,22 @@ Deliberate limits, stated so nobody mistakes silence for absence:
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from typing import Callable
+from datetime import UTC, datetime, timedelta
 
 from android_forensics.artifacts.timestamps import is_plausible, to_datetime
 from android_forensics.models import CarveKind, TimestampFormat
 
 Validator = Callable[[str, "datetime | None"], bool]
-_UTC = timezone.utc
+_UTC = UTC
 
 
 @dataclass(frozen=True)
 class Rule:
     name: str
     kind: CarveKind
-    regex: "re.Pattern[bytes]"
+    regex: re.Pattern[bytes]
     validate: Validator
     description: str
     trim: Callable[[str], str] | None = None  # punctuation that surrounds a token but is not part of it
@@ -113,7 +113,7 @@ def valid_android_uri(text: str, now: datetime | None) -> bool:
     scheme = scheme.lower()
     if scheme == "file":
         return rest.startswith("/") and len(rest) > 1
-    authority = re.split(r"[/?#]", rest, 1)[0]
+    authority = re.split(r"[/?#]", rest, maxsplit=1)[0]
     if scheme == "content":
         return bool(re.fullmatch(r"(?:[0-9]+@)?[A-Za-z][A-Za-z0-9_.-]*", authority)) and "." in authority
     if scheme == "market":
@@ -186,7 +186,7 @@ def parse_medium_date(text: str) -> datetime | None:
     return _moment(int(m.group(3)), _MONTHS[m.group(1)], int(m.group(2)), hour, int(m.group(5)), int(m.group(6) or 0))
 
 
-def _plausible_parse(parse: Callable[[str], "datetime | None"]) -> Validator:
+def _plausible_parse(parse: Callable[[str], datetime | None]) -> Validator:
     def check(text: str, now: datetime | None) -> bool:
         moment = parse(text)
         return moment is not None and is_plausible(moment, now)

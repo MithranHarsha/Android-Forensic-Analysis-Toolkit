@@ -5,22 +5,22 @@ from __future__ import annotations
 import functools
 import json
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.panel import Panel
 from rich.text import Text
 
 from android_forensics import TOOL_NAME, __version__
-from android_forensics.acquisition.hashing import hash_file
 from android_forensics.acquisition import PreservePolicy
+from android_forensics.acquisition.hashing import hash_file
 from android_forensics.acquisition.ingest import ingest_source
 from android_forensics.cli.console import RichProgress, SafeTable, console, err_console, escape, plain_panel, stats_panel, styled
+from android_forensics.errors import CaseError, ForensicsError
 from android_forensics.fmt import fmt_bytes
 from android_forensics.pipeline.runner import FULL_PIPELINE_NAMES, REVIEW2_STAGE_NAMES, StageOptions, run_pipeline, run_stage
-from android_forensics.errors import CaseError, ForensicsError
 from android_forensics.storage.case_store import CaseStore
 
 app = typer.Typer(
@@ -51,10 +51,10 @@ def handle_errors(fn):
             return fn(*args, **kwargs)
         except ForensicsError as exc:
             err_console.print(f"[bold red]error:[/] {escape(str(exc))}")
-            raise typer.Exit(2)
+            raise typer.Exit(2) from exc
         except OSError as exc:
             err_console.print(f"[bold red]error:[/] {escape(str(exc))}")
-            raise typer.Exit(2)
+            raise typer.Exit(2) from exc
 
     return wrapper
 
@@ -85,8 +85,8 @@ def _root(version: Annotated[bool, typer.Option("--version", callback=_version, 
 def init_case(
     name: Annotated[str, typer.Argument(help="Case identifier, e.g. case001")],
     cases_dir: CasesDir = Path("cases"),
-    examiner: Annotated[Optional[str], typer.Option(help="Examiner name for the report.")] = None,
-    description: Annotated[Optional[str], typer.Option(help="Short case description.")] = None,
+    examiner: Annotated[str | None, typer.Option(help="Examiner name for the report.")] = None,
+    description: Annotated[str | None, typer.Option(help="Short case description.")] = None,
 ) -> None:
     """Create a new case (database, evidence store, report directory)."""
     if not _NAME_RE.match(name):
@@ -102,7 +102,7 @@ def ingest(
     case: CaseArg,
     path: Annotated[Path, typer.Argument(help="Directory dump, .zip, .tar/.tar.gz, or a single SQLite database.")],
     cases_dir: CasesDir = Path("cases"),
-    acquired_at: Annotated[Optional[str], typer.Option("--acquired-at", help="Acquisition time (ISO 8601 with timezone) if known.")] = None,
+    acquired_at: Annotated[str | None, typer.Option("--acquired-at", help="Acquisition time (ISO 8601 with timezone) if known.")] = None,
     preserve: Annotated[PreservePolicy, typer.Option("--preserve", help="Which files are copied into the working directory: analysis (databases + small text/XML/JSON), all, or none (hash only).")] = PreservePolicy.ANALYSIS,
 ) -> None:
     """Hash and ingest evidence. The original is only ever read; write-protected working copies are made where needed."""
@@ -222,8 +222,8 @@ def _print_discovery(s, show_files: bool) -> None:
 def inspect_cmd(
     path: Annotated[Path, typer.Argument(help="A SQLite database file. Its -wal / -shm / -journal files beside it are detected. No case is needed.")],
     as_json: Annotated[bool, typer.Option("--json", help="Emit the complete inspection (schema, metadata and every active record) as JSON.")] = False,
-    rows: Annotated[Optional[int], typer.Option("--rows", help="Rows kept per table. Default: 3 shown in the text view, all in --json.")] = None,
-    tables: Annotated[Optional[list[str]], typer.Option("--table", help="Read records only from this table (repeatable). The schema is always complete.")] = None,
+    rows: Annotated[int | None, typer.Option("--rows", help="Rows kept per table. Default: 3 shown in the text view, all in --json.")] = None,
+    tables: Annotated[list[str] | None, typer.Option("--table", help="Read records only from this table (repeatable). The schema is always complete.")] = None,
     no_records: Annotated[bool, typer.Option("--no-records", help="Schema, metadata and row counts only.")] = False,
     no_sidecars: Annotated[bool, typer.Option("--no-sidecars", help="Read the main file alone: do not apply the WAL / hot journal.")] = False,
     blob_limit: Annotated[int, typer.Option("--blob-limit", help="BLOBs up to this many bytes are kept whole (larger: length + SHA-256 + head).")] = 256,
@@ -397,7 +397,7 @@ def _print_recovery(rec: dict, carve: dict, correlate: dict, reconstruct: dict) 
 def analyze(
     target: Annotated[str, typer.Argument(help="An existing case, or a path to evidence (a case is created automatically).")],
     cases_dir: CasesDir = Path("cases"),
-    name: Annotated[Optional[str], typer.Option(help="Case name when TARGET is a path.")] = None,
+    name: Annotated[str | None, typer.Option(help="Case name when TARGET is a path.")] = None,
     timeline_files: Annotated[str, typer.Option("--timeline-files", help="File-time events in the timeline: key | all | none.")] = "key",
     no_rehash: Annotated[bool, typer.Option("--no-rehash", help="Skip re-hashing originals during validation (faster, less assurance).")] = False,
     recover: Annotated[bool, typer.Option("--recover/--no-recover", help="Recover deleted/superseded records and carve raw bytes (Review 2). On by default.")] = True,
@@ -413,7 +413,7 @@ def analyze(
     if store is None:
         if not p.exists():
             raise CaseError(f"'{target}' is neither a case nor an existing evidence path")
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
         case_name = name or f"{re.sub(r'[^A-Za-z0-9_.-]', '_', p.stem or 'evidence')}-{stamp}"
         store = CaseStore.create(cases_dir / case_name, case_name)
         console.print(Text.assemble(("Case created: ", "bold"), str(store.case_dir)), soft_wrap=True)
@@ -454,13 +454,13 @@ def analyze(
 def artifacts(
     case: CaseArg,
     cases_dir: CasesDir = Path("cases"),
-    type_: Annotated[Optional[str], typer.Option("--type", help="sms|call|contact|browser_visit|browser_download|generic_record|app_summary")] = None,
-    status: Annotated[Optional[str], typer.Option(help="ACTIVE|RECOVERED|PARTIAL|CORRUPTED (the last three only after 'recover'/'analyze' with recovery)")] = None,
-    db: Annotated[Optional[str], typer.Option(help="Substring of the source database path.")] = None,
-    app_: Annotated[Optional[str], typer.Option("--app", help="Android package name.")] = None,
+    type_: Annotated[str | None, typer.Option("--type", help="sms|call|contact|browser_visit|browser_download|generic_record|app_summary")] = None,
+    status: Annotated[str | None, typer.Option(help="ACTIVE|RECOVERED|PARTIAL|CORRUPTED (the last three only after 'recover'/'analyze' with recovery)")] = None,
+    db: Annotated[str | None, typer.Option(help="Substring of the source database path.")] = None,
+    app_: Annotated[str | None, typer.Option("--app", help="Android package name.")] = None,
     limit: int = 30,
     offset: int = 0,
-    show: Annotated[Optional[int], typer.Option(help="Show full provenance for one artifact id.")] = None,
+    show: Annotated[int | None, typer.Option(help="Show full provenance for one artifact id.")] = None,
 ) -> None:
     """List extracted artifacts, or show one with complete provenance."""
     store = open_case(case, cases_dir)
@@ -570,10 +570,10 @@ def timeline(
     case: CaseArg,
     cases_dir: CasesDir = Path("cases"),
     limit: int = 40,
-    type_: Annotated[Optional[str], typer.Option("--type", help="Filter by artifact type.")] = None,
-    kind: Annotated[Optional[str], typer.Option(help="artifact | file_mtime")] = None,
-    since: Annotated[Optional[str], typer.Option(help="ISO timestamp lower bound.")] = None,
-    until: Annotated[Optional[str], typer.Option(help="ISO timestamp upper bound.")] = None,
+    type_: Annotated[str | None, typer.Option("--type", help="Filter by artifact type.")] = None,
+    kind: Annotated[str | None, typer.Option(help="artifact | file_mtime")] = None,
+    since: Annotated[str | None, typer.Option(help="ISO timestamp lower bound.")] = None,
+    until: Annotated[str | None, typer.Option(help="ISO timestamp upper bound.")] = None,
     reverse: bool = False,
 ) -> None:
     """Show the unified, chronologically sorted timeline."""
@@ -609,7 +609,7 @@ def report(
     case: CaseArg,
     cases_dir: CasesDir = Path("cases"),
     formats: Annotated[str, typer.Option("--format", help="Comma list: html,json,csv,pdf")] = "html,json,csv",
-    out: Annotated[Optional[Path], typer.Option(help="Output directory (default: <case>/reports/<timestamp>).")] = None,
+    out: Annotated[Path | None, typer.Option(help="Output directory (default: <case>/reports/<timestamp>).")] = None,
 ) -> None:
     """Generate the forensic report (HTML, JSON, CSV)."""
     from android_forensics.reporting.generate import generate_report

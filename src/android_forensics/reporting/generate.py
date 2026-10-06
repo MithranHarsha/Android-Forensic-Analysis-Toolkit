@@ -7,7 +7,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -76,7 +76,7 @@ def generate_report(store: CaseStore, formats: list[str], out_dir: Path | None =
     if bad:
         raise ValueError(f"unsupported report format(s): {', '.join(sorted(bad))}")
     model: ReportModel = build_report_model(store, html_row_cap)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     out = (out_dir or store.reports_dir / f"report-{stamp}").resolve()
     out.mkdir(parents=True, exist_ok=True)
     res = ReportResult(out_dir=out)

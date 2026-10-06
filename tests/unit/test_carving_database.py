@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import shutil
 import sqlite3
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from android_forensics.carving import (
@@ -22,7 +22,7 @@ from android_forensics.sqlite.recover_db import recover_database
 from android_forensics.sqlite.wal import COMMITTED, parse_wal
 from tests.unit.recovery_fixtures import SMS_DDL, build_table_db, sms_row
 
-NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
+NOW = datetime(2026, 1, 1, tzinfo=UTC)
 SRC = CarveSource(evidence_file_id=1, source_file="stub.db", source_sha256="cd" * 32)
 
 

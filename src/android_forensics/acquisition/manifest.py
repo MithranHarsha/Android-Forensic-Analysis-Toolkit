@@ -10,9 +10,9 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Sequence
 
 from android_forensics import TOOL_NAME, __version__
 from android_forensics.acquisition.hashing import hash_file

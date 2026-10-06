@@ -8,14 +8,14 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from android_forensics.lab.synth import CHROME, CONTACTS, TELEPHONY
 from android_forensics.storage.case_store import CaseStore
 
-_UNIX = datetime(1970, 1, 1, tzinfo=timezone.utc)
-_WEBKIT = datetime(1601, 1, 1, tzinfo=timezone.utc)
+_UNIX = datetime(1970, 1, 1, tzinfo=UTC)
+_WEBKIT = datetime(1601, 1, 1, tzinfo=UTC)
 SMS_DIR = {1: "RECEIVED", 2: "SENT", 3: "DRAFT", 4: "OUTBOX", 5: "FAILED", 6: "QUEUED"}
 CALL_TYPE = {1: "INCOMING", 2: "OUTGOING", 3: "MISSED", 4: "VOICEMAIL", 5: "REJECTED", 6: "BLOCKED"}
 

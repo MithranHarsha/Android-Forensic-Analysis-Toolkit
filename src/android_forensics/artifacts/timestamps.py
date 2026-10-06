@@ -7,15 +7,15 @@ plausibility verdict. Value ``0`` (or negative) means "unset" and yields no time
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from android_forensics.config import PLAUSIBLE_FUTURE_SLACK_DAYS, PLAUSIBLE_MIN
 from android_forensics.models import TimestampFormat, TimestampInfo
 from android_forensics.util import iso_utc
 
-_UNIX = datetime(1970, 1, 1, tzinfo=timezone.utc)
-_WEBKIT = datetime(1601, 1, 1, tzinfo=timezone.utc)
-_COCOA = datetime(2001, 1, 1, tzinfo=timezone.utc)
+_UNIX = datetime(1970, 1, 1, tzinfo=UTC)
+_WEBKIT = datetime(1601, 1, 1, tzinfo=UTC)
+_COCOA = datetime(2001, 1, 1, tzinfo=UTC)
 
 FORMATS = {
     TimestampFormat.UNIX_S: (_UNIX, "seconds"),
@@ -35,7 +35,7 @@ def to_datetime(value: int | float, fmt: TimestampFormat | str) -> datetime | No
 
 
 def is_plausible(dt: datetime, now: datetime | None = None) -> bool:
-    now = now or datetime.now(timezone.utc)
+    now = now or datetime.now(UTC)
     return PLAUSIBLE_MIN <= dt <= now + timedelta(days=PLAUSIBLE_FUTURE_SLACK_DAYS)
 
 

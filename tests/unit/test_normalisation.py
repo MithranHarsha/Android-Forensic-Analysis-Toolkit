@@ -1,11 +1,11 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from android_forensics.artifacts.schema_probe import FieldSpec, best_matches, probe_table
 from android_forensics.artifacts.timestamps import convert, is_plausible, plausible_formats, to_datetime
 from android_forensics.normalization.phone import classify_address, normalize_number, phone_key
 from android_forensics.sqlite.reader import ColumnInfo, SchemaObject
 
-NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
+NOW = datetime(2026, 1, 1, tzinfo=UTC)
 
 
 def test_unix_ms_and_webkit_known_values():
@@ -30,7 +30,7 @@ def test_unset_null_garbage_never_invented():
 def test_plausibility_window():
     old = convert(1000000000000, "unix_ms", NOW)  # 2001
     assert old.utc and old.plausible is False
-    future = convert(int(datetime(2030, 1, 1, tzinfo=timezone.utc).timestamp() * 1000), "unix_ms", NOW)
+    future = convert(int(datetime(2030, 1, 1, tzinfo=UTC).timestamp() * 1000), "unix_ms", NOW)
     assert future.plausible is False
     assert is_plausible(to_datetime(1709280000000, "unix_ms"), NOW)
 

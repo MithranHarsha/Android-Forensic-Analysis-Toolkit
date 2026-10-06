@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Mapping
+import sqlite3
+from collections.abc import Mapping
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -45,7 +47,7 @@ class Case(BaseModel):
         }
 
     @classmethod
-    def from_record(cls, record: Mapping[str, Any]) -> "Case":
+    def from_record(cls, record: Mapping[str, Any] | sqlite3.Row) -> Case:
         return cls(
             id=record["id"],
             name=record["name"],

@@ -33,7 +33,6 @@ from android_forensics.sqlite.header import HeaderReport, inspect_database_file
 from android_forensics.storage.case_store import CaseStore, utcnow
 from android_forensics.util import iso_from_epoch, safe_text
 
-
 # ------------------------------------------------------------------ standalone directory scanner
 
 

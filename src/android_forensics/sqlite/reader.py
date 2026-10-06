@@ -14,9 +14,10 @@ import re
 import shutil
 import sqlite3
 import tempfile
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Iterator
+from typing import Any
 from urllib.parse import quote
 
 from android_forensics.config import CHUNK_SIZE
@@ -48,7 +49,7 @@ class UndecodableText(str):
 
     raw: bytes
 
-    def __new__(cls, text: str, raw: bytes) -> "UndecodableText":
+    def __new__(cls, text: str, raw: bytes) -> UndecodableText:
         obj = super().__new__(cls, text)
         obj.raw = raw
         return obj
@@ -122,7 +123,7 @@ class SQLiteSession:
             text = raw.decode("utf-8", "replace")
             return UndecodableText(text, raw) if self.track_undecodable else text
 
-    def __enter__(self) -> "SQLiteSession":
+    def __enter__(self) -> SQLiteSession:
         self.scratch_root.mkdir(parents=True, exist_ok=True)
         self._tmp = Path(tempfile.mkdtemp(prefix="sess_", dir=self.scratch_root))
         work = self._tmp / "work.db"

@@ -8,7 +8,6 @@ from android_forensics.lab.ground_truth import compare_active
 from android_forensics.models import ArtifactType, RawKind, SMSMessage, artifact_class
 from android_forensics.sqlite.discovery import preserved_path, sidecar_rows
 from android_forensics.sqlite.reader import SQLiteSession
-
 from tests.conftest import tree_hash
 
 

@@ -3,17 +3,17 @@ independent artifacts -- and only by independent ones."""
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
 from android_forensics.artifacts.base import DbContext, RowSource
+from android_forensics.artifacts.browser import BrowserParser
 from android_forensics.artifacts.calls import CallsParser
 from android_forensics.artifacts.contacts import ContactsParser
+from android_forensics.artifacts.recovered import reconstruct
 from android_forensics.artifacts.schema_probe import RoleMatch, SchemaMatch
 from android_forensics.artifacts.sms import SmsParser
-from android_forensics.artifacts.browser import BrowserParser
-from android_forensics.artifacts.recovered import reconstruct
 from android_forensics.correlation import FileInfo, Subject, build_correlation, database_of, facts_of, normalise_url
 from android_forensics.models import (
     ArtifactStatus,
@@ -26,7 +26,7 @@ from android_forensics.storage.case_store import CaseStore
 from android_forensics.storage.recovery_store import insert_edges, load_edges
 from tests.unit.recovery_fixtures import SMS_DDL, build_table_db, sms_row, stage
 
-NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
+NOW = datetime(2026, 1, 1, tzinfo=UTC)
 SMS_DB, CALL_DB, CONTACT_DB, CHROME_DB = "data/mmssms.db", "data/calllog.db", "data/contacts2.db", "data/History"
 FILES = {1: FileInfo(1, SMS_DB, "database", "com.android.providers.telephony"), 2: FileInfo(2, CALL_DB, "database", "com.android.providers.contacts"),
          3: FileInfo(3, CONTACT_DB, "database", "com.android.providers.contacts"), 4: FileInfo(4, CHROME_DB, "database", "com.android.chrome"),

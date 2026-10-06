@@ -10,8 +10,8 @@ from pydantic import ValidationError
 from android_forensics.filesystem.analysis import FileObservation, analyze_files, detect_sqlite_status, sidecar_header_status
 from android_forensics.models import (
     DiscoveredDatabase,
-    FilesystemScan,
     FileKind,
+    FilesystemScan,
     Sidecar,
     SidecarKind,
     SqliteStatus,

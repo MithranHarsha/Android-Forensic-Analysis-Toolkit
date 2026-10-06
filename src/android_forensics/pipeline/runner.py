@@ -10,9 +10,10 @@ default pipeline: ``run_pipeline(store)`` with no ``names`` still runs exactly R
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable
+from typing import Any
 
 from android_forensics.artifacts.extract import run_extraction
 from android_forensics.filesystem.scanner import scan_filesystem

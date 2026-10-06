@@ -6,9 +6,10 @@ import hashlib
 import json
 import sqlite3
 import uuid
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Mapping, Sequence
+from typing import Any
 
 from android_forensics import TOOL_NAME, __version__
 from android_forensics.errors import CaseError
@@ -69,7 +70,7 @@ class CaseStore:
         name: str,
         examiner: str | None = None,
         description: str | None = None,
-    ) -> "CaseStore":
+    ) -> CaseStore:
         case_dir = case_dir.resolve()
         if (case_dir / "case.db").exists():
             raise CaseError(f"A case already exists at {case_dir}")
@@ -85,7 +86,7 @@ class CaseStore:
         return store
 
     @classmethod
-    def open(cls, case_dir: Path) -> "CaseStore":
+    def open(cls, case_dir: Path) -> CaseStore:
         return cls(case_dir)
 
     @staticmethod
@@ -136,7 +137,7 @@ class CaseStore:
         """INSERT one flat record (as produced by a model's ``to_record``). Table/column names are internal constants."""
         cols = ", ".join(record)
         marks = ", ".join(f":{c}" for c in record)
-        return int(self.conn.execute(f"INSERT INTO {table}({cols}) VALUES({marks})", dict(record)).lastrowid)
+        return int(self.conn.execute(f"INSERT INTO {table}({cols}) VALUES({marks})", dict(record)).lastrowid or 0)
 
     def insert_many(self, table: str, records: Sequence[Mapping[str, Any]]) -> None:
         if not records:

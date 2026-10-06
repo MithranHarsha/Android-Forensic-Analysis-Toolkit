@@ -146,7 +146,7 @@ def build_report_model(store: CaseStore, html_row_cap: int | None = None) -> Rep
     kinds = Counter(f["kind"] for f in files)
     issues = [dict(r) for r in store.q("SELECT source_id, path, issue_type, detail, stage FROM scan_issues ORDER BY id")]
     sources = [dict(r) for r in store.q("SELECT * FROM evidence_sources ORDER BY id")]
-    layout = {sid: l.model_dump() for sid, l in case.layouts.items()}
+    layout = {sid: lay.model_dump() for sid, lay in case.layouts.items()}
 
     by_type = {r["artifact_type"]: r["n"] for r in store.q("SELECT artifact_type, COUNT(*) n FROM artifacts GROUP BY 1")}
     artifact_status = {r["status"]: r["n"] for r in store.q("SELECT status, COUNT(*) n FROM artifacts GROUP BY 1")}

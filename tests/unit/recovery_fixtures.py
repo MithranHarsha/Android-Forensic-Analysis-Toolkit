@@ -8,15 +8,15 @@ from __future__ import annotations
 
 import hashlib
 import sqlite3
-from datetime import datetime, timezone
+from collections.abc import Iterable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Iterable
 
-from android_forensics.artifacts.recovered import DatabaseContext, record_from_row, reconstruct
+from android_forensics.artifacts.recovered import DatabaseContext, reconstruct, record_from_row
 from android_forensics.models import Artifact, RecoveredRecord
 from android_forensics.sqlite.recover_db import RecoveryReport, recover_database
 
-NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
+NOW = datetime(2026, 1, 1, tzinfo=UTC)
 MS = 1709280000000  # 2024-03-01T08:00:00Z in Unix milliseconds
 WEBKIT = (1709280000 + 11_644_473_600) * 1_000_000  # the same instant as Chromium stores it
 

@@ -11,8 +11,8 @@ It observes; it does not open databases, parse content or recover anything.
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable
 
 from android_forensics.filesystem.android_paths import KNOWN_APPS, AndroidPath, analyze_layout, is_app_subdir
 from android_forensics.filesystem.sidecars import sidecar_paths, split_sidecar
@@ -23,8 +23,8 @@ from android_forensics.models import (
     FileKind,
     FilesystemScan,
     LayoutInfo,
-    ScannedFile,
     ScanIssue,
+    ScannedFile,
     Sidecar,
     SidecarKind,
     SqliteStatus,

@@ -33,7 +33,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from android_forensics.artifacts.recovered import DatabaseContext, record_from_row, reconstruct
+from android_forensics.artifacts.recovered import DatabaseContext, reconstruct, record_from_row
 from android_forensics.carving import (
     CarveSource,
     carve_database_file,

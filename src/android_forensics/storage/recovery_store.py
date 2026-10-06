@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Iterable, Iterator
+from collections.abc import Iterable, Iterator
+from typing import Any
 
 from android_forensics.models import (
     ArtifactStatus,
@@ -18,7 +19,6 @@ from android_forensics.models import (
     encode_value,
 )
 from android_forensics.storage.case_store import CaseStore
-
 
 # ------------------------------------------------------------------ values <-> JSON (bytes survive as {"$blob": hex})
 

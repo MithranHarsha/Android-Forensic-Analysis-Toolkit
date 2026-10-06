@@ -3,7 +3,7 @@ Nothing is fabricated to make a check pass and nothing bad is silently dropped."
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from android_forensics.artifacts.base import DbContext, RowSource
 from android_forensics.artifacts.schema_probe import RoleMatch, SchemaMatch
@@ -13,7 +13,7 @@ from android_forensics.storage.artifact_writer import insert_artifacts
 from android_forensics.storage.case_store import CaseStore, utcnow
 from android_forensics.validation.runner import run_validation
 
-NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
+NOW = datetime(2026, 1, 1, tzinfo=UTC)
 DB = "data/data/com.android.providers.telephony/databases/mmssms.db"
 MATCH = SchemaMatch("sms", "aosp_sms", {"main": RoleMatch("sms", {}, 1.0)}, 1.0)
 

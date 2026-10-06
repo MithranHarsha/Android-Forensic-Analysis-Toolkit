@@ -18,10 +18,11 @@ from __future__ import annotations
 import bisect
 import os
 import re
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any
 
 from android_forensics.carving.records import scan_records
 from android_forensics.carving.rules import RULES, Rule

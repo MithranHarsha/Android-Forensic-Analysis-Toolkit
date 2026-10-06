@@ -11,6 +11,7 @@ import pytest
 from android_forensics.models.enums import ArtifactStatus
 from android_forensics.models.unknown import UNKNOWN
 from android_forensics.sqlite.ddl import parse_create_table
+from android_forensics.sqlite.records import encode_record, encode_table_leaf_cell, encode_varint
 from android_forensics.sqlite.recovery import (
     ActiveIndex,
     PageImage,
@@ -22,7 +23,6 @@ from android_forensics.sqlite.recovery import (
     try_clobbered,
     try_full,
 )
-from android_forensics.sqlite.records import encode_record, encode_table_leaf_cell, encode_varint
 
 SMS = TableModel.from_sql(parse_create_table(
     "CREATE TABLE sms(_id INTEGER PRIMARY KEY, address TEXT, date INTEGER, type INTEGER, body TEXT, read INTEGER)"))

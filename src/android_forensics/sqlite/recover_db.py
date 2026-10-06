@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import tempfile
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from android_forensics.sqlite.ddl import DdlError, parse_create_table
 from android_forensics.sqlite.journal import JournalInfo, parse_journal
@@ -100,7 +101,8 @@ def recover_database(main: str | Path, sidecars: dict[str, Path | str] | None = 
     Nothing is written next to the evidence: SQLite (used only to obtain the *active view* the findings are compared with)
     works on a scratch copy."""
     main = Path(main)
-    sidecars = {k: Path(v) for k, v in (sidecars or {}).items()}
+    sidecars_d: dict[str, Path] = {k: Path(v) for k, v in (sidecars or {}).items()}
+    sidecars = sidecars_d  # type: ignore[assignment]
     report = RecoveryReport(str(main))
     try:
         db = SQLiteDatabase.open(main)
@@ -108,13 +110,13 @@ def recover_database(main: str | Path, sidecars: dict[str, Path | str] | None = 
         report.notes.append(f"the main file has no usable header ({exc}): recovery from it was not attempted")
         return report
     own_scratch = scratch is None
-    scratch_dir = Path(tempfile.mkdtemp(prefix="afrecover_")) if own_scratch else Path(scratch)
+    scratch_dir = Path(tempfile.mkdtemp(prefix="afrecover_")) if own_scratch else Path(scratch)  # type: ignore[arg-type]
     try:
         with db:
             report.freelist_pages = len(db.freelist().pages)
-            wal = parse_wal(sidecars["-wal"], expected_page_size=db.page_size) if sidecars.get("-wal") and sidecars["-wal"].stat().st_size else None
-            journal = parse_journal(sidecars["-journal"], db_page_size=db.page_size, db_page_count=db.page_count) \
-                if sidecars.get("-journal") and sidecars["-journal"].stat().st_size else None
+            wal = parse_wal(sidecars_d["-wal"], expected_page_size=db.page_size) if sidecars_d.get("-wal") and sidecars_d["-wal"].stat().st_size else None
+            journal = parse_journal(sidecars_d["-journal"], db_page_size=db.page_size, db_page_count=db.page_count) \
+                if sidecars_d.get("-journal") and sidecars_d["-journal"].stat().st_size else None
             if wal:
                 report.wal = {"frames": len(wal.frames), **wal.summary(), "problems": wal.problems}
                 report.wal_frame_status = {f.index: f.status for f in wal.frames}

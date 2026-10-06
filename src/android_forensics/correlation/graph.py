@@ -8,8 +8,9 @@ the graph never holds two edges for one fact.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+from typing import Any
 
 from android_forensics.models import CorrelationEdge, EntityKind, Relation
 

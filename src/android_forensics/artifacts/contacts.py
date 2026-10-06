@@ -11,7 +11,8 @@ reported as ACTIVE rows carrying ``marked_deleted=True`` — they are not "recov
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
 
 from android_forensics.artifacts.base import ArtifactParser, DbContext, FieldReader, RowSource, build_envelope, jsonable
 from android_forensics.artifacts.registry import register

@@ -16,7 +16,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from android_forensics.filesystem.analysis import FileObservation, detect_sqlite_status
-from android_forensics.filesystem.sidecars import SIDECAR_SUFFIX, sidecar_paths as expected_sidecar_paths
+from android_forensics.filesystem.sidecars import SIDECAR_SUFFIX
+from android_forensics.filesystem.sidecars import sidecar_paths as expected_sidecar_paths
 from android_forensics.models import FileKind
 from android_forensics.models.enums import OpenStatus, TableKind
 from android_forensics.progress import NullProgress, Progress

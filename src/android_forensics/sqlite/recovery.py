@@ -40,8 +40,9 @@ several places is reported once, with the other locations noted.
 from __future__ import annotations
 
 import struct
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Sequence
+from typing import Any
 
 from android_forensics.models.enums import ArtifactStatus, ExtractionMethod
 from android_forensics.models.unknown import UNKNOWN
@@ -91,7 +92,7 @@ class TableModel:
         return tuple(c.name for c in self.columns)
 
     @classmethod
-    def from_sql(cls, table: TableSql) -> "TableModel | None":
+    def from_sql(cls, table: TableSql) -> TableModel | None:
         """None for tables recovery does not attempt: virtual, WITHOUT ROWID (index-format cells) and column-less."""
         if table.virtual or table.without_rowid or not table.stored_columns or table.name.lower().startswith("sqlite_"):
             return None

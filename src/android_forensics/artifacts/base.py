@@ -11,10 +11,11 @@ from __future__ import annotations
 import hashlib
 import math
 from abc import ABC, abstractmethod
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
-from functools import lru_cache
 from datetime import datetime
-from typing import Any, Iterator, Mapping
+from functools import cache
+from typing import Any
 
 from android_forensics.artifacts.schema_probe import RoleMatch, SchemaMatch
 from android_forensics.models import UNKNOWN, Artifact, ParserInfo, Provenance, RawKind, RawReference
@@ -109,13 +110,13 @@ class FieldReader:
         return None
 
 
-@lru_cache(maxsize=None)
+@cache
 def _parser_info(name: str, version: str, variant: str | None, score: float | None) -> ParserInfo:
     """ParserInfo is immutable and identical for every row of a table, so build it once."""
     return ParserInfo(name=name, version=version, schema_variant=variant, schema_match_score=score)
 
 
-def build_envelope(ctx: DbContext, match: SchemaMatch, row: RowSource, parser: "ArtifactParser", flags: list[str]) -> dict[str, Any]:
+def build_envelope(ctx: DbContext, match: SchemaMatch, row: RowSource, parser: ArtifactParser, flags: list[str]) -> dict[str, Any]:
     """Everything an active-row artifact shares: where it came from, the raw row, and which parser read it."""
     return dict(
         application=ctx.application,

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Mapping, Self
+import sqlite3
+from collections.abc import Mapping
+from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -39,7 +41,7 @@ class ValidationResult(BaseModel):
         evidence: dict[str, Any] | None = None,
     ) -> Self:
         return cls(
-            target_type=target_type, target_id=target_id, target_label=target_label, check=check, status=status,
+            target_type=target_type, target_id=target_id, target_label=target_label, check=check, status=status,  # type: ignore[arg-type]
             detail=detail, evidence=evidence or {},
         )
 
@@ -60,7 +62,7 @@ class ValidationResult(BaseModel):
         }
 
     @classmethod
-    def from_record(cls, r: Mapping[str, Any]) -> Self:
+    def from_record(cls, r: Mapping[str, Any] | sqlite3.Row) -> Self:
         return cls(
             id=r["id"], run_id=r["run_id"], target_type=r["target_type"], target_id=r["target_id"],
             target_label=r["target_label"], check=r["check_name"], status=r["status"], detail=r["detail"],

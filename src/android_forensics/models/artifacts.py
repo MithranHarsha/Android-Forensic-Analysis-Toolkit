@@ -18,8 +18,10 @@ Artifacts are immutable. To change one (for example to promote a candidate), ``e
 from __future__ import annotations
 
 import json
-from functools import lru_cache
-from typing import Annotated, Any, Literal, Mapping, Self, Union
+import sqlite3
+from collections.abc import Mapping
+from functools import cache, lru_cache
+from typing import Annotated, Any, Literal, Self, Union
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
@@ -135,7 +137,7 @@ class Artifact(BaseModel):
         return tuple(_payload_defaults(cls))
 
     def payload(self) -> dict[str, Any]:
-        return self.model_dump(mode="json", include=_payload_names(type(self)))
+        return self.model_dump(mode="json", include=set(_payload_names(type(self))))
 
     def to_record(self) -> dict[str, Any]:
         """Flat column values for the ``artifacts`` table (the caller adds run_id / database_id)."""
@@ -186,21 +188,21 @@ class Artifact(BaseModel):
         }
 
     @staticmethod
-    def from_record(record: Mapping[str, Any]) -> "Artifact":
+    def from_record(record: Mapping[str, Any] | sqlite3.Row) -> Artifact:
         """Rebuild the correct concrete subclass from an ``artifacts`` row (inverse of ``to_record``)."""
-        return artifact_from_record(record)
+        return artifact_from_record(record)  # type: ignore[arg-type]
 
 
 _ENVELOPE_FIELDS = frozenset(Artifact.model_fields)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _payload_defaults(cls: type[Artifact]) -> dict[str, Any]:
     """Type-specific field name → default value, computed once per class (an UNKNOWN field must equal its default)."""
     return {n: f.get_default(call_default_factory=True) for n, f in cls.model_fields.items() if n not in _ENVELOPE_FIELDS}
 
 
-@lru_cache(maxsize=None)
+@cache
 def _payload_names(cls: type[Artifact]) -> frozenset[str]:
     return frozenset(_payload_defaults(cls))
 

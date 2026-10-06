@@ -7,15 +7,14 @@ import struct
 import tarfile
 import zipfile
 import zlib
-from datetime import datetime, timezone
+from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Iterator
 
 from android_forensics.acquisition.base import AcquireContext, AcquiredFile, AcquisitionIssue, ingest_stream
 from android_forensics.acquisition.safety import BudgetExceeded, UnsafePathError, normalize_member_path
 from android_forensics.models import FileTimes, SourceType
 from android_forensics.util import iso_from_epoch, iso_utc, safe_text
-
 
 _UT_EXTRA_ID = 0x5455  # Info-ZIP "extended timestamp": UTC epoch seconds, unlike the timezone-less DOS time
 
@@ -31,7 +30,7 @@ def _zip_times(info: zipfile.ZipInfo) -> FileTimes:
             return FileTimes(mtime=iso_from_epoch(mtime), basis="zip_extra_field_UT (UTC epoch, Info-ZIP extended timestamp)")
         i += 4 + size
     try:
-        mtime_iso = iso_utc(datetime(*info.date_time, tzinfo=timezone.utc))
+        mtime_iso = iso_utc(datetime(*info.date_time, tzinfo=UTC))
     except ValueError:
         mtime_iso = None
     return FileTimes(mtime=mtime_iso, basis="zip_dos_time (timezone unspecified; shown as UTC)")

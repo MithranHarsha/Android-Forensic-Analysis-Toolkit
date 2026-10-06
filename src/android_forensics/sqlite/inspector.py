@@ -30,10 +30,11 @@ import re
 import shutil
 import sqlite3
 import tempfile
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any, Iterator, Mapping
+from typing import Any
 
 from android_forensics import __version__
 from android_forensics.acquisition.hashing import sha256_of
@@ -449,7 +450,7 @@ def _read_table(
         without_rowid, strict = "WITHOUT ROWID" in options, "STRICT" in options
     if kind is TableKind.VIRTUAL:
         without_rowid = False
-    base = dict(
+    base: dict[str, Any] = dict(
         name=entry.name, kind=kind, internal=entry.name.lower().startswith("sqlite_"), sql=entry.sql, root_page=entry.root_page,
         without_rowid=without_rowid, strict=strict, autoincrement=bool(_AUTOINCREMENT.search(stripped)),
     )

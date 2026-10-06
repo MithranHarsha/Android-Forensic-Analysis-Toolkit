@@ -6,7 +6,6 @@ from pydantic import ValidationError
 from android_forensics.models import (
     UNKNOWN,
     ApplicationSummary,
-    GenericRecord,
     Artifact,
     ArtifactStatus,
     ArtifactType,
@@ -16,6 +15,7 @@ from android_forensics.models import (
     Confidence,
     Contact,
     ExtractionMethod,
+    GenericRecord,
     MessageDirection,
     PageTransition,
     RawKind,

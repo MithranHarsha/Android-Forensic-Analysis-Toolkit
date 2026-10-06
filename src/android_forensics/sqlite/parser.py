@@ -11,9 +11,10 @@ Rows come out with their physical location (page, cell index, byte offset in the
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from android_forensics.readonly import open_readonly
 from android_forensics.sqlite.ddl import DdlError, TableSql, parse_create_table
@@ -98,7 +99,7 @@ class SQLiteDatabase:
 
     # ------------------------------------------------------------------ opening
     @classmethod
-    def open(cls, path: str | Path) -> "SQLiteDatabase":
+    def open(cls, path: str | Path) -> SQLiteDatabase:
         path = Path(path)
         with open_readonly(path) as fh:
             header = parse_header(fh.read(HEADER_SIZE))
@@ -109,7 +110,7 @@ class SQLiteDatabase:
     def close(self) -> None:
         self.source.close()
 
-    def __enter__(self) -> "SQLiteDatabase":
+    def __enter__(self) -> SQLiteDatabase:
         return self
 
     def __exit__(self, *exc: object) -> None:

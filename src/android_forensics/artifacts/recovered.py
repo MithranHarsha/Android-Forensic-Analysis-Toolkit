@@ -15,9 +15,10 @@ scorer (``confidence.scorer``); the parser contributes the typed payload, the ti
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from android_forensics.artifacts.base import ArtifactParser, DbContext, RowSource, jsonable
 from android_forensics.artifacts.registry import get_parsers
@@ -64,8 +65,8 @@ class DatabaseContext:
     _routes: dict[str, tuple[ArtifactParser, SchemaMatch, str]] | None = field(default=None, repr=False)
 
     @classmethod
-    def from_report(cls, report: "RecoveryReport", *, database_file_id: int, database_sha256: str, application: str | None,
-                    now: datetime | None = None, urls: Mapping[Any, tuple[str | None, str | None]] | None = None) -> "DatabaseContext":
+    def from_report(cls, report: RecoveryReport, *, database_file_id: int, database_sha256: str, application: str | None,
+                    now: datetime | None = None, urls: Mapping[Any, tuple[str | None, str | None]] | None = None) -> DatabaseContext:
         return cls(database_file_id, report.database, database_sha256, application, report.models, now, urls or {},
                    report.wal_frame_status, report.journal_checksum_ok)
 

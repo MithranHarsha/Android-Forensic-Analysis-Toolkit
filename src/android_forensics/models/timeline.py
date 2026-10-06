@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Self
+import sqlite3
+from collections.abc import Mapping
+from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
@@ -62,7 +64,7 @@ class TimelineEvent(BaseModel):
         }
 
     @classmethod
-    def from_record(cls, r: Mapping[str, Any]) -> Self:
+    def from_record(cls, r: Mapping[str, Any] | sqlite3.Row) -> Self:
         return cls(
             id=r["id"], run_id=r["run_id"], timestamp=r["ts_utc"], timestamp_raw=r["ts_raw"], time_basis=r["time_basis"],
             kind=r["event_kind"], artifact_type=r["artifact_type"], event=r["event"], source=r["source"],

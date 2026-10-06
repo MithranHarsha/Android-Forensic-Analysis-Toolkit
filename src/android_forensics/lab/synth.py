@@ -20,7 +20,7 @@ import time
 import zipfile
 from collections import Counter
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,7 +28,7 @@ from android_forensics.lab.journal import build_hot_journal
 from android_forensics.sqlite.records import encode_record, encode_table_leaf_cell
 
 WEBKIT_EPOCH_OFFSET_S = 11_644_473_600
-BASE = datetime(2024, 3, 1, 8, 0, 0, tzinfo=timezone.utc)
+BASE = datetime(2024, 3, 1, 8, 0, 0, tzinfo=UTC)
 BASE_MS = int(BASE.timestamp() * 1000)
 
 TELEPHONY = "data/data/com.android.providers.telephony/databases"
@@ -126,7 +126,7 @@ def _build_sms(root: Path, spec: SynthSpec, rng: random.Random, people: list[dic
             address = person["number"]
             mtype = rng.choice([1, 1, 2, 2, 2])
         if i in (17, 58):
-            mtype, address = 3, None
+            mtype, address = 3, None  # type: ignore[assignment]
         body = rng.choice(SMS_TEMPLATES).format(
             h=rng.randint(1, 12), h2=rng.randint(1, 12), otp=rng.randint(100000, 999999), amt=rng.randint(50, 9000),
             room=rng.randint(100, 499), otp4=rng.randint(1000, 9999),
