@@ -846,3 +846,112 @@ def audit_verify(
         console.print(escape(harden_fn(log.path)))
     if not (v.ok and ok_db):
         raise typer.Exit(1)
+
+
+# ------------------------------------------------------------------ deployable server
+
+_LOOPBACK = {"127.0.0.1", "::1", "localhost"}
+
+
+@app.command()
+@handle_errors
+def serve(
+    cases_dir: CasesDir = Path("cases"),
+    data_dir: Annotated[Path, typer.Option("--data-dir", envvar="ANDROID_FORENSICS_DATA", help="Server state: token DB, uploads, job logs, audit log. Keep it OUTSIDE --cases-dir.")] = Path("server-data"),
+    host: Annotated[str, typer.Option(help="Bind address.")] = "127.0.0.1",
+    port: Annotated[int, typer.Option(help="Bind port.")] = 8765,
+    allowed_host: Annotated[list[str] | None, typer.Option("--allowed-host", help="Host header value(s) this server answers to (repeatable). Required when binding beyond loopback.")] = None,
+    allow_origin: Annotated[list[str] | None, typer.Option("--allow-origin", help="CORS origin(s) allowed to call the API (repeatable). Default: none (same-origin only).")] = None,
+    tls_certfile: Annotated[Path | None, typer.Option(help="PEM certificate: serve HTTPS directly.")] = None,
+    tls_keyfile: Annotated[Path | None, typer.Option(help="PEM private key for --tls-certfile.")] = None,
+    behind_proxy: Annotated[bool, typer.Option("--behind-proxy", help="A TLS-terminating reverse proxy (Caddy/nginx) is in front: enables HSTS and trusts one X-Forwarded-For hop.")] = False,
+    insecure_http: Annotated[bool, typer.Option("--insecure-http", help="Allow plain HTTP on a non-loopback address (tokens cross the network in clear text!).")] = False,
+    max_upload_gb: Annotated[float, typer.Option(help="Largest accepted evidence upload, in GiB.")] = 64.0,
+    workers: Annotated[int, typer.Option(help="Concurrent analysis jobs.")] = 2,
+    job_memory_gb: Annotated[float, typer.Option(help="Per-job memory limit in GiB (enforced on Linux).")] = 8.0,
+    job_hours: Annotated[float, typer.Option(help="Per-job wall-clock limit in hours.")] = 24.0,
+    rate_limit: Annotated[int, typer.Option(help="Requests per minute per client IP.")] = 600,
+    signing_key: Annotated[Path | None, typer.Option(help="Ed25519 key: sign every report the server's jobs produce.")] = None,
+) -> None:
+    """Run the authenticated multi-case web server (REST API + browser UI, background analysis jobs, uploads)."""
+    import uvicorn
+
+    from android_forensics.server import ServerSettings, create_server_app
+    from android_forensics.server.db import ServerDB
+
+    loopback = host in _LOOPBACK
+    tls = tls_certfile is not None
+    if bool(tls_certfile) != bool(tls_keyfile):
+        raise CaseError("--tls-certfile and --tls-keyfile must be given together")
+    if not loopback and not (tls or behind_proxy or insecure_http):
+        raise CaseError(f"refusing to serve plain HTTP on {host}: bearer tokens would cross the network unencrypted. Use --tls-certfile/--tls-keyfile, "
+                        "put a TLS proxy in front and pass --behind-proxy, or (not recommended) --insecure-http")
+    if not loopback and not allowed_host:
+        raise CaseError("when binding beyond loopback, name the host(s) clients use with --allowed-host (protects against Host-header attacks)")
+    data_dir, cases_dir = data_dir.resolve(), cases_dir.resolve()
+    if data_dir == cases_dir or cases_dir in data_dir.parents or data_dir in cases_dir.parents:
+        raise CaseError("--data-dir and --cases-dir must be separate, non-nested directories")
+    hosts = tuple(allowed_host or ()) or ("localhost", "127.0.0.1", "[::1]")
+    gib = 1024 ** 3
+    settings = ServerSettings(
+        cases_dir=cases_dir, data_dir=data_dir, max_upload_bytes=int(max_upload_gb * gib), workers=workers,
+        rate_limit_per_minute=rate_limit, allowed_origins=tuple(allow_origin or ()), allowed_hosts=hosts,
+        behind_tls=tls or behind_proxy, trust_proxy_hops=1 if behind_proxy else 0, job_memory_bytes=int(job_memory_gb * gib),
+        job_wall_seconds=int(job_hours * 3600), signing_key=signing_key,
+    )
+    server_app = create_server_app(settings)
+    if not ServerDB(settings.db_path).tokens():
+        err_console.print(f"[bold yellow]No access tokens exist yet.[/] Create the first admin token with:\n  {TOOL_NAME} server-token create --data-dir {data_dir} --name admin --role admin")
+    scheme = "https" if tls else "http"
+    console.print(Text.assemble(("Server: ", "bold green"), f"{scheme}://{host}:{port}/  (cases: {cases_dir}; state: {data_dir})"), soft_wrap=True)
+    uvicorn.run(server_app, host=host, port=port, log_level="warning", ssl_certfile=str(tls_certfile) if tls_certfile else None,
+                ssl_keyfile=str(tls_keyfile) if tls_keyfile else None, proxy_headers=False, server_header=False)
+
+
+token_app = typer.Typer(help="Manage the access tokens of the web server.", no_args_is_help=True, add_completion=False)
+app.add_typer(token_app, name="server-token")
+DataDir = Annotated[Path, typer.Option("--data-dir", envvar="ANDROID_FORENSICS_DATA", help="The server's --data-dir.")]
+
+
+@token_app.command("create")
+@handle_errors
+def token_create(
+    name: Annotated[str, typer.Option(help="Who the token is for (shown in audit logs).")],
+    role: Annotated[str, typer.Option(help="viewer (read), analyst (+ upload/analyse) or admin (+ tokens, delete).")] = "viewer",
+    data_dir: DataDir = Path("server-data"),
+) -> None:
+    """Create an access token. It is printed ONCE; only its SHA-256 is stored."""
+    from android_forensics.server.auth import ROLES, hash_token, new_token
+    from android_forensics.server.db import ServerDB
+
+    if role not in ROLES:
+        raise CaseError(f"role must be one of: {', '.join(ROLES)}")
+    token = new_token()
+    token_id = ServerDB(data_dir / "server.db").add_token(name, role, hash_token(token))
+    console.print(stats_panel("Token created", [("Id", token_id), ("Name", name), ("Role", role)]))
+    console.print(Text.assemble(("Token (shown once): ", "bold yellow"), token), soft_wrap=True)
+
+
+@token_app.command("list")
+@handle_errors
+def token_list(data_dir: DataDir = Path("server-data")) -> None:
+    """List tokens (never their secrets)."""
+    from android_forensics.server.db import ServerDB
+
+    t = SafeTable(title="Tokens", header_style="bold")
+    for c in ("Id", "Name", "Role", "Created", "Last used", "Revoked"):
+        t.add_column(c)
+    for r in ServerDB(data_dir / "server.db").tokens():
+        t.add_row(str(r["id"]), r["name"], r["role"], r["created_at"], r["last_used_at"] or "-", r["revoked_at"] or "-")
+    console.print(t)
+
+
+@token_app.command("revoke")
+@handle_errors
+def token_revoke(token_id: Annotated[int, typer.Argument(help="Token id (see 'server-token list').")], data_dir: DataDir = Path("server-data")) -> None:
+    """Revoke a token immediately."""
+    from android_forensics.server.db import ServerDB
+
+    if not ServerDB(data_dir / "server.db").revoke_token(token_id):
+        raise CaseError(f"no active token with id {token_id}")
+    console.print(f"[green]✓[/] token {token_id} revoked")

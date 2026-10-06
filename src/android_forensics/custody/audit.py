@@ -147,8 +147,10 @@ def harden(path: Path | str) -> str:
 
 
 def actor() -> dict[str, str]:
+    """Who is running the command. A server job sets ANDROID_FORENSICS_ACTOR to the web user it acts for."""
+    delegated = os.environ.get("ANDROID_FORENSICS_ACTOR")
     try:
-        user = getpass.getuser()
+        user = delegated or getpass.getuser()
     except Exception:  # noqa: BLE001 - getuser can fail in containers without passwd entries
         user = os.environ.get("USER", "unknown")
     return {"user": user, "host": socket.gethostname(), "os": platform.platform()}
