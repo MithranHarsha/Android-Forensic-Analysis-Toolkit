@@ -2,7 +2,7 @@
 
 ## Deployment and platform (0.3)
 
-* **Windows is untested.** The CI matrix includes Windows, but the author could not run it. Several protections are POSIX-only:
+* **Windows: the CLI and test-suite pass on GitHub's Windows runners (3.11–3.13), but the server's job sandbox is POSIX-only and not run there.** Several protections are POSIX-only or best-effort:
   `O_NOFOLLOW`/`O_NOATIME` evidence opening (best-effort elsewhere), `flock` on the audit log (single-writer assumed), and — for the
   server — resource limits and process-group kills (`server/sandbox.py`). Use Linux or macOS, or the Docker image, for casework.
 * **Memory limits for analysis jobs are enforced only where `RLIMIT_AS` works (Linux).** macOS ignores it; rely on container limits.
@@ -91,7 +91,7 @@ mismatches such as `sqlite3.Row` vs `Mapping`, optional narrowing). New code mus
 * **Validation on synthetic data only.** See [evaluation.md](evaluation.md#threats-to-validity).
 * **Custody log** is hash-chained inside the case database. It detects edits and deletions but is not signed or externally
   time-stamped; an adversary with write access to the whole case could rebuild it.
-* **Platform.** Developed and tested on macOS with Python 3.12; the code is portable (Linux/Windows) but only macOS was run.
+* **Platform.** Developed on macOS; the full test-suite runs in GitHub Actions on Linux, macOS and Windows with Python 3.11, 3.12 and 3.13. Performance and the real-corpus runs were measured on one Apple-silicon Mac.
   File-permission tests are skipped where the OS ignores permissions; some file systems reject non-UTF-8 names.
 * **No ADB acquisition.** Live-device acquisition is out of scope; the tool examines acquisitions.
 * **Ingestion records content and times only** — not permissions, uid/gid, SELinux labels or extended attributes; nested archives are hashed, not expanded; hard links are skipped; `O_NOATIME` exists only on Linux, so elsewhere reading may update access times (use a read-only mount or write blocker). See [evidence_ingestion.md](evidence_ingestion.md#limitations).

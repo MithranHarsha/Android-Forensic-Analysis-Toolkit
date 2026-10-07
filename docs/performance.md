@@ -58,6 +58,14 @@ status/method/confidence (and carved kind/confidence) that covers *every* row, w
 files always contain everything. (Before this, a case with hundreds of thousands of carved candidates would have produced a
 multi-hundred-megabyte HTML file.)
 
+### More defects found by running on GitHub's runners
+CI on Windows (slow `fsync`, slower CPUs) exposed two more hot spots that were merely tolerable on a fast Mac:
+
+| Defect | Effect | Fix |
+|---|---|---|
+| `reconstruct` committed one database transaction (one `fsync`) per recovered record | ~8,000 commits for the synthetic lab; minutes on a Windows runner | commits in batches of 500 |
+| De-duplication compared every recovered row with every row kept so far (O(n²)) | 32 million comparisons for the lab's 8,000-row `queue` table | index by content and `(table, column, value)`; proved identical to the original on random inputs; a test fails if it turns quadratic again |
+
 ## Evidence containers and disk images (streaming)
 
 | Input | Size | Wall time | Peak memory |

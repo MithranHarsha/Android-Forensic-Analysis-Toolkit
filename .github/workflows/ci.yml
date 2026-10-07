@@ -47,9 +47,6 @@ jobs:
         python: ["3.11", "3.12", "3.13"]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
-    # Windows is experimental: the analysis-job sandbox is POSIX-only by design (docs/limitations.md). Its result is reported but does
-    # not fail the build until the remaining Windows differences are worked through.
-    continue-on-error: ${{ matrix.os == 'windows-latest' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

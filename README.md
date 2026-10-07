@@ -83,7 +83,7 @@ and [docs/pipeline_stages.md](docs/pipeline_stages.md).
 
 ## Installation
 
-Requires Python 3.11+ (tested on 3.11–3.13 on Linux and macOS; **Windows is untested**). No cloud services.
+Requires Python 3.11+ (CI runs the suite on Linux, macOS and Windows with 3.11–3.13; Windows lacks the server's job sandbox). No cloud services.
 
 ```bash
 # from source
@@ -302,7 +302,7 @@ numbers, charts and threats to validity: [docs/evaluation.md](docs/evaluation.md
 
 ## Limitations
 
-Highlights (full list in [docs/limitations.md](docs/limitations.md)): **encrypted `/data` (the norm on phones) yields no artifacts — it is reported, not decrypted**; deleted *files* are not recovered at file-system level (only deleted SQLite records); ext4 `inline_data` and f2fs compression are unsupported; Windows is untested and the server's job sandbox is POSIX-only; databases SQLite refuses to open yield no active
+Highlights (full list in [docs/limitations.md](docs/limitations.md)): **encrypted `/data` (the norm on phones) yields no artifacts — it is reported, not decrypted**; deleted *files* are not recovered at file-system level (only deleted SQLite records); ext4 `inline_data` and f2fs compression are unsupported; the server's job sandbox is POSIX-only (the suite itself passes on Windows in CI); databases SQLite refuses to open yield no active
 artifacts (page-level recovery still attempts them); encrypted databases are flagged, not opened; ABX XML and MMS
 attachments are not decoded; phone-number matching is heuristic; parsers and the recovery engine were validated on
 synthetic evidence — real devices vary; recovery cannot restore data that was actually overwritten (VACUUM,

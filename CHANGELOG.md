@@ -37,14 +37,14 @@ the format follows [Keep a Changelog](https://keepachangelog.com/).
 - Runtime `requirements.txt` no longer lists test tooling (moved to the `dev` extra).
 
 ### Added (post-release hardening)
-- Single sign-on through a trusted reverse proxy (`--sso-*`), passphrase-from-file for signing keys, HTTP fuzzing of the server, `reconstruct` commits in batches (one fsync per record made it crawl on Windows runners).
+- Single sign-on through a trusted reverse proxy (`--sso-*`), passphrase-from-file for signing keys, HTTP fuzzing of the server, `reconstruct` commits in batches and recovery de-duplication is indexed (the two hot spots GitHub's Windows runners exposed).
 
 ### Fixed
 - DDL parser raised `IndexError` on malformed `CREATE TABLE` text (found by fuzzing); now always `DdlError`.
 - A test opened the shared synthetic evidence with SQLite directly (creating `-shm` files); it now works on a copy.
 
 ### Known limitations
-- Windows untested; encrypted `/data` is reported, not decrypted; f2fs compression and ext4 `inline_data` unsupported; the Linux test
+- The server's job sandbox is POSIX-only (the rest passes CI on Windows); encrypted `/data` is reported, not decrypted; f2fs compression and ext4 `inline_data` unsupported; the Linux test
   matrix and compose smoke test could not be run in the development environment (see `scripts/test_linux_matrix.sh`).
 
 

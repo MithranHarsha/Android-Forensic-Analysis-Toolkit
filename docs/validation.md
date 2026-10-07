@@ -106,4 +106,4 @@ remain in the JSON for anyone who wants to build a better comparison.
   corpus is a *file-level* extraction, not a partition image.
 * **Precision of recovery on real data.** Only SMS can be scored (2 of 2); for everything else there is no ground truth, so false-positive
   rates on real devices are **unknown**. Treat `LOW` as leads, not findings.
-* **Windows**, third-party penetration testing, accreditation or any independent review ([standards_alignment.md](standards_alignment.md)).
+* **The server's sandbox on Windows** (it is POSIX-only), third-party penetration testing, accreditation or any independent review ([standards_alignment.md](standards_alignment.md)).
