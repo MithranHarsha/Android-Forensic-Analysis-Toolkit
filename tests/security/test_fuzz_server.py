@@ -3,7 +3,9 @@ property that matters most — never reach protected data without a valid token.
 
 from __future__ import annotations
 
+import posixpath
 import string
+from urllib.parse import unquote
 
 import httpx
 import pytest
@@ -43,9 +45,9 @@ def test_unauthenticated_requests_never_succeed_on_protected_routes_nor_error(sr
         return
     assert r.status_code < 500, (method, path, r.status_code, r.text[:200])
     assert "Traceback" not in r.text and "File \"" not in r.text
-    base = path.split("?")[0].rstrip("/") or "/"
-    if path.startswith("//"):   # "//x" is a URL *authority* to the HTTP client: the request is really for "/"
-        base = "/"
+    # what the request is *really* for, after the normalisation any HTTP client/server performs ("/." and "/a/.." are "/", "//x" is
+    # a URL authority followed by "/")
+    base = "/" if path.startswith("//") else posixpath.normpath(unquote(path.split("?")[0])) or "/"
     if base not in PUBLIC and not base.startswith("/static") and method not in ("OPTIONS", "HEAD") and r.status_code == 200:
         pytest.fail(f"{method} {path} answered 200 without a token")
 

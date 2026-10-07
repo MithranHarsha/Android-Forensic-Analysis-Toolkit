@@ -645,15 +645,53 @@ def _subsumes(kept: RecoveredRow, other: RecoveredRow, alias: str | None) -> boo
 
 def _merge_duplicates(rows: list[RecoveredRow], aliases: dict[str, str | None] | None = None) -> list[RecoveredRow]:
     """The same row in several places is one deleted record: keep the most complete instance and list the other locations.
-    A partial row merges into a more complete one when everything it knows agrees with it."""
+    A partial row merges into a more complete one when everything it knows agrees with it.
+
+    The *first* kept row (in quality order) that is the same record absorbs ``r``. Finding it used to mean testing ``r`` against every
+    kept row — quadratic, minutes for the 8,000 rows of one lab table — so kept rows are indexed by table, by exact content and by
+    ``(table, column, value)``; only rows that could possibly match are tested, with the original predicate, and the earliest wins,
+    which is exactly what the linear scan returned (``tests/unit/test_recovery_equivalence.py`` proves it against the original)."""
     aliases = aliases or {}
     ordered = sorted(rows, key=lambda r: (-_RANK[r.status], -sum(v is not UNKNOWN for v in r.values.values()), -r.fit,
                                          r.source != "main", r.page_number, r.page_offset))
     kept: list[RecoveredRow] = []
+    by_content: dict[Any, int] = {}                       # (table, sorted raw items) -> index of the first kept row with that content
+    postings: dict[Any, list[int]] = {}                   # (table, column, normalised value) -> kept indices (ascending)
+    unindexable: list[int] = []                           # kept rows with a value that cannot be hashed: always tested
     for r in ordered:
-        home = next((k for k in kept if _subsumes(k, r, aliases.get(r.table)) or (k.values == r.values and k.table == r.table)), None)
+        alias = aliases.get(r.table)
+        candidates: set[int] = set(unindexable)
+        try:
+            content = (r.table, tuple(sorted(r.values.items(), key=lambda kv: kv[0])))
+            if not any(isinstance(v, float) and v != v for v in r.values.values()):       # NaN != NaN: cannot be matched by key
+                hit = by_content.get(content)
+                if hit is not None:
+                    candidates.add(hit)
+            known = [(k, _hashable(v)) for k, v in r.values.items() if v is not UNKNOWN and k != alias]
+            if len(known) >= 2:
+                lists = [postings.get((r.table, k, hv)) for k, hv in known]
+                if all(lists):
+                    smallest = min(lists, key=len)  # type: ignore[arg-type]
+                    others = [set(x) for x in lists if x is not smallest and x]  # type: ignore[arg-type]
+                    candidates.update(i for i in smallest if all(i in o for o in others))  # type: ignore[union-attr]
+        except TypeError:   # an unhashable value: fall back to testing every kept row of this table, as before
+            candidates = set(range(len(kept)))
+        home = None
+        for idx in sorted(candidates):
+            cand = kept[idx]
+            if _subsumes(cand, r, alias) or (cand.values == r.values and cand.table == r.table):
+                home = cand
+                break
         if home is None:
+            idx = len(kept)
             kept.append(r)
+            try:
+                by_content.setdefault((r.table, tuple(sorted(r.values.items(), key=lambda kv: kv[0]))), idx)
+                for k, v in r.values.items():
+                    if v is not UNKNOWN:
+                        postings.setdefault((r.table, k, _hashable(v)), []).append(idx)
+            except TypeError:
+                unindexable.append(idx)
             continue
         if r.location not in home.also_found_at:
             home.also_found_at.append(r.location)
