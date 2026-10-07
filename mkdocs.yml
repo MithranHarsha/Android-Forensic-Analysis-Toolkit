@@ -26,6 +26,7 @@ nav:
       - Correlation: correlation.md
       - Reporting: reporting.md
       - Dashboard: dashboard.md
+      - Dashboard walkthrough: dashboard_walkthrough.md
       - Data models: data_models.md
       - Artifact formats: artifact_formats.md
       - Forensic methodology: forensic_methodology.md
