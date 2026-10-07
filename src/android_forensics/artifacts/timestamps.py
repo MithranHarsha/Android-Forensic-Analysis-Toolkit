@@ -65,9 +65,9 @@ def plausible_formats(value: object, now: datetime | None = None) -> list[str]:
     """Which storage formats would render ``value`` as a plausible date (for generic column hints only)."""
     if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
         return []
-    out = []
+    out: list[str] = []
     for fmt in FORMATS:
         dt = to_datetime(value, fmt)
         if dt is not None and is_plausible(dt, now):
-            out.append(fmt)
+            out.append(str(fmt))
     return out

@@ -87,7 +87,7 @@ class SmsParser(ArtifactParser):
             "subject": r.text("subject"),
         }
         who = address if isinstance(address, str) and address else "unknown address"
-        verb = {MessageDirection.RECEIVED: "from", MessageDirection.SENT: "to"}.get(direction, "with")
+        verb = {MessageDirection.RECEIVED: "from", MessageDirection.SENT: "to"}.get(direction, "with") if isinstance(direction, MessageDirection) else "with"
         label = direction.value if isinstance(direction, MessageDirection) else "message"
         summary = f"SMS {label} {verb} {who}: {snippet(body if isinstance(body, str) else None)}"
         return SMSMessage.build(

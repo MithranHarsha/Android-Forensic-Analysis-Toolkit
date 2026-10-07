@@ -829,8 +829,8 @@ def info(
         t = SafeTable(title="Skipped / flagged entries (first 25)", header_style="bold")
         for col in ("Issue", "Path", "Detail"):
             t.add_column(col, overflow="fold")
-        for r in issues:
-            t.add_row(r["issue_type"], r["path"], (r["detail"] or "")[:100])
+        for issue in issues:
+            t.add_row(issue["issue_type"], issue["path"], (issue["detail"] or "")[:100])
         console.print(t)
     ok, msg = store.verify_custody_chain()
     console.print(Text.assemble("Chain of custody: ", (msg, "green" if ok else "bold red")))

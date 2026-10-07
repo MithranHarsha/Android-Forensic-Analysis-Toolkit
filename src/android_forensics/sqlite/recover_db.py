@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -95,14 +95,14 @@ def _journal_images(journal: JournalInfo) -> Iterator[PageImage]:
         yield PageImage(r.page_number, journal.page(r), "journal", journal.path, r.page_offset(), "historical", None, r.index)
 
 
-def recover_database(main: str | Path, sidecars: dict[str, Path | str] | None = None, scratch: Path | None = None) -> RecoveryReport:
+def recover_database(main: str | Path, sidecars: Mapping[str, Path | str] | None = None, scratch: Path | None = None) -> RecoveryReport:
     """Recover deleted / superseded records from ``main`` and its ``-wal`` / ``-journal`` (``{"-wal": path, ...}``).
 
     Nothing is written next to the evidence: SQLite (used only to obtain the *active view* the findings are compared with)
     works on a scratch copy."""
     main = Path(main)
     sidecars_d: dict[str, Path] = {k: Path(v) for k, v in (sidecars or {}).items()}
-    sidecars = sidecars_d  # type: ignore[assignment]
+    sidecars = sidecars_d
     report = RecoveryReport(str(main))
     try:
         db = SQLiteDatabase.open(main)

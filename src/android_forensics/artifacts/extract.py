@@ -17,6 +17,7 @@ from android_forensics.sqlite.discovery import preserved_path, sidecar_rows
 from android_forensics.sqlite.reader import SQLiteOpenError, SQLiteSession
 from android_forensics.storage.artifact_writer import insert_artifacts
 from android_forensics.storage.case_store import CaseStore, utcnow
+from android_forensics.util import require
 
 _BATCH = 1000
 
@@ -55,10 +56,9 @@ def run_extraction(store: CaseStore, run_id: int, progress: Progress | None = No
     for d in dbs:
         stats.databases += 1
         frow = store.one("SELECT * FROM evidence_files WHERE id=?", (d["fid"],))
-        sidecars = {s: preserved_path(store, r) for s, r in sidecar_rows(store, frow).items()}
-        sidecars = {s: p for s, p in sidecars.items() if p is not None}
+        sidecars = {s: p for s, r in sidecar_rows(store, frow).items() if (p := preserved_path(store, r)) is not None}
         try:
-            session_cm = SQLiteSession(preserved_path(store, frow), sidecars, store.scratch_dir)
+            session_cm = SQLiteSession(require(preserved_path(store, frow), "preserved copy"), sidecars, store.scratch_dir)
             with session_cm as session:
                 objects = session.schema()
                 ctx = DbContext(

@@ -25,6 +25,8 @@ def _txt(v: Any) -> str:
 
 
 class Report(FPDF):
+    title_line: str = ""
+
     def header(self) -> None:
         if self.page_no() == 1:
             return

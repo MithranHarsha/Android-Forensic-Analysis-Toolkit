@@ -62,38 +62,6 @@ ignore_missing_imports = true
 warn_unused_ignores = true
 check_untyped_defs = true
 
-# Known typing debt: annotation-only mismatches (sqlite3.Row vs Mapping, Optional narrowing). Tracked in docs/limitations.md.
-# The gate stays strict for every module not listed here.
-[[tool.mypy.overrides]]
-module = [
-    "Found 64 errors in 24 files (checked 111 source files)",
-    "android_forensics.acquisition.archive",
-    "android_forensics.acquisition.manifest",
-    "android_forensics.acquisition.session",
-    "android_forensics.artifacts.browser",
-    "android_forensics.artifacts.contacts",
-    "android_forensics.artifacts.extract",
-    "android_forensics.artifacts.generic",
-    "android_forensics.artifacts.recovered",
-    "android_forensics.artifacts.sms",
-    "android_forensics.artifacts.timestamps",
-    "android_forensics.carving.carver",
-    "android_forensics.cli.app",
-    "android_forensics.correlation.builder",
-    "android_forensics.dashboard.api",
-    "android_forensics.filesystem.scanner",
-    "android_forensics.lab.synth",
-    "android_forensics.models.recovery",
-    "android_forensics.pipeline.recovery_stages",
-    "android_forensics.reporting.model",
-    "android_forensics.reporting.pdf",
-    "android_forensics.sqlite.discovery",
-    "android_forensics.sqlite.reader",
-    "android_forensics.timeline.builder",
-    "android_forensics.validation.checks",
-]
-ignore_errors = true
-
 [tool.bandit]
 exclude_dirs = ["tests", ".venv"]
 skips = ["B101", "B311", "B608"]

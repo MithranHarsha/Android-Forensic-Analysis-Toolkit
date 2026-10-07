@@ -138,9 +138,11 @@ def _names(names: list[str]) -> str:
     return f"contacts {names[0]}, {names[1]} and {len(names) - 2} more"
 
 
-def _seconds(a: str, b: str) -> int | None:
+def _seconds(a: str | None, b: str | None) -> int | None:
     from datetime import datetime
 
+    if a is None or b is None:
+        return None
     try:
         return abs(int((datetime.fromisoformat(a) - datetime.fromisoformat(b)).total_seconds()))
     except ValueError:
@@ -335,11 +337,11 @@ class _Builder:
                 for value in self._record_values(c):
                     self._match_phone(c, node, phone_key(value), phones, found, sentences, quiet=True)
                     self._match_body(c, node, normalise_text(value), bodies, found, sentences, quiet=True)
-                    for t in self._independent(c, names.get(value.casefold(), [])):
-                        if t not in found:
-                            found.append(t)
+                    for named in self._independent(c, names.get(value.casefold(), [])):
+                        if named not in found:
+                            found.append(named)
                             sentences.append(f"the contact name {value!r}")
-                            self.g.add_edge(node, Relation.CORRELATES_WITH, self.nodes[t.ref], f"a text value of the record is the name of {t.label!r}",
+                            self.g.add_edge(node, Relation.CORRELATES_WITH, self.nodes[named.ref], f"a text value of the record is the name of {named.label!r}",
                                             strength=0.5, value=value)
             unique = tuple(dict.fromkeys(sentences))
             self.result.corroboration[ref] = Corroboration(ref, unique, tuple(sorted({t.ref for t in found}, key=_natural)), bool(unique))

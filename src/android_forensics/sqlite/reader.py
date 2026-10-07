@@ -249,6 +249,7 @@ class SQLiteSession:
         every row before it has already been yielded to the caller, and only the failing step raises.
         """
         assert self.conn is not None
+        rowid_name: str | None
         if isinstance(table, str):
             name, has_rowid, rowid_name = table, True, "rowid"
         else:

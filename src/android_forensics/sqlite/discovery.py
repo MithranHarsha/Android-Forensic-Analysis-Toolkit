@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from android_forensics.filesystem.analysis import FileObservation, detect_sqlite_status
 from android_forensics.filesystem.sidecars import SIDECAR_SUFFIX
@@ -25,6 +26,7 @@ from android_forensics.sqlite.header import HeaderReport
 from android_forensics.sqlite.inspection import DatabaseInspection
 from android_forensics.sqlite.inspector import InspectionOptions, SQLiteInspector
 from android_forensics.storage.case_store import CaseStore, utcnow
+from android_forensics.util import require
 
 _DB_KINDS = tuple(k.value for k in FileKind if k.is_database_candidate)
 _NOT_SQLITE_MESSAGE = "SQLite magic absent (corrupt, overwritten or different format)"
@@ -47,9 +49,9 @@ def preserved_path(store: CaseStore, row) -> Path | None:
     return store.evidence_dir / f"s{row['source_id']}" / row["preserved_copy"]
 
 
-def sidecar_rows(store: CaseStore, db_row) -> dict[str, object]:
+def sidecar_rows(store: CaseStore, db_row) -> dict[str, Any]:
     """The sidecar files ingested for a database, keyed by suffix ("-wal", "-shm", "-journal")."""
-    found = {}
+    found: dict[str, Any] = {}
     for kind, sidecar_path in expected_sidecar_paths(db_row["path"]).items():
         r = store.one("SELECT * FROM evidence_files WHERE source_id=? AND path=?", (db_row["source_id"], sidecar_path))
         if r is not None:
@@ -83,7 +85,7 @@ def _apply_inspection(rec: dict, insp: DatabaseInspection, warnings: list[str], 
 
     facts = {}
     for s in insp.sidecars:
-        facts[s.kind.value] = (s.wal or s.shm or s.journal).model_dump()
+        facts[s.kind.value] = require(s.wal or s.shm or s.journal, "sidecar facts").model_dump()
         rec[f"has_{s.kind.value}"] = 1
     stats.with_wal += "wal" in facts
     stats.with_journal += "journal" in facts
@@ -115,7 +117,7 @@ def _table_rows(database_id: int, insp: DatabaseInspection) -> list[tuple]:
     """One ``db_tables`` row per ``sqlite_master`` entry (tables, indexes, views, triggers), with the full schema as JSON."""
     tables = {t.name: t for t in insp.tables}
     indexes = {i.name: i for i in insp.indexes}
-    rows = []
+    rows: list[tuple] = []
     for e in insp.schema_entries:
         t = tables.get(e.name) if e.type == "table" else None
         if t is not None:
@@ -180,7 +182,7 @@ def discover_databases(store: CaseStore, progress: Progress | None = None) -> Di
             cur = store.conn.execute(
                 f"INSERT INTO databases({','.join(cols)}) VALUES({','.join('?' * len(cols))})", [rec[c] for c in cols]
             )
-            db_id = int(cur.lastrowid)
+            db_id = require(cur.lastrowid, "database id")
             if insp is not None:
                 store.conn.executemany(
                     "INSERT INTO db_tables(database_id,name,obj_type,root_page,sql,rowid_table,is_virtual,row_count,"

@@ -206,7 +206,10 @@ def ingest_evidence(
     files: list[EvidenceFile] = []
     issues: list[AcquisitionIssue] = []
     for item in session.run():
-        (issues if isinstance(item, AcquisitionIssue) else files).append(item)
+        if isinstance(item, AcquisitionIssue):
+            issues.append(item)
+        else:
+            files.append(item)
     source = session.finalized_source()
     manifest = make_manifest(session.case_id, case_name, [(source, files)])
     manifest_path = manifest_sha = None

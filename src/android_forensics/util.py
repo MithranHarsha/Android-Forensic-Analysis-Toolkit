@@ -5,6 +5,16 @@ from __future__ import annotations
 import os
 import re
 from datetime import UTC, datetime
+from typing import TypeVar
+
+_T = TypeVar("_T")
+
+
+def require(value: _T | None, what: str = "value") -> _T:
+    """A value that the surrounding code guarantees is present (e.g. the id of a row read back from the case database)."""
+    if value is None:
+        raise RuntimeError(f"internal error: {what} is missing")
+    return value
 
 
 def iso_utc(dt: datetime) -> str:

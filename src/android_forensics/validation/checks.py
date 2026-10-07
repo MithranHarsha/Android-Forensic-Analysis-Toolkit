@@ -82,7 +82,7 @@ def check_hash_consistency(store: CaseStore, opts: Options) -> Iterator[Validati
                                           f"all {checked} original files re-hashed and match ingest-time SHA-256")
     bad_copies, checked = [], 0
     for f in store.evidence_files():
-        if not f.is_preserved:
+        if not f.is_preserved or f.preserved_copy is None:
             continue
         p = store.evidence_dir / f"s{f.source_id}" / f.preserved_copy
         opts.progress.advance()
@@ -312,9 +312,9 @@ def check_cross_artifact(store: CaseStore, opts: Options) -> Iterator[Validation
                        if mism else ("cached call names agree with contacts" if contacts else "no contacts artifact available to compare"))
                       + f"; {matched} of {n_calls} calls have a number present in contacts",
                       {"mismatches": len(mism), "calls_with_contact": matched})
-        for aid, cached, names in mism[:FAILURE_ROW_CAP]:
+        for aid, cached, contact_names in mism[:FAILURE_ROW_CAP]:
             yield ValidationResult.of("artifact", aid, "call cached name", "cross_artifact_consistency", VS.PARTIAL,
-                          f"cached name '{cached}' vs contact name(s) {names}")
+                          f"cached name '{cached}' vs contact name(s) {contact_names}")
         odd = store.q(
             "SELECT id, summary FROM artifacts WHERE artifact_type='call' AND json_extract(fields_json,'$.call_type') IN ('MISSED','REJECTED','BLOCKED') "
             "AND json_extract(fields_json,'$.duration_seconds') > 0"

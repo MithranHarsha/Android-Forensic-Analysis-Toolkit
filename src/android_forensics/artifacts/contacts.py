@@ -11,7 +11,7 @@ reported as ACTIVE rows carrying ``marked_deleted=True`` — they are not "recov
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from typing import Any
 
 from android_forensics.artifacts.base import ArtifactParser, DbContext, FieldReader, RowSource, build_envelope, jsonable
@@ -113,22 +113,22 @@ class ContactsParser(ArtifactParser):
     def extract(self, session: SQLiteSession, match: SchemaMatch, ctx: DbContext) -> Iterator[Contact]:
         if match.variant == "flat_contacts":
             for row in self.rows(session, ctx, match.roles["main"]):
-                v = dict(row.values)
-                num = v.get("number")
-                v["phones"] = [{"number": num, "label": None}] if num else []
-                em = v.get("email")
-                v["emails"] = [{"address": em, "label": None}] if em else []
-                art = self.from_row(RowSource(v, row.raw, row.table, row.rowid), match, ctx)
+                flat = dict(row.values)
+                num = flat.get("number")
+                flat["phones"] = [{"number": num, "label": None}] if num else []
+                em = flat.get("email")
+                flat["emails"] = [{"address": em, "label": None}] if em else []
+                art = self.from_row(RowSource(flat, row.raw, row.table, row.rowid), match, ctx)
                 if art:
                     yield art
             return
 
         mimes = {rid: r.values.get("mimetype") for r in self.rows(session, ctx, match.roles["mimetypes"]) for rid in [r.values.get("id")]}
-        accounts: dict[Any, dict] = {}
+        accounts: dict[Any, Mapping[str, Any]] = {}
         if "accounts" in match.roles:
             for r in self.rows(session, ctx, match.roles["accounts"]):
                 accounts[r.values.get("id")] = r.values
-        contacts_tbl: dict[Any, dict] = {}
+        contacts_tbl: dict[Any, Mapping[str, Any]] = {}
         if "contacts" in match.roles:
             for r in self.rows(session, ctx, match.roles["contacts"]):
                 contacts_tbl[r.values.get("id")] = r.values

@@ -9,7 +9,7 @@ pip install -e ".[dev]"
 ## Before you open a pull request
 ```bash
 ruff check src tests          # lint
-mypy                          # types (new modules must be clean; see [[tool.mypy.overrides]] for known debt)
+mypy                          # types (the whole package is checked; there is no exemption list)
 bandit -q -c pyproject.toml -r src
 coverage run -m pytest && coverage report --fail-under=93
 ```

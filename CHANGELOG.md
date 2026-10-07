@@ -56,7 +56,7 @@ the format follows [Keep a Changelog](https://keepachangelog.com/).
 - Continuous integration (lint, type-check, security scan, dependency audit, 3-OS × 3-Python test matrix, coverage gate).
 - `Dockerfile` (non-root, read-only evidence mount), hash-pinned `requirements.lock`, PyInstaller single-file build,
   tagged-release workflow.
-- `ruff`, `mypy` and `bandit` configuration in `pyproject.toml`.
+- `ruff`, `mypy` (every module, no exemptions: the former 24-module override list was removed and its 61 type errors fixed) and `bandit` configuration in `pyproject.toml`.
 
 ### Changed
 - `shared_prefs` XML is parsed with `defusedxml` (bandit B314).

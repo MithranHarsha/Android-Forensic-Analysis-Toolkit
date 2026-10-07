@@ -31,7 +31,7 @@ from android_forensics.progress import NullProgress, Progress
 from android_forensics.readonly import open_readonly
 from android_forensics.sqlite.header import HeaderReport, inspect_database_file
 from android_forensics.storage.case_store import CaseStore, utcnow
-from android_forensics.util import iso_from_epoch, safe_text
+from android_forensics.util import iso_from_epoch, require, safe_text
 
 # ------------------------------------------------------------------ standalone directory scanner
 
@@ -182,9 +182,9 @@ def scan_filesystem(store: CaseStore, progress: Progress | None = None) -> Files
         ids_by_path: dict[str, list[int]] = {}
         observations = []
         for f in files:
-            ids_by_path.setdefault(f.path, []).append(f.id)
+            ids_by_path.setdefault(f.path, []).append(require(f.id, "evidence file id"))
             header = None
-            if f.kind is FileKind.SQLITE_DB and f.is_preserved:
+            if f.kind is FileKind.SQLITE_DB and f.is_preserved and f.preserved_copy:
                 copy = store.evidence_dir / f"s{f.source_id}" / f.preserved_copy
                 try:
                     header = inspect_database_file(copy)
@@ -207,7 +207,7 @@ def scan_filesystem(store: CaseStore, progress: Progress | None = None) -> Files
         kinds.update(scan.kind_counts)
         categories.update(scan.category_counts)
         prefix = scan.layout.roots[0].prefix if len(scan.layout.roots) == 1 else ""
-        layouts[src.id] = SourceLayout(layout=scan.layout.layout, prefix=prefix, detail=scan.layout.detail)
+        layouts[require(src.id, "source id")] = SourceLayout(layout=scan.layout.layout, prefix=prefix, detail=scan.layout.detail)
         for issue in scan.issues:
             issue_rows.append((src.id, issue.path, issue.issue_type, issue.detail, "scan", now))
         for a in scan.app_directories:

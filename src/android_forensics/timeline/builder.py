@@ -48,7 +48,7 @@ def build_timeline(store: CaseStore, run_id: int, files: str = "key") -> Timelin
                 continue
             if files == "key" and not (f.kind.is_sqlite_family or "/shared_prefs/" in "/" + f.path):
                 continue
-            events.append(_file_event(f))
+            events.append(_file_event(f, f.times.mtime))
             stats.file_events += 1
 
     events.sort(key=lambda e: (e.timestamp, e.kind.value, e.event))
@@ -56,8 +56,8 @@ def build_timeline(store: CaseStore, run_id: int, files: str = "key") -> Timelin
     return stats
 
 
-def _file_event(f: EvidenceFile) -> TimelineEvent:
+def _file_event(f: EvidenceFile, mtime: str) -> TimelineEvent:
     return TimelineEvent(
-        timestamp=f.times.mtime, timestamp_raw=f.times.mtime, time_basis=f.times.basis, kind=TimelineEventKind.FILE_MTIME,
+        timestamp=mtime, timestamp_raw=f.times.mtime, time_basis=f.times.basis, kind=TimelineEventKind.FILE_MTIME,
         event=f"File modified: {f.logical_path or f.path} ({f.kind.value}, {f.size} bytes)", source=f.path, evidence_file_id=f.id,
     )

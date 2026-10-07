@@ -159,7 +159,7 @@ def build_router(store_dep: Callable[..., Iterator[CaseStore]]) -> APIRouter:
         total = s.scalar(f"SELECT COUNT(*) FROM correlations WHERE {clause}", params) or 0
         rows = s.q(f"SELECT * FROM correlations WHERE {clause} ORDER BY id LIMIT ?", [*params, limit])
         edges = [{**_row(r), "evidence": json.loads(r["evidence_json"] or "{}")} for r in rows]
-        nodes = {}
+        nodes: dict[str, dict[str, Any]] = {}
         for e in edges:
             for kind, ref in ((e["source_kind"], e["source_ref"]), (e["target_kind"], e["target_ref"])):
                 nodes.setdefault(f"{kind}:{ref}", {"kind": kind, "ref": ref})

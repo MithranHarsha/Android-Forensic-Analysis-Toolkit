@@ -22,7 +22,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from android_forensics.carving.records import scan_records
 from android_forensics.carving.rules import RULES, Rule
@@ -44,7 +44,7 @@ class CarveSource:
     evidence_file_id: int
     source_file: str
     source_sha256: str
-    container: str = "file"  # "file" | "sqlite_free_space"
+    container: Literal["file", "sqlite_free_space"] = "file"  # "file" | "sqlite_free_space"
 
 
 @dataclass
@@ -60,7 +60,7 @@ class _Hit:
     kind: CarveKind
     pattern: str
     matched: str
-    encoding: str
+    encoding: Literal["ascii", "utf-16le", "binary"]
     context_valid: bool
     notes: tuple[str, ...] = ()
 

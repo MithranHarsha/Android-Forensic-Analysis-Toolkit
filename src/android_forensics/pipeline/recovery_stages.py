@@ -65,6 +65,7 @@ from android_forensics.storage.recovery_store import (
     load_recovered,
     update_carved_scoring,
 )
+from android_forensics.util import require
 
 _SIDECAR_SUFFIXES = ("-wal", "-journal")
 
@@ -167,8 +168,8 @@ def _recover(store: CaseStore, run_id: int, o) -> dict[str, Any]:
             fl = db.freelist()
         with store.transaction():
             for role, pages in (("trunk", fl.trunks), ("leaf", fl.leaves)):
-                for p in pages:
-                    store.insert("freelist_pages", {"run_id": run_id, "database_id": d["id"], "page_number": p, "role": role})
+                for page_no in pages:
+                    store.insert("freelist_pages", {"run_id": run_id, "database_id": d["id"], "page_number": page_no, "role": role})
         stats["databases_attempted"] += 1
         o.progress.advance()
     o.progress.stop()
@@ -230,7 +231,7 @@ def _carve(store: CaseStore, run_id: int, o) -> dict[str, Any]:
             _issue(store, d["src_id"], d["fpath"], "carve_error", f"{type(exc).__name__}: {exc}", "carve")
             o.progress.advance()
             continue
-        units.append({"path": main_path, "source": CarveSource(d["fid"], d["fpath"], frow["sha256"]), "ex": ex, "db": True,
+        units.append({"path": main_path, "source": CarveSource(d["fid"], d["fpath"], require(frow, "evidence file row")["sha256"]), "ex": ex, "db": True,
                       "count": "databases_carved", "error": None})
         if wal_info is not None:
             wr = sidecar_recs["-wal"]
@@ -260,7 +261,7 @@ def _carve(store: CaseStore, run_id: int, o) -> dict[str, Any]:
 
     others = [f for f in store.evidence_files() if f.id not in handled and f.kind.value not in _CARVE_SKIP_KINDS and f.is_preserved]
     for f in others:
-        units.append({"path": _preserved(store, f), "source": CarveSource(f.id, f.path, f.hashes.sha256), "ex": None, "db": False,
+        units.append({"path": _preserved(store, f), "source": CarveSource(require(f.id, "evidence file id"), f.path, f.hashes.sha256), "ex": None, "db": False,
                       "count": "files_carved", "error": None})
 
     # Phase 2: the byte scanning, spread over worker processes; Phase 3: results written back in the original order.
@@ -339,7 +340,7 @@ def _recovered_drafts(store: CaseStore) -> tuple[list[Subject], dict[str, int]]:
         draft = reconstruct(record, ctx)
         ref = f"recovered:{record.id}"
         subjects.append(Subject.slim(ref, draft, "recovered", ctx.database_path, record.database_file_id, record.source_file_id))
-        record_id_by_ref[ref] = record.id
+        record_id_by_ref[ref] = require(record.id, "recovered record id")
     return subjects, record_id_by_ref
 
 
@@ -366,7 +367,7 @@ def _correlate(store: CaseStore, run_id: int, o) -> dict[str, Any]:
             scored = CarvedCandidate(**{**c.model_dump(), "confidence": assessment.level, "confidence_factors": assessment.factors,
                                         "explanation": assessment.explanation, "corroborated_by": artifact_ids,
                                         "notes": list(corrb.notes)})
-            update_carved_scoring(store, c.id, scored)
+            update_carved_scoring(store, require(c.id, "carved candidate id"), scored)
     return {
         "recovered_drafts": len(drafts), "carved_scored": len(carved), "active_subjects": len(active),
         "recovered_corroborated": sum(1 for ref in record_id_by_ref if corr.for_ref(ref).corroborated),
@@ -397,7 +398,7 @@ def _reconstruct(store: CaseStore, run_id: int, o) -> dict[str, Any]:
             continue
         sources = tuple(json.loads(store.scalar("SELECT corroboration_json FROM recovered_records WHERE id=?", (record.id,)) or "[]"))
         artifact = reconstruct(record, ctx, sources)
-        link_artifact(store, record.id, insert_artifact_uncommitted(store, run_id, record.database_id, artifact, now))
+        link_artifact(store, require(record.id, "recovered record id"), insert_artifact_uncommitted(store, run_id, record.database_id, artifact, now))
         stats[f"reconstructed_{artifact.status.value.lower()}"] += 1
         pending += 1
         if pending >= 500:   # a commit (an fsync) per record was the slowest thing in the whole pipeline on some platforms

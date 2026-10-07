@@ -23,11 +23,6 @@
 * **Encrypted `/data` is common on real phones.** Detected and reported (`file_based_encryption_detected`, `ENCRYPTED_SUSPECT`),
   never decrypted; an empty result on encrypted evidence is not evidence of absence.
 
-## Typing debt
-
-`mypy` is clean for every module except the ones listed under `[[tool.mypy.overrides]]` in `pyproject.toml` (annotation-only
-mismatches such as `sqlite3.Row` vs `Mapping`, optional narrowing). New code must not add to that list.
-
 ## Review 2 scope limits (engineering, not fundamental)
 
 * **Recovery does not attempt every table.** Tables with fewer than three stored columns, `WITHOUT ROWID` tables, virtual

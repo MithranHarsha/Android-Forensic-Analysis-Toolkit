@@ -184,39 +184,39 @@ def build_report_model(store: CaseStore, html_row_cap: int | None = None) -> Rep
         })
     app_directories = []
     for a in store.q("SELECT * FROM app_directories ORDER BY path"):
-        row = dict(a)
-        row["subdirectories"] = json.loads(row.pop("subdirectories_json") or "[]")
-        row["kind_counts"] = json.loads(row.pop("kind_counts_json") or "{}")
-        app_directories.append(row)
+        entry = dict(a)
+        entry["subdirectories"] = json.loads(entry.pop("subdirectories_json") or "[]")
+        entry["kind_counts"] = json.loads(entry.pop("kind_counts_json") or "{}")
+        app_directories.append(entry)
     indicators = []
-    for d in databases:
-        if d["open_status"] in ("encrypted_suspect", "not_preserved"):
+    for info in databases:
+        if info["open_status"] in ("encrypted_suspect", "not_preserved"):
             continue
-        wal = d["wal"] or {}
-        jr = d["journal"] or {}
+        wal = info["wal"] or {}
+        jr = info["journal"] or {}
         notes = []
-        if d["auto_vacuum"] in ("full", "incremental"):
-            notes.append(f"auto-vacuum ({d['auto_vacuum']}) enabled — freed pages are reclaimed, so freelist-based recovery potential is reduced")
-        if d["freelist_pages"]:
-            notes.append(f"{d['freelist_pages']} freelist page(s) declared in the header — deleted rows may persist there")
+        if info["auto_vacuum"] in ("full", "incremental"):
+            notes.append(f"auto-vacuum ({info['auto_vacuum']}) enabled — freed pages are reclaimed, so freelist-based recovery potential is reduced")
+        if info["freelist_pages"]:
+            notes.append(f"{info['freelist_pages']} freelist page(s) declared in the header — deleted rows may persist there")
         if wal.get("size", 0) > 32:
             notes.append(f"WAL present ({wal.get('frame_slots', '?')} frame slot(s)) — may hold superseded page images")
         if jr.get("magic_valid"):
             notes.append("valid-magic rollback journal — holds pre-transaction page images")
         elif jr.get("size", 0) > 0:
             notes.append("journal file present but header not valid/zeroed — stale pages may remain")
-        if d["open_status"] != "ok":
+        if info["open_status"] != "ok":
             notes.append("database not readable by SQLite — a candidate for Review 2 salvage")
-        indicators.append({"path": d["path"], "freelist_pages": d["freelist_pages"], "page_count": d["page_count"],
+        indicators.append({"path": info["path"], "freelist_pages": info["freelist_pages"], "page_count": info["page_count"],
                            "wal_frame_slots": wal.get("frame_slots") if wal else None, "journal_bytes": jr.get("size") if jr else None,
                            "notes": notes or ["no indicator present in header or sidecars (this does not prove nothing was deleted)"]})
 
     val_rows = [dict(r) for r in store.q("SELECT target_type, target_id, target_label, check_name, status, detail FROM validation_results ORDER BY CASE status WHEN 'INVALID' THEN 0 WHEN 'PARTIAL' THEN 1 WHEN 'UNVERIFIED' THEN 2 ELSE 3 END, check_name, id")]
     by_status = Counter(r["status"] for r in val_rows)
     by_check: dict[str, dict[str, int]] = {}
-    for r in val_rows:
-        by_check.setdefault(r["check_name"], {}).setdefault(r["status"], 0)
-        by_check[r["check_name"]][r["status"]] += 1
+    for vr in val_rows:
+        by_check.setdefault(vr["check_name"], {}).setdefault(vr["status"], 0)
+        by_check[vr["check_name"]][vr["status"]] += 1
 
     tl = [dict(r) for r in store.q(
         "SELECT ts_utc, time_basis, event_kind, artifact_type, event, source, status, confidence, artifact_id FROM timeline_events ORDER BY ts_utc, id")]
@@ -271,7 +271,7 @@ def build_report_model(store: CaseStore, html_row_cap: int | None = None) -> Rep
                   "carved": len(carved_rows), "correlation_edges": len(correlation_rows), "unrecoverable": len(unrecovered_rows)},
     }
 
-    at_a_glance = [
+    at_a_glance: list[dict[str, Any]] = [
         {"label": "ACTIVE DATA", "value": counts["active_artifacts"], "note": "records present in live databases", "state": "ok"},
         {"label": "RECOVERED DELETED DATA", "value": (len(recovered_rows) + len(corrupted_rows)) if recovery_performed else "not performed",
          "note": (f"{len(corrupted_rows)} corrupted" if corrupted_rows else "reconstructed with a confidence explanation") if recovery_performed else "Review 2",

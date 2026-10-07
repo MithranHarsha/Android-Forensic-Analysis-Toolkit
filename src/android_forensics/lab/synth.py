@@ -307,9 +307,9 @@ def _build_chrome(root: Path, spec: SynthSpec, rng: random.Random) -> dict[str, 
             u["visit_count"], u["last"] = 1, _webkit_us(BASE_MS + rng.randint(0, 90 * 24 * 3600) * 1000)
         conn.execute("INSERT INTO urls(id,url,title,visit_count,typed_count,last_visit_time) VALUES(?,?,?,?,?,?)",
                      (u["id"], u["url"], u["title"], u["visit_count"], 0, u["last"]))
-    for v in visits:
+    for visit in visits:
         conn.execute("INSERT INTO visits(id,url,visit_time,from_visit,transition,visit_duration) VALUES(?,?,?,?,?,?)",
-                     (v["id"], v["url"], v["visit_time"], 0, v["transition"], v["visit_duration"]))
+                     (visit["id"], visit["url"], visit["visit_time"], 0, visit["transition"], visit["visit_duration"]))
     downloads: list[dict] = []
     for d in range(1, spec.downloads + 1):
         start = BASE_MS + rng.randint(0, 80 * 24 * 3600) * 1000

@@ -13,7 +13,7 @@
 from __future__ import annotations
 
 import hashlib
-from typing import Any, Literal, Self
+from typing import Any, Final, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -30,7 +30,7 @@ from android_forensics.models.types import HexBytes, NonBlankStr, Sha256Hex
 
 _FROZEN = ConfigDict(extra="forbid", frozen=True)
 RECOVERY_STATUSES = frozenset({ArtifactStatus.RECOVERED, ArtifactStatus.PARTIAL, ArtifactStatus.CORRUPTED})
-CARVED_CANDIDATE = "CARVED CANDIDATE"
+CARVED_CANDIDATE: Final = "CARVED CANDIDATE"
 
 
 def encode_value(value: Any) -> Any:

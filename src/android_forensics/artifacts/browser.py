@@ -6,6 +6,7 @@ Chromium stores times as microseconds since 1601-01-01 UTC (WebKit epoch).
 from __future__ import annotations
 
 from collections.abc import Iterator
+from collections.abc import Set as AbstractSet
 from typing import Any
 
 from android_forensics.artifacts.base import ArtifactParser, DbContext, FieldReader, RowSource, build_envelope
@@ -62,12 +63,12 @@ STOCK = [
     FieldSpec("id", ("_id", "id"), False, 0.5),
 ]
 
-def decode_transition(code: int) -> tuple[PageTransition, list[TransitionQualifier]]:
+def decode_transition(code: int) -> tuple[PageTransition | None, list[TransitionQualifier]]:
     """Split a Chromium transition value into its core type and qualifier flags."""
     return PageTransition.from_code(code), TransitionQualifier.from_flags(code)
 
 
-def _role(tables: list[SchemaObject], specs: list[FieldSpec], hints: tuple[str, ...], exclude: set[str] = frozenset()) -> RoleMatch | None:
+def _role(tables: list[SchemaObject], specs: list[FieldSpec], hints: tuple[str, ...], exclude: AbstractSet[str] = frozenset()) -> RoleMatch | None:
     cands, _ = best_matches([t for t in tables if t.name not in exclude], specs, hints)
     if not cands:
         return None
@@ -102,8 +103,8 @@ class BrowserParser(ArtifactParser):
     def extract(self, session: SQLiteSession, match: SchemaMatch, ctx: DbContext) -> Iterator[BrowserHistoryEntry | BrowserDownload]:
         if match.variant == "legacy_flat_history":
             for row in self.rows(session, ctx, match.roles["main"]):
-                v = dict(row.values, _kind="legacy")
-                art = self.from_row(RowSource(v, row.raw, row.table, row.rowid), match, ctx)
+                legacy = dict(row.values, _kind="legacy")
+                art = self.from_row(RowSource(legacy, row.raw, row.table, row.rowid), match, ctx)
                 if art:
                     yield art
             return

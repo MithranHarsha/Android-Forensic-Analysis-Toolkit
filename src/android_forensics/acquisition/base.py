@@ -14,7 +14,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import BinaryIO, Protocol
+from typing import IO, BinaryIO, Protocol
 
 from android_forensics.acquisition.hashing import Digests, MultiHasher
 from android_forensics.acquisition.safety import ExtractionBudget
@@ -78,7 +78,7 @@ def ingest_stream(
     ctx: AcquireContext,
     ordinal: int,
     rel_path: str,
-    src: BinaryIO,
+    src: IO[bytes],
     size_hint: int,
     times: FileTimes,
 ) -> AcquiredFile:

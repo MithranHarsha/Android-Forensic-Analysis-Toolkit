@@ -88,7 +88,7 @@ def verify_manifest(manifest: Manifest, workspace: Workspace | None = None) -> V
     def note(kind: str, path: str, detail: str) -> None:
         report.discrepancies.append(Discrepancy(kind, path, detail))
 
-    def check(p: Path, expected: str, subject: str, shown: str) -> None:
+    def check(p: Path, expected: str | None, subject: str, shown: str) -> None:
         """Compare one file's SHA-256 with the manifest; a file that cannot be read is reported, not fatal."""
         try:
             actual = hash_file(p).sha256

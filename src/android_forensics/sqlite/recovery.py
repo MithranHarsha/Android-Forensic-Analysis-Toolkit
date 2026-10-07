@@ -42,7 +42,7 @@ from __future__ import annotations
 import struct
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Any, NamedTuple
+from typing import Any, Literal, NamedTuple
 
 from android_forensics.models.enums import ArtifactStatus, ExtractionMethod
 from android_forensics.models.unknown import UNKNOWN
@@ -539,7 +539,7 @@ class RecoveredRow:
     rowid: int | None
     status: ArtifactStatus
     method: ExtractionMethod
-    source: str  # "main" | "wal" | "journal"
+    source: Literal["main", "wal", "journal"]
     source_path: str
     page_number: int
     page_offset: int  # within the page image
@@ -566,7 +566,7 @@ class PageImage:
 
     number: int  # the *database* page number it represents
     data: bytes
-    source: str  # "main" | "wal" | "journal"
+    source: Literal["main", "wal", "journal"]
     source_path: str
     file_offset: int  # of the start of ``data`` in ``source_path``
     role: str  # btree | freelist_leaf | freelist_trunk | orphan | historical
