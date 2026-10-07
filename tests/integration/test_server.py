@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
+import sys
 import time
 from pathlib import Path
 
@@ -143,6 +144,7 @@ def test_viewer_cannot_upload_or_start_jobs(srv):
     assert c.post("/api/cases/v/jobs", json={"kind": "report"}, headers=bearer(t["viewer"])).status_code == 403
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="the analysis-job sandbox (resource limits, process groups) is POSIX-only")
 def test_end_to_end_upload_analyse_view_download_and_audit(tmp_path, synth):
     out, _ = synth
     key_dir = tmp_path / "keys"

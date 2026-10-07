@@ -232,6 +232,7 @@ def test_page_map_partitions_the_file_and_a_clean_database_has_no_orphans(tmp_pa
 def test_deleting_rows_puts_pages_on_the_freelist_and_the_walk_matches_the_header(tmp_path):
     p = build_db(tmp_path / "a.db", 1024, rows=400)
     c = sqlite3.connect(p)
+    c.execute("PRAGMA secure_delete=OFF")   # Debian/Ubuntu build SQLite with secure_delete ON, which zeroes freed pages; this test is about the layout
     c.execute("DELETE FROM t WHERE id > 40")
     c.execute("DELETE FROM w WHERE k > 'key00040'")
     c.commit()

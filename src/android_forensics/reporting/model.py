@@ -46,6 +46,9 @@ class ReportModel(BaseModel):
     truncation: dict[str, list[int]] = Field(default_factory=dict)
 
 
+_CONF_RANK = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
+
+
 def _short(sha: str | None) -> str:
     return (sha or "")[:16] + "…" if sha else ""
 
@@ -248,7 +251,19 @@ def build_report_model(store: CaseStore, html_row_cap: int | None = None) -> Rep
     carved_rows = _carved_rows(store) if stages_run["carve"] else []
     correlation_rows = _correlation_rows(store) if stages_run["correlate"] else []
     unrecovered_rows = _unrecovered_rows(store) if recovery_performed else []
+    def top(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """What the HTML shows when there are too many rows: highest confidence first, original order within a level."""
+        return sorted(rows, key=lambda r: _CONF_RANK.get(str(r.get("confidence")), 9))[:cap] if len(rows) > cap else rows
+
+    def summary(rows: list[dict[str, Any]], *keys: str) -> list[dict[str, Any]]:
+        tally = Counter(tuple(str(r.get(k)) for k in keys) for r in rows)
+        return [dict(zip(keys, k, strict=True), count=n) for k, n in sorted(tally.items(), key=lambda kv: (-kv[1], kv[0]))]
+
     recovery = {
+        "recovered_top": top(recovered_rows + corrupted_rows), "partial_top": top(partial_rows), "carved_top": top(carved_rows),
+        "correlations_top": correlation_rows[:cap], "unrecoverable_top": unrecovered_rows[:cap],
+        "carved_summary": summary(carved_rows, "kind", "confidence"),
+        "recovered_summary": summary(recovered_rows + corrupted_rows + partial_rows, "status", "method", "confidence"),
         "performed": recovery_performed, "stages_run": stages_run, "messages": text.NOT_PERFORMED,
         "indicators": indicators, "recovered": recovered_rows, "corrupted": corrupted_rows, "partial": partial_rows,
         "carved": carved_rows, "correlations": correlation_rows, "unrecoverable": unrecovered_rows,
@@ -320,5 +335,9 @@ def build_report_model(store: CaseStore, html_row_cap: int | None = None) -> Rep
         "evidence_files": [min(len(files), cap), len(files)], "timeline": [min(len(tl), cap), len(tl)],
         **{k: [min(len(v["rows"]), cap), len(v["rows"])] for k, v in active.items()},
         "validation": [min(len(val_rows), cap), len(val_rows)],
+        "recovered": [min(len(recovered_rows) + len(corrupted_rows), cap), len(recovered_rows) + len(corrupted_rows)],
+        "partial": [min(len(partial_rows), cap), len(partial_rows)], "carved": [min(len(carved_rows), cap), len(carved_rows)],
+        "correlations": [min(len(correlation_rows), cap), len(correlation_rows)],
+        "unrecoverable": [min(len(unrecovered_rows), cap), len(unrecovered_rows)],
     }
     return model

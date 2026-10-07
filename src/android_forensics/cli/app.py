@@ -244,8 +244,22 @@ def hash_cmd(
     console.print(t)
 
 
-def _options(no_rehash: bool, files: str) -> StageOptions:
-    return StageOptions(progress=RichProgress(), rehash_originals=not no_rehash, timeline_files=files)
+Workers = Annotated[str, typer.Option("--workers", envvar="ANDROID_FORENSICS_WORKERS",
+                                      help="Processes for the per-database recovery/carving stages: a number or 'auto' (cores - 1, max 8). "
+                                           "Results are identical to a serial run.")]
+
+
+def _workers(value: str) -> int:
+    from android_forensics.pipeline.parallel import resolve_workers
+
+    try:
+        return resolve_workers(value)
+    except ValueError as exc:
+        raise CaseError(f"--workers: {exc}") from exc
+
+
+def _options(no_rehash: bool, files: str, workers: str = "1") -> StageOptions:
+    return StageOptions(progress=RichProgress(), rehash_originals=not no_rehash, timeline_files=files, workers=_workers(workers))
 
 
 @app.command()
@@ -501,6 +515,7 @@ def analyze(
     recover: Annotated[bool, typer.Option("--recover/--no-recover", help="Recover deleted/superseded records and carve raw bytes (Review 2). On by default.")] = True,
     report: Annotated[bool, typer.Option("--report/--no-report", help="Generate the report at the end.")] = True,
     mount_point: Annotated[str | None, typer.Option("--mount-point", help="For disk images: the Android path the image is mounted at (e.g. 'data'). Default: detected.")] = None,
+    workers: Workers = "1",
 ) -> None:
     """Run the full pipeline: scan → extract → recover → carve → correlate → reconstruct → validate → timeline → report."""
     p = Path(target)
@@ -519,7 +534,7 @@ def analyze(
         r = ingest_source(store, p, progress=RichProgress(), mount_point=mount_point)
         console.print(f"[green]✓[/] ingested {r.files:,} files ({fmt_bytes(r.total_bytes)}), manifest SHA-256 {r.manifest_sha256[:16]}…")
 
-    opts = _options(no_rehash, timeline_files)
+    opts = _options(no_rehash, timeline_files, workers)
     names = list(FULL_PIPELINE_NAMES) if recover else [n for n in FULL_PIPELINE_NAMES if n not in REVIEW2_STAGE_NAMES]
     results = run_pipeline(store, names=names, options=opts, on_stage=lambda n, s: console.print(f"[green]✓[/] {n:<11} {s['seconds']}s"))
     _print_scan(store, results["scan"])
@@ -622,6 +637,7 @@ def _show_artifact(store: CaseStore, aid: int) -> None:
 def recover(
     case: CaseArg,
     cases_dir: CasesDir = Path("cases"),
+    workers: Workers = "1",
 ) -> None:
     """Recover deleted/superseded SQLite records, carve raw bytes, correlate and score (Review 2).
 
@@ -631,7 +647,7 @@ def recover(
     for stage in ("scan", "extract"):
         if store.last_run(stage) is None:
             raise CaseError(f"Run '{TOOL_NAME} analyze --no-recover {case}' (or 'scan'/'extract') first — no completed '{stage}' stage")
-    opts = StageOptions(progress=RichProgress())
+    opts = StageOptions(progress=RichProgress(), workers=_workers(workers))
     results = {}
     for name in REVIEW2_STAGE_NAMES:
         results[name] = run_stage(store, name, opts)
@@ -835,6 +851,9 @@ def synth(
 
 
 def main() -> None:
+    import multiprocessing
+
+    multiprocessing.freeze_support()   # needed by the PyInstaller binary: worker processes re-execute the executable
     app()
 
 

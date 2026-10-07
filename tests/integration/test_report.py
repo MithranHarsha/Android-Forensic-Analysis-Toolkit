@@ -188,3 +188,22 @@ def test_hostile_evidence_cannot_inject_html_or_formulas(tmp_path):
     assert all(not r["summary"].startswith("=") for r in art)
     data = json.loads(res.json.read_text())
     assert evil in json.dumps(data["active"]["sms"]["rows"])  # evidence preserved verbatim in JSON
+
+
+def test_html_caps_big_recovery_tables_but_json_and_csv_keep_everything(recovered_report, tmp_path):
+    import json
+
+    from android_forensics.reporting.generate import generate_report
+
+    store, _ = recovered_report
+    res = generate_report(store, ["html", "json", "csv"], tmp_path / "rep", html_row_cap=5)
+    html = res.html.read_text()
+    data = json.loads(res.json.read_text())
+    counts = data["recovery"]["counts"]
+    assert counts["carved"] > 5 and counts["recovered"] + counts["corrupted"] > 5
+    assert len(data["recovery"]["carved"]) == counts["carved"]                         # nothing is lost from the machine-readable report
+    assert f"of {counts['carved']:,} rows" in html and "Summary of all" in html          # …and the HTML says it is showing a sample, and summarises the whole
+    assert "Showing the first 5 of" in html
+    csv_rows = (res.csv_dir / "carved_candidates.csv").read_text(encoding="utf-8-sig").splitlines()
+    assert len(csv_rows) - 1 == counts["carved"]
+    assert len(html) < 3_000_000

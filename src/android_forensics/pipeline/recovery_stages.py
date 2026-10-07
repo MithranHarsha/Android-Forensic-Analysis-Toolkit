@@ -46,6 +46,7 @@ from android_forensics.confidence.scorer import CarveEvidence, score_carved
 from android_forensics.correlation import FileInfo, Subject, build_correlation, database_of
 from android_forensics.models import CarvedCandidate, EvidenceFile
 from android_forensics.models import UnrecoveredRegion as StoredUnrecoveredRegion
+from android_forensics.pipeline.parallel import ordered_map, resolve_workers
 from android_forensics.sqlite.discovery import preserved_path, sidecar_rows
 from android_forensics.sqlite.journal import parse_journal
 from android_forensics.sqlite.parser import SQLiteDatabase
@@ -90,27 +91,48 @@ def _open_databases(store: CaseStore):
 # ------------------------------------------------------------------ recover
 
 
+def _task_size(task) -> float:
+    """Scheduling hint: bigger files first. Never affects results or their order."""
+    try:
+        return float(task[0].stat().st_size)
+    except OSError:
+        return 0.0
+
+
+def _recover_worker(task: tuple[Path, dict[str, Path], Path]):
+    """Runs in a worker process: recovery of one database. Returns the report, or the error text (never raises)."""
+    main_path, sidecar_paths, scratch = task
+    try:
+        return recover_database(main_path, sidecar_paths, scratch=scratch), None
+    except Exception as exc:  # one damaged database must not stop the run
+        return None, f"{type(exc).__name__}: {exc}"
+
+
 def _recover(store: CaseStore, run_id: int, o) -> dict[str, Any]:
     stats: Counter = Counter()
     dbs = _open_databases(store)
     o.progress.start("Recovering deleted records", len(dbs))
+    prepared: list[tuple[Any, Any, Path | None, dict[str, Path], dict[str, Any]]] = []
     for d in dbs:
         frow = store.one("SELECT * FROM evidence_files WHERE id=?", (d["fid"],))
         main_path = preserved_path(store, frow)
+        sidecar_recs = sidecar_rows(store, frow) if main_path is not None else {}
+        sidecar_paths = {suf: p for suf in _SIDECAR_SUFFIXES if suf in sidecar_recs
+                         and (p := preserved_path(store, sidecar_recs[suf])) is not None}
+        prepared.append((d, frow, main_path, sidecar_paths, sidecar_recs))
+    tasks = [(mp, sp, store.scratch_dir) for _d, _f, mp, sp, _r in prepared if mp is not None]
+    results = ordered_map(_recover_worker, tasks, resolve_workers(getattr(o, "workers", 1)), cost=_task_size)
+    for d, frow, main_path, sidecar_paths, sidecar_recs in prepared:
         if main_path is None:
             stats["skipped_no_working_copy"] += 1
             _issue(store, d["src_id"], d["fpath"], "recovery_skipped",
                   "no working copy preserved: recovery reads raw file bytes and cannot run on hashes alone", "recover")
             o.progress.advance()
             continue
-        sidecar_recs = sidecar_rows(store, frow)
-        sidecar_paths = {suf: p for suf in _SIDECAR_SUFFIXES if suf in sidecar_recs
-                         and (p := preserved_path(store, sidecar_recs[suf])) is not None}
-        try:
-            report = recover_database(main_path, sidecar_paths, scratch=store.scratch_dir)
-        except Exception as exc:  # one damaged database must not stop the run
+        report, error = next(results)
+        if report is None:
             stats["errors"] += 1
-            _issue(store, d["src_id"], d["fpath"], "recovery_error", f"{type(exc).__name__}: {exc}", "recover")
+            _issue(store, d["src_id"], d["fpath"], "recovery_error", error or "unknown error", "recover")
             o.progress.advance()
             continue
         file_for_source = {"main": (d["fid"], d["fsha"])}
@@ -148,6 +170,7 @@ def _recover(store: CaseStore, run_id: int, o) -> dict[str, Any]:
                 for p in pages:
                     store.insert("freelist_pages", {"run_id": run_id, "database_id": d["id"], "page_number": p, "role": role})
         stats["databases_attempted"] += 1
+        o.progress.advance()
     o.progress.stop()
     return dict(stats)
 
@@ -168,11 +191,23 @@ def _persist(store: CaseStore, run_id: int, candidates: list[CarvedCandidate]) -
         insert_carved(store, run_id, candidates)
 
 
+def _carve_worker(task):
+    """Runs in a worker process: carve one preserved file with its exclusions. Returns (candidates, None) or (None, error text)."""
+    path, source, exclusions, now, is_database = task
+    try:
+        result = carve_database_file(path, source, exclusions, now=now) if is_database else carve_file(path, source, now=now)
+        return result.candidates, None
+    except Exception as exc:  # noqa: BLE001 - one unreadable file must not stop the stage
+        return None, f"{type(exc).__name__}: {exc}"
+
+
 def _carve(store: CaseStore, run_id: int, o) -> dict[str, Any]:
     stats: Counter = Counter()
     dbs = _open_databases(store)
     handled: set[int] = set()
-    o.progress.start("Carving database free space", len(dbs))
+    o.progress.start("Preparing carving", len(dbs))
+    # Phase 1 (one process, needs the case database): decide *what* to carve and *what to leave out*, in a fixed order.
+    units: list[dict[str, Any]] = []
     for d in dbs:
         frow = store.one("SELECT * FROM evidence_files WHERE id=?", (d["fid"],))
         main_path = preserved_path(store, frow)
@@ -182,7 +217,7 @@ def _carve(store: CaseStore, run_id: int, o) -> dict[str, Any]:
             o.progress.advance()
             continue
         sidecar_recs = sidecar_rows(store, frow)
-        handled.update(sidecar_recs[s]["id"] for s in ("-wal", "-journal", "-shm") if s in sidecar_recs)
+        handled.update(sidecar_recs[s_]["id"] for s_ in ("-wal", "-journal", "-shm") if s_ in sidecar_recs)
         recovered_main = [(r["file_offset"], r["length"]) for r in store.q(
             "SELECT file_offset, length FROM recovered_records WHERE database_file_id=? AND source='main'", (d["fid"],))]
         try:
@@ -195,21 +230,16 @@ def _carve(store: CaseStore, run_id: int, o) -> dict[str, Any]:
             _issue(store, d["src_id"], d["fpath"], "carve_error", f"{type(exc).__name__}: {exc}", "carve")
             o.progress.advance()
             continue
-        result = carve_database_file(main_path, CarveSource(d["fid"], d["fpath"], frow["sha256"]), ex, now=o.now)
-        _persist(store, run_id, result.candidates)
-        stats["candidates"] += len(result.candidates)
-        stats["databases_carved"] += 1
-
+        units.append({"path": main_path, "source": CarveSource(d["fid"], d["fpath"], frow["sha256"]), "ex": ex, "db": True,
+                      "count": "databases_carved", "error": None})
         if wal_info is not None:
             wr = sidecar_recs["-wal"]
             wal_ranges = [(r["file_offset"], r["length"]) for r in store.q(
                 "SELECT file_offset, length FROM recovered_records WHERE source_file_id=? AND source='wal'", (wr["id"],))]
             with SQLiteDatabase.open(main_path) as db:
                 wex = wal_exclusions(wal_info, db, wal_ranges)
-            wr_result = carve_database_file(wal_path, CarveSource(wr["id"], wr["path"], wr["sha256"]), wex, now=o.now)
-            _persist(store, run_id, wr_result.candidates)
-            stats["candidates"] += len(wr_result.candidates)
-
+            units.append({"path": wal_path, "source": CarveSource(wr["id"], wr["path"], wr["sha256"]), "ex": wex, "db": True,
+                          "count": None, "error": None})
         if "-journal" in sidecar_recs:
             jr = sidecar_recs["-journal"]
             journal_path = preserved_path(store, jr)
@@ -220,9 +250,8 @@ def _carve(store: CaseStore, run_id: int, o) -> dict[str, Any]:
                         "SELECT file_offset, length FROM recovered_records WHERE source_file_id=? AND source='journal'", (jr["id"],))]
                     with SQLiteDatabase.open(main_path) as db:
                         jex = journal_exclusions(journal_info, db, j_ranges)
-                    j_result = carve_database_file(journal_path, CarveSource(jr["id"], jr["path"], jr["sha256"]), jex, now=o.now)
-                    _persist(store, run_id, j_result.candidates)
-                    stats["candidates"] += len(j_result.candidates)
+                    units.append({"path": journal_path, "source": CarveSource(jr["id"], jr["path"], jr["sha256"]), "ex": jex, "db": True,
+                                  "count": None, "error": (d["src_id"], jr["path"])})
                 except Exception as exc:
                     stats["errors"] += 1
                     _issue(store, d["src_id"], jr["path"], "carve_error", f"{type(exc).__name__}: {exc}", "carve")
@@ -230,13 +259,23 @@ def _carve(store: CaseStore, run_id: int, o) -> dict[str, Any]:
     o.progress.stop()
 
     others = [f for f in store.evidence_files() if f.id not in handled and f.kind.value not in _CARVE_SKIP_KINDS and f.is_preserved]
-    o.progress.start("Carving other files", len(others))
     for f in others:
-        path = _preserved(store, f)
-        result = carve_file(path, CarveSource(f.id, f.path, f.hashes.sha256), now=o.now)
-        _persist(store, run_id, result.candidates)
-        stats["candidates"] += len(result.candidates)
-        stats["files_carved"] += 1
+        units.append({"path": _preserved(store, f), "source": CarveSource(f.id, f.path, f.hashes.sha256), "ex": None, "db": False,
+                      "count": "files_carved", "error": None})
+
+    # Phase 2: the byte scanning, spread over worker processes; Phase 3: results written back in the original order.
+    o.progress.start("Carving", len(units))
+    tasks = [(u["path"], u["source"], u["ex"], o.now, u["db"]) for u in units]
+    for unit, (candidates, error) in zip(units, ordered_map(_carve_worker, tasks, resolve_workers(getattr(o, "workers", 1)), cost=_task_size)):
+        if candidates is None:
+            stats["errors"] += 1
+            src = unit["error"] or (None, unit["source"].source_file)
+            _issue(store, src[0], src[1], "carve_error", error or "unknown error", "carve")
+        else:
+            _persist(store, run_id, candidates)
+            stats["candidates"] += len(candidates)
+            if unit["count"]:
+                stats[unit["count"]] += 1
         o.progress.advance()
     o.progress.stop()
     return dict(stats)
@@ -366,7 +405,7 @@ def _reconstruct(store: CaseStore, run_id: int, o) -> dict[str, Any]:
     active = _load_active_subjects(store)
     carved = list(load_carved(store))
     corr = build_correlation(active, carved, files)
-    stats["correlation_edges"] = insert_edges(store, run_id, corr.graph.edges)
+    stats["correlation_edges"] = insert_edges(store, run_id, corr.graph.iter_edges())
     return dict(stats)
 
 

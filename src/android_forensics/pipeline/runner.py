@@ -41,6 +41,7 @@ class StageOptions:
     rehash_originals: bool = True
     timeline_files: str = "key"
     now: datetime | None = None
+    workers: int | str = 1  # processes for the per-database recovery / carving stages; results are identical to a serial run
 
 
 @dataclass(frozen=True)

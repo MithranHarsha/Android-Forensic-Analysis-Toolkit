@@ -14,6 +14,6 @@ def register(cls: type[ArtifactParser]) -> type[ArtifactParser]:
 
 
 def get_parsers() -> list[ArtifactParser]:
-    from android_forensics.artifacts import browser, calls, contacts, sms  # noqa: F401  (register on import)
+    from android_forensics.artifacts import browser, calls, contacts, google_messages, sms  # noqa: F401  (register on import)
 
     return list(_PARSERS)

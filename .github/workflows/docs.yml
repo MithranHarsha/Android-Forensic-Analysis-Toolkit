@@ -26,6 +26,7 @@ jobs:
           path: site
   deploy:
     needs: build
+    if: vars.PAGES_ENABLED == 'true'   # set this repo variable after enabling Pages (Settings -> Pages -> Source: GitHub Actions)
     runs-on: ubuntu-latest
     environment:
       name: github-pages

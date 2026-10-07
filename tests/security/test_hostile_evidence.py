@@ -204,7 +204,7 @@ def test_report_html_never_contains_live_markup_from_evidence(tmp_path):
             assert not (value or "").lower().lstrip().startswith("javascript:")
     assert "pwn" not in [h for _, h in re.findall(r"<(h1)[^>]*>([^<]*)</h1>", html)]
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html          # shown to the examiner, but inert
-    assert "49" not in re.findall(r"\{\{7\*7\}\}|\b49\b", html)      # template syntax in evidence is data, not code
+    assert "{{7*7}}" in html and "${7*7}" in html                      # template syntax in evidence is shown literally: data, not code
     # the machine-readable outputs keep the raw evidence faithfully
     assert "<script>alert(1)</script>" in res.json.read_text()
 
