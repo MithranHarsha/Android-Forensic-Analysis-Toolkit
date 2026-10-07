@@ -294,8 +294,12 @@ async function boot() {
   document.getElementById("back").addEventListener("click", () => { state.caseId = null; render(); }, { once: true });
   if (state.mode === "server") {
     state.token = state.token || storedToken();
-    if (!state.token) { setHeader(); renderLogin(); return; }
-    try { state.me = await api("/api/me"); } catch (e) { fail(e); return; }
+    if (!state.token) {
+      // behind a single-sign-on proxy the server already knows who we are: try without a token before asking for one
+      try { state.me = await api("/api/me"); } catch (_) { setHeader(); renderLogin(); return; }
+    } else {
+      try { state.me = await api("/api/me"); } catch (e) { fail(e); return; }
+    }
   }
   render();
 }

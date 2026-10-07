@@ -9,7 +9,9 @@ signature protects the whole report. Two schemes are supported:
   (``--trusted-key`` / fingerprint) to bind it to a person or lab.
 * **GPG** (optional, if ``gpg`` is installed and ``gpg_key`` is given): writes ``sha256sums.txt.asc`` (armoured, detached).
 
-Private keys are written ``0600``; set ``ANDROID_FORENSICS_KEY_PASSPHRASE`` to encrypt them.
+Private keys are written ``0600``; set ``ANDROID_FORENSICS_KEY_PASSPHRASE`` (or, better, ``..._PASSPHRASE_FILE``) to encrypt them.
+For **hardware-backed signing** (a YubiKey / smart card / HSM), use the GPG route: ``--gpg-key`` delegates to ``gpg``, whose agent talks to the
+token, so the private key never exists as a file on the machine.
 """
 
 from __future__ import annotations
@@ -51,7 +53,19 @@ def fingerprint(public_key: Ed25519PublicKey) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+PASSPHRASE_FILE_ENV = "ANDROID_FORENSICS_KEY_PASSPHRASE_FILE"  # nosec B105 - an environment variable name
+
+
 def _passphrase() -> bytes | None:
+    """The key passphrase from ``ANDROID_FORENSICS_KEY_PASSPHRASE`` or — preferably, because it never appears in the process
+    environment — from the file named by ``ANDROID_FORENSICS_KEY_PASSPHRASE_FILE`` (a Docker/Kubernetes secret, a tmpfs file from
+    a secrets manager)."""
+    path = os.environ.get(PASSPHRASE_FILE_ENV)
+    if path:
+        try:
+            return Path(path).read_text(encoding="utf-8").rstrip("\r\n").encode() or None
+        except OSError as exc:
+            raise SigningError(f"cannot read the passphrase file {path}: {exc}") from exc
     p = os.environ.get(PASSPHRASE_ENV)
     return p.encode() if p else None
 

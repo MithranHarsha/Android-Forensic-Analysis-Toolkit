@@ -40,6 +40,7 @@ is a self-assessment. Read [Limitations](#limitations) before relying on it in c
 | **Disk images** | Raw / Android-sparse / **E01 (multi-segment)** images, GPT and MBR; read-only **ext2/3/4 and f2fs** parsers written for hostile input (bounds-checked, cycle-guarded; f2fs applies the checkpoint's NAT journal and cross-checks every node); encrypted directories are *reported*, never decrypted ([docs/disk_images.md](docs/disk_images.md)) |
 | **Chain of custody & signing** | In-database hash chain **plus** an external append-only audit log (who, host, command, outcome, evidence hash) whose head goes into the report; Ed25519-signed reports with offline `verify-report`; exact build/dependency/plugin stamp in every report ([docs/standards_alignment.md](docs/standards_alignment.md)) |
 | **Web server** | Token-authenticated roles (viewer / analyst / admin), multi-case registry, streamed hash-while-uploading evidence, **resource-limited child-process jobs**, rate limiting + lockout, strict CSP, server audit log, browser UI ([docs/deployment.md](docs/deployment.md)) |
+| **Parsers** | SMS, call log, contacts, Chromium history/downloads, and **Google Messages** (`bugle_db`, the default messaging app on Pixels; direction rule checked against a real image's author-supplied list); anything else via [plugins](docs/plugins.md) |
 | **Plugins, config, logging** | Parser plugins (`--plugin`, entry points) with SHA-256 attribution in the report ([docs/plugins.md](docs/plugins.md)); TOML config for examiner details; structured JSON logs; court-oriented case details and certification block |
 | **Filesystem discovery** | A standalone `discover` command and library ([docs/filesystem_discovery.md](docs/filesystem_discovery.md)): recursive, read-only, content-signature classification of SQLite databases, sidecars, XML, JSON, logs and media; Android layout *detected* not assumed; application directories with package / user attribution |
 | **SQLite inspection** | `SQLiteInspector.inspect(path)` ([docs/sqlite_inspection.md](docs/sqlite_inspection.md)): header, version info, tables, columns, keys, indexes, foreign keys, every **active** record with its storage class, WAL/journal facts, integrity check. Damaged, encrypted and non-SQLite files are described, not refused |
@@ -119,6 +120,7 @@ android-forensics dashboard demo                       # → http://127.0.0.1:87
 android-forensics init-case case001 --examiner "A. Examiner" --description "Handset 3"
 android-forensics ingest    case001 ./evidence            # dir | .zip | .tar | .tar.gz | database.db
 android-forensics scan      case001                        # filesystem analysis + SQLite discovery
+android-forensics analyze   case001 --workers auto        # use several cores for recovery/carving; identical results
 android-forensics analyze   case001                        # scan → extract → recover → carve → correlate → reconstruct → validate → timeline → report
 android-forensics analyze   case001 --no-recover            # exactly the Review 1 pipeline
 android-forensics recover   case001                         # just the four Review 2 stages, on a case already scanned+extracted

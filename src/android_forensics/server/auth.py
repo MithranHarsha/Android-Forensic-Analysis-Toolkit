@@ -55,6 +55,35 @@ def authenticate(db: ServerDB, token: str | None) -> Principal | None:
     return Principal(row["id"], row["name"], row["role"])
 
 
+def _highest(roles: list[str]) -> str | None:
+    return max(roles, key=lambda r: _RANK[r]) if roles else None
+
+
+def sso_principal(request: Request, trusted: list, user_header: str, groups_header: str, role_map: dict[str, str],
+                  default_role: str | None) -> Principal | None:
+    """The user a trusted proxy vouches for, or None when SSO does not apply to this request.
+
+    SSO applies only when the TCP peer is inside a configured proxy network *and* the user header is present; headers sent by any
+    other peer are ignored (they are just untrusted request headers, so a client cannot talk its way into a role)."""
+    import ipaddress
+
+    peer = request.client.host if request.client else ""
+    try:
+        addr = ipaddress.ip_address(peer)
+    except ValueError:
+        return None
+    if not any(addr in net for net in trusted):
+        return None
+    user = request.headers.get(user_header, "").strip()
+    if not user or len(user) > 200 or any(ord(c) < 32 for c in user):
+        return None
+    groups = [g.strip() for g in request.headers.get(groups_header, "").split(",") if g.strip()]
+    role = _highest([role_map[g] for g in groups if g in role_map]) or default_role
+    if role is None:
+        raise HTTPException(403, "your account is not in any group that grants access")
+    return Principal(-1, user, role)
+
+
 def forbidden(role: str) -> HTTPException:
     return HTTPException(403, f"this action needs the '{role}' role")
 

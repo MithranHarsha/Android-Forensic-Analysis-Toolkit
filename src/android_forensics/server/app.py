@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import ipaddress
 import os
 import re
 import shutil
@@ -24,7 +25,7 @@ from android_forensics.custody.audit import AUDIT_FILENAME, AuditLog
 from android_forensics.dashboard.api import WEB_DIR, build_router
 from android_forensics.dashboard.security import SecurityHeadersMiddleware
 from android_forensics.errors import CaseError
-from android_forensics.server.auth import ROLES, Principal, authenticate, client_ip, hash_token, new_token, parse_bearer
+from android_forensics.server.auth import ROLES, Principal, authenticate, client_ip, hash_token, new_token, parse_bearer, sso_principal
 from android_forensics.server.db import ServerDB
 from android_forensics.server.jobs import KINDS, JobManager
 from android_forensics.server.ratelimit import RateLimiter
@@ -100,8 +101,19 @@ def create_server_app(settings: ServerSettings) -> FastAPI:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(s.allowed_hosts))
 
     # ------------------------------------------------------------------ authn / authz
+    sso_nets = [ipaddress.ip_network(c, strict=False) for c in s.sso_trusted_proxies]
+    sso_roles = dict(s.sso_role_map)
+
     def principal(request: Request) -> Principal:
         ip = client_ip(request, s.trust_proxy_hops)
+        if sso_nets:
+            vouched = sso_principal(request, sso_nets, s.sso_user_header, s.sso_groups_header, sso_roles, s.sso_default_role)
+            if vouched is not None:
+                ok, retry = principal_limiter.hit(f"sso:{vouched.name}")
+                if not ok:
+                    raise HTTPException(429, "rate limit exceeded", headers={"Retry-After": str(int(retry) + 1)})
+                request.state.principal = vouched
+                return vouched
         locked, retry = fail_limiter.blocked(ip)
         if locked:
             raise HTTPException(429, "too many failed authentication attempts", headers={"Retry-After": str(int(retry) + 1)})
@@ -157,7 +169,7 @@ def create_server_app(settings: ServerSettings) -> FastAPI:
 
     @app.get("/api/me")
     def me(p: Principal = Depends(principal)) -> dict[str, Any]:
-        return {"name": p.name, "role": p.role}
+        return {"name": p.name, "role": p.role, "via": "sso" if p.token_id == -1 else "token"}
 
     # ------------------------------------------------------------------ cases
     @app.get("/api/cases")

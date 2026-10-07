@@ -86,7 +86,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -e ".[dev]"
-      - run: pytest -q tests/security/test_fuzz_parsers.py
+      - run: pytest -q tests/security/test_fuzz_parsers.py tests/security/test_fuzz_server.py
         env:
           HYPOTHESIS_PROFILE: soak
 
@@ -98,10 +98,10 @@ jobs:
       - uses: actions/checkout@v4
       - run: docker build -t android-forensics:ci .
       - run: docker run --rm android-forensics:ci --version
-      - name: "Smoke test - analyse synthetic evidence read-only with no network"
+      - name: "Smoke test - generate and analyse evidence read-only with no network"
         run: |
-          docker run --rm android-forensics:ci synth /tmp/syn >/dev/null
-          docker run --rm --network none --read-only --tmpfs /tmp android-forensics:ci analyze /tmp/syn/android_dump --cases-dir /tmp/cases --name smoke --no-report
+          docker run --rm --network none --read-only --tmpfs /tmp --entrypoint sh android-forensics:ci -c \
+            "android-forensics synth /tmp/syn >/dev/null && android-forensics analyze /tmp/syn/android_dump --cases-dir /tmp/cases --name smoke --no-report --workers 2"
 
   binary:
     needs: test

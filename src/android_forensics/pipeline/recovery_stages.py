@@ -53,7 +53,7 @@ from android_forensics.sqlite.parser import SQLiteDatabase
 from android_forensics.sqlite.recover_db import recover_database
 from android_forensics.sqlite.recovery import build_models
 from android_forensics.sqlite.wal import parse_wal
-from android_forensics.storage.artifact_writer import insert_artifacts_with_ids
+from android_forensics.storage.artifact_writer import insert_artifact_uncommitted
 from android_forensics.storage.case_store import CaseStore, utcnow
 from android_forensics.storage.recovery_store import (
     insert_carved,
@@ -389,6 +389,7 @@ def _reset_correlate(store: CaseStore) -> None:
 def _reconstruct(store: CaseStore, run_id: int, o) -> dict[str, Any]:
     stats: Counter = Counter()
     contexts: dict[int, DatabaseContext | None] = {}
+    now, pending = utcnow(), 0
     for record in list(load_recovered(store, "artifact_id IS NULL")):
         ctx = contexts.setdefault(record.database_file_id, _database_context(store, record.database_file_id))
         if ctx is None:
@@ -396,9 +397,12 @@ def _reconstruct(store: CaseStore, run_id: int, o) -> dict[str, Any]:
             continue
         sources = tuple(json.loads(store.scalar("SELECT corroboration_json FROM recovered_records WHERE id=?", (record.id,)) or "[]"))
         artifact = reconstruct(record, ctx, sources)
-        (artifact_id,) = insert_artifacts_with_ids(store, run_id, record.database_id, [artifact])
-        link_artifact(store, record.id, artifact_id)
+        link_artifact(store, record.id, insert_artifact_uncommitted(store, run_id, record.database_id, artifact, now))
         stats[f"reconstructed_{artifact.status.value.lower()}"] += 1
+        pending += 1
+        if pending >= 500:   # a commit (an fsync) per record was the slowest thing in the whole pipeline on some platforms
+            store.conn.commit()
+            pending = 0
     store.conn.commit()
 
     files = _file_infos(store)

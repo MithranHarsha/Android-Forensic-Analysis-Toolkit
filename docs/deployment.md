@@ -43,6 +43,26 @@ android-forensics server-token revoke 7 --data-dir …
 A token is shown **once**; only its SHA-256 is stored. Revocation is immediate. Too many failed attempts from one address locks
 that address out (even for valid tokens) until the window clears.
 
+## 2b. Single sign-on (OIDC / SAML via a proxy)
+
+Tokens suit scripts; people usually want their organisation's login. Put an authenticating proxy in front — `oauth2-proxy`, Authelia,
+an OIDC-aware ingress — and let it tell the server who the user is:
+
+```bash
+android-forensics serve … --behind-proxy --allowed-host forensics.example.org \
+    --sso-trusted-proxy 172.18.0.0/16 \                       # the network the proxy connects from; nothing else is believed
+    --sso-role-map forensics-admins=admin --sso-role-map forensics-analysts=analyst --sso-role-map forensics-readers=viewer
+```
+
+The proxy must set `X-Auth-Request-User` and `X-Auth-Request-Groups` (override with `--sso-user-header` / `--sso-groups-header`) and must
+**remove any such headers sent by clients**. The server believes them only when the TCP peer is inside `--sso-trusted-proxy`; from anyone
+else they are ordinary, ignored headers. A user's role is the highest among their mapped groups; a user in no mapped group is refused
+unless `--sso-default-role` is set. Bearer tokens keep working for scripts. Everything the user does is recorded in the audit log under
+their SSO name, and per-user rate limits apply. The browser UI detects SSO and skips its token prompt.
+
+**Do not** publish the app's port next to the proxy: anyone who can reach the app directly from inside a trusted network can claim any
+identity. The compose file keeps the app on an internal network for that reason.
+
 ## 3. Without Docker
 
 ```bash
@@ -81,7 +101,9 @@ Every report the server's jobs produce is signed (Ed25519, over `sha256sums.txt`
 android-forensics verify-report REPORT_DIR --trusted-key report-signing.pub.pem
 ```
 
-Keep the private key off the server's data volume if you can (mount it read-only from a secrets store).
+Keep the private key off the server's data volume if you can (mount it read-only from a secrets store) and give the passphrase
+through `ANDROID_FORENSICS_KEY_PASSPHRASE_FILE` (a Docker/Kubernetes secret) rather than an environment variable.
+For hardware-backed keys (YubiKey, smart card, HSM) use the GPG route — `report --gpg-key KEYID` — so the private key never exists as a file.
 
 ## 6. Operating it
 
@@ -96,5 +118,5 @@ Keep the private key off the server's data volume if you can (mount it read-only
 ## 7. What is *not* provided
 
 Multi-node scaling (the job queue and rate limiter are per process; put a shared limiter at the proxy and run one server per
-volume), single sign-on (tokens only; put an OIDC-aware proxy such as oauth2-proxy in front if you need SSO), and malware
+volume), single sign-on *inside the app* (it trusts a proxy's headers instead — section 2b), and malware
 sandboxing of apps found in evidence (the tool only parses data; it never executes anything from evidence).

@@ -6,8 +6,8 @@
   `O_NOFOLLOW`/`O_NOATIME` evidence opening (best-effort elsewhere), `flock` on the audit log (single-writer assumed), and — for the
   server — resource limits and process-group kills (`server/sandbox.py`). Use Linux or macOS, or the Docker image, for casework.
 * **Memory limits for analysis jobs are enforced only where `RLIMIT_AS` works (Linux).** macOS ignores it; rely on container limits.
-* **The server is single-node.** The job queue and rate limiter live in the process; authentication is by bearer token (put an
-  OIDC-aware proxy in front for single sign-on). It has not been load- or penetration-tested by a third party.
+* **The server is single-node.** The job queue and rate limiter live in the process; authentication is by bearer token or, behind a trusted
+  proxy, SSO headers (see deployment.md). It has not been load- or penetration-tested by a third party.
 * **Evidence graph memory** grows with the number of artifacts (~4.7 KB each at one million), see [performance.md](performance.md).
 * **WAL/journal sidecars are read fully into memory**, capped at 1 GiB (`config.MAX_SIDECAR_BYTES`); larger ones are reported, not parsed.
 

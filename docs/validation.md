@@ -74,7 +74,7 @@ The list (produced with a commercial tool, with a *Deleted* column) contains 35 
 | 4 flagged *deleted* | **2 RECOVERED** (`"Got it."`, a Messenger verification code — both from the WAL of Google Play services' `icing_mmssms.db`); 2 not found |
 | 1 live, Google-Messages-only | not found |
 
-The 3 misses exist only in `bugle_db`, **Google Messages' private database, for which this tool has no parser** (and the list itself has
+The 3 misses exist only in `bugle_db`, **Google Messages' private database, for which this run had no parser** — one was added afterwards, see below (and the list itself has
 empty bodies for them). The tool created **no SMS that is not in the author's list**: of its SMS artifacts, 208 are ACTIVE and exactly 2 are
 RECOVERED, and both match the reference — 2 of 2 recovered messages correct, 2 of 4 deleted messages found.
 
@@ -85,6 +85,7 @@ RECOVERED, and both match the reference — 2 of 2 recovered messages correct, 2
 | Recovery of 605 databases did not finish in 35 minutes: the byte-offset scan re-parsed each cell header once **per table** (real databases have dozens) | header parsed once per offset; **7–10× faster** on the worst files, identical results (proved against the original on 10,000+ offsets); whole recovery stage now **3 min** |
 | The file-based-encryption detector flagged **7 cache directories of a decrypted image** (apps name cache files after base64 SHA digests) | restricted to block-aligned ciphertext lengths directly under an encryption-policy root; regression tests built from the real pattern; the real corpus now yields 0 findings |
 | 249k carved candidates | expected for browser/app caches; all `CARVED CANDIDATE`, none HIGH, 99.5 % LOW. Filter by confidence/kind in the report |
+| *(added after this run)* Google Messages' own database held the 3 misses | a **Google Messages parser** now exists: on this image it yields 184 messages, whose direction agrees with the author's list on **30 of 30** body-matched messages (the 3 remaining misses have empty bodies in the list, so they cannot be matched by text) |
 | The image holds the data directories of WhatsApp, Telegram, Signal, Viber, Facebook Messenger, TikTok, Snapchat, LINE and Twitter | **no app-specific parsers**: where their databases were readable they were handled generically (tables catalogued; deleted rows as generic records). The plugin API ([plugins.md](plugins.md)) is the route to add them |
 
 ### Comparison with reference tools on this corpus — inconclusive

@@ -26,6 +26,8 @@ the format follows [Keep a Changelog](https://keepachangelog.com/).
   bandit, pip-audit, 3-OS x 3-Python tests, e2e, nightly fuzz, docker, binaries, docs, release), docker-compose + Caddy/nginx/systemd, MkDocs site.
 
 ### Changed
+- **`--workers N|auto`** runs recovery and carving on several processes (4× on a real corpus) with results identical to a serial run.
+- Google Messages (`bugle_db`) parser; HTML report tables capped with whole-case summaries; evidence-graph edges stored as tuples (-31% peak memory).
 - `shared_prefs` XML is parsed with `defusedxml`; SQLite evidence copies are opened with a **read-only authorizer**, `trusted_schema=OFF`,
   a heap cap and per-statement deadlines; the CLI console neutralises control characters in evidence text.
 - The dashboard frontend ships **inside** the package (wheel/Docker/binary installs now work) and is CSP-clean (no inline script/style).
@@ -33,6 +35,9 @@ the format follows [Keep a Changelog](https://keepachangelog.com/).
   search is O(log n) instead of O(n) per hit; correlation keeps only the facts it needs (~15 GB -> ~4.7 GB per million artifacts).
 - WAL/journal sidecars over 1 GiB are reported instead of read into memory.
 - Runtime `requirements.txt` no longer lists test tooling (moved to the `dev` extra).
+
+### Added (post-release hardening)
+- Single sign-on through a trusted reverse proxy (`--sso-*`), passphrase-from-file for signing keys, HTTP fuzzing of the server, `reconstruct` commits in batches (one fsync per record made it crawl on Windows runners).
 
 ### Fixed
 - DDL parser raised `IndexError` on malformed `CREATE TABLE` text (found by fuzzing); now always `DdlError`.

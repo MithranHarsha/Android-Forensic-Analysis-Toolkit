@@ -143,3 +143,19 @@ def test_keygen_refuses_overwrite_and_encrypts_with_passphrase(tmp_path, monkeyp
     monkeypatch.delenv("ANDROID_FORENSICS_KEY_PASSPHRASE")
     with pytest.raises(SigningError):
         sign_report(tmp_path, p)
+
+
+def test_passphrase_can_come_from_a_file_so_it_stays_out_of_the_environment(tmp_path, monkeypatch):
+    secret = tmp_path / "pw"
+    secret.write_text("correct horse\n")
+    monkeypatch.setenv("ANDROID_FORENSICS_KEY_PASSPHRASE_FILE", str(secret))
+    key = tmp_path / "k" / "key.pem"
+    generate_keypair(key)
+    assert b"ENCRYPTED" in key.read_bytes()
+    d = tmp_path / "rep"
+    d.mkdir()
+    (d / "sha256sums.txt").write_text("")
+    sign_report(d, key)                                   # decrypts with the file's passphrase
+    monkeypatch.setenv("ANDROID_FORENSICS_KEY_PASSPHRASE_FILE", str(tmp_path / "missing"))
+    with pytest.raises(SigningError, match="passphrase file"):
+        sign_report(d, key)

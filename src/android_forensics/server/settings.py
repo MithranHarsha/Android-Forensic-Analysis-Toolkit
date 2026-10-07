@@ -23,6 +23,13 @@ class ServerSettings:
     job_wall_seconds: int = 24 * 3600
     job_memory_bytes: int = 8 * GiB
     job_file_bytes: int = 512 * GiB
+    # Single sign-on through a trusted reverse proxy (oauth2-proxy, Authelia, an OIDC-aware ingress …). The proxy authenticates the user and
+    # passes their name and groups in headers; the server believes those headers ONLY for connections that come from these networks.
+    sso_trusted_proxies: tuple[str, ...] = ()           # CIDRs, e.g. ("10.0.0.0/8", "172.18.0.0/16")
+    sso_user_header: str = "X-Auth-Request-User"
+    sso_groups_header: str = "X-Auth-Request-Groups"     # comma-separated
+    sso_role_map: tuple[tuple[str, str], ...] = ()       # (group, role) pairs; the highest role among a user's groups wins
+    sso_default_role: str | None = None                  # role for an authenticated user in no mapped group (None = refuse)
     signing_key: Path | None = None     # when set, reports produced by jobs are signed with this Ed25519 key
     signer_name: str = "android-forensics server"
     extra_env: dict[str, str] = field(default_factory=dict)

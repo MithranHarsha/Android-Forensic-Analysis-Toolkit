@@ -30,6 +30,34 @@ timeline), one worker (the pipeline is single-threaded).
 | Correlation loaded every artifact as a full model (~17 KB each) just to read a few facts | 1.58 GB peak for a 13 MB database (≈ 15 GB per million rows) | `Subject.slim` keeps only the facts correlation uses → 0.66 GB for the same database |
 | The carver scanned every timestamp hit for every phone-number hit (O(n·m)) | carving was half the run time: 18.9 s of 55 s at 100k rows | sorted spans + bisection: 5.7 s (identical results; a property test compares against the naive definition and a scaling test guards the complexity) |
 
+## Parallel recovery and carving (`--workers`)
+
+Recovery and carving are pure functions of one file's bytes, so `analyze` / `recover` accept `--workers N|auto` (env
+`ANDROID_FORENSICS_WORKERS`). Results are written by a single process in task order, so **a parallel run produces exactly the same case
+content as a serial one** — row ids, ordering and every report (asserted by `tests/integration/test_parallel.py`). The biggest files are
+started first so one large database is not the straggler.
+
+Real corpus (Digital Corpora Android 9, 605 databases, 8 workers, Apple M-series):
+
+| Stage | 1 worker | 8 workers | Speed-up |
+|---|---:|---:|---:|
+| recover | 181 s | 45 s | 4.0× |
+| carve | 166 s | 44 s | 3.8× |
+
+Both runs found 21,129 recovered records and 249,372 carved candidates. The other stages (extract, correlate, reconstruct, validate,
+timeline) are still single-process, which is why the whole pipeline gains less than the two stages do.
+
+### Memory of the evidence graph
+Edges are stored as plain tuples and turned into validated `CorrelationEdge` models only when read or persisted
+(`graph.iter_edges()`): at 100,000 rows the correlation stage peaked at **467 MB, down from 681 MB**. Expect roughly 3.3 KB per artifact at
+scale (measured only at 100k; the 1M-row figure above predates this change).
+
+## Reports at scale
+The HTML report shows at most `html_row_cap` rows (default 3,000) of each recovery table — highest confidence first — plus a summary by
+status/method/confidence (and carved kind/confidence) that covers *every* row, with a note saying it is a sample. `report.json` and the CSV
+files always contain everything. (Before this, a case with hundreds of thousands of carved candidates would have produced a
+multi-hundred-megabyte HTML file.)
+
 ## Evidence containers and disk images (streaming)
 
 | Input | Size | Wall time | Peak memory |

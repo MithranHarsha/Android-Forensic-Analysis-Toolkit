@@ -957,6 +957,11 @@ def serve(
     job_hours: Annotated[float, typer.Option(help="Per-job wall-clock limit in hours.")] = 24.0,
     rate_limit: Annotated[int, typer.Option(help="Requests per minute per client IP.")] = 600,
     signing_key: Annotated[Path | None, typer.Option(help="Ed25519 key: sign every report the server's jobs produce.")] = None,
+    sso_trusted_proxy: Annotated[list[str] | None, typer.Option("--sso-trusted-proxy", help="CIDR of a reverse proxy whose user/group headers are believed (repeatable). Enables SSO.")] = None,
+    sso_user_header: Annotated[str, typer.Option(help="Header carrying the authenticated user name.")] = "X-Auth-Request-User",
+    sso_groups_header: Annotated[str, typer.Option(help="Header carrying the user's groups (comma-separated).")] = "X-Auth-Request-Groups",
+    sso_role_map: Annotated[list[str] | None, typer.Option("--sso-role-map", help="group=role (viewer|analyst|admin), repeatable; the highest role wins.")] = None,
+    sso_default_role: Annotated[str | None, typer.Option(help="Role for an authenticated user in no mapped group (default: refuse).")] = None,
 ) -> None:
     """Run the authenticated multi-case web server (REST API + browser UI, background analysis jobs, uploads)."""
     import uvicorn
@@ -977,12 +982,32 @@ def serve(
     if data_dir == cases_dir or cases_dir in data_dir.parents or data_dir in cases_dir.parents:
         raise CaseError("--data-dir and --cases-dir must be separate, non-nested directories")
     hosts = allowed_hosts(allowed_host)
+    roles_map: list[tuple[str, str]] = []
+    for item in sso_role_map or []:
+        group, sep, role = item.partition("=")
+        if not sep or role not in ("viewer", "analyst", "admin") or not group.strip():
+            raise CaseError(f"--sso-role-map expects group=viewer|analyst|admin, got {item!r}")
+        roles_map.append((group.strip(), role))
+    if sso_default_role not in (None, "viewer", "analyst", "admin"):
+        raise CaseError("--sso-default-role must be viewer, analyst or admin")
+    if sso_trusted_proxy:
+        import ipaddress
+
+        for cidr in sso_trusted_proxy:
+            try:
+                ipaddress.ip_network(cidr, strict=False)
+            except ValueError as exc:
+                raise CaseError(f"--sso-trusted-proxy {cidr!r}: {exc}") from exc
+        if not roles_map and not sso_default_role:
+            raise CaseError("SSO needs --sso-role-map and/or --sso-default-role, otherwise no user could ever be granted a role")
     gib = 1024 ** 3
     settings = ServerSettings(
         cases_dir=cases_dir, data_dir=data_dir, max_upload_bytes=int(max_upload_gb * gib), workers=workers,
         rate_limit_per_minute=rate_limit, allowed_origins=tuple(allow_origin or ()), allowed_hosts=hosts,
         behind_tls=tls or behind_proxy, trust_proxy_hops=1 if behind_proxy else 0, job_memory_bytes=int(job_memory_gb * gib),
         job_wall_seconds=int(job_hours * 3600), signing_key=signing_key,
+        sso_trusted_proxies=tuple(sso_trusted_proxy or ()), sso_user_header=sso_user_header, sso_groups_header=sso_groups_header,
+        sso_role_map=tuple(roles_map), sso_default_role=sso_default_role,
     )
     server_app = create_server_app(settings)
     if not ServerDB(settings.db_path).tokens():

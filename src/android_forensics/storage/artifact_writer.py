@@ -53,19 +53,25 @@ def _typed_insert(store: CaseStore, art: Artifact, aid: int) -> None:
         )
 
 
+def insert_artifact_uncommitted(store: CaseStore, run_id: int, database_id: int | None, artifact: Artifact, now: str) -> int:
+    """Insert one artifact and its typed row *without committing* (the caller batches commits: one fsync per record is
+    what made ``reconstruct`` crawl on file systems with slow syncs — 8,000 commits took minutes on a Windows runner)."""
+    record = artifact.to_record()
+    record["created_at"] = record["created_at"] or now
+    record["run_id"] = run_id
+    record["database_id"] = database_id
+    aid = store.insert("artifacts", record)
+    _typed_insert(store, artifact, aid)
+    return aid
+
+
 def insert_artifacts_with_ids(store: CaseStore, run_id: int, database_id: int | None, artifacts: Iterable[Artifact]) -> list[int]:
     """Store ``artifacts`` and return their row ids, in order (the reconstruct stage links recovered records to them)."""
     ids: list[int] = []
     now = utcnow()
     with store.transaction():
         for a in artifacts:
-            record = a.to_record()
-            record["created_at"] = record["created_at"] or now
-            record["run_id"] = run_id
-            record["database_id"] = database_id
-            aid = store.insert("artifacts", record)
-            _typed_insert(store, a, aid)
-            ids.append(aid)
+            ids.append(insert_artifact_uncommitted(store, run_id, database_id, a, now))
     return ids
 
 
