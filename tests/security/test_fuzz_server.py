@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import string
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 from hypothesis import given
@@ -36,10 +37,15 @@ def srv(tmp_path_factory):
 @given(METHODS, PATHS, st.binary(max_size=200), st.dictionaries(st.sampled_from(["content-type", "x-forwarded-for", "origin", "range", "x-test"]), HEADER_VALUES, max_size=3))
 def test_unauthenticated_requests_never_succeed_on_protected_routes_nor_error(srv, method, path, body, headers):
     client, _token = srv
-    r = client.request(method, path, content=body, headers=headers)
+    try:
+        r = client.request(method, path, content=body, headers=headers)
+    except httpx.InvalidURL:   # the HTTP *client* refuses to send it; the server never sees it
+        return
     assert r.status_code < 500, (method, path, r.status_code, r.text[:200])
     assert "Traceback" not in r.text and "File \"" not in r.text
     base = path.split("?")[0].rstrip("/") or "/"
+    if path.startswith("//"):   # "//x" is a URL *authority* to the HTTP client: the request is really for "/"
+        base = "/"
     if base not in PUBLIC and not base.startswith("/static") and method not in ("OPTIONS", "HEAD") and r.status_code == 200:
         pytest.fail(f"{method} {path} answered 200 without a token")
 
@@ -47,7 +53,10 @@ def test_unauthenticated_requests_never_succeed_on_protected_routes_nor_error(sr
 @given(METHODS, PATHS, st.binary(max_size=200))
 def test_authenticated_viewer_never_triggers_a_server_error_or_a_write(srv, method, path, body):
     client, token = srv
-    r = client.request(method, path, content=body, headers={"Authorization": f"Bearer {token}", "content-type": "application/json"})
+    try:
+        r = client.request(method, path, content=body, headers={"Authorization": f"Bearer {token}", "content-type": "application/json"})
+    except httpx.InvalidURL:
+        return
     assert r.status_code < 500, (method, path, r.status_code, r.text[:200])
     if method in ("POST", "PUT", "DELETE", "PATCH") and not path.startswith("/static"):
         assert r.status_code != 201 and r.status_code != 202, f"a viewer created something via {method} {path}"

@@ -63,7 +63,7 @@ def test_everything_but_health_and_static_needs_a_token(srv):
 
 def test_roles_are_enforced(srv):
     c, t, _s = srv
-    assert c.get("/api/me", headers=bearer(t["viewer"])).json() == {"name": "viewer", "role": "viewer"}
+    assert c.get("/api/me", headers=bearer(t["viewer"])).json() == {"name": "viewer", "role": "viewer", "via": "token"}
     assert c.get("/api/cases", headers=bearer(t["viewer"])).status_code == 200
     assert c.post("/api/cases", json={"id": "c1"}, headers=bearer(t["viewer"])).status_code == 403
     assert c.post("/api/cases", json={"id": "c1"}, headers=bearer(t["analyst"])).status_code == 201

@@ -14,6 +14,7 @@ nav:
       - Disk images (raw, sparse, E01): disk_images.md
       - Plugins: plugins.md
       - Deploying the server: deployment.md
+      - Releasing: releasing.md
       - Performance: performance.md
   - How it works:
       - Architecture: architecture.md
