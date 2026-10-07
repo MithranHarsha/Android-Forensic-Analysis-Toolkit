@@ -672,7 +672,7 @@ def _merge_duplicates(rows: list[RecoveredRow], aliases: dict[str, str | None] |
                 lists = [postings.get((r.table, k, hv)) for k, hv in known]
                 if all(lists):
                     smallest = min(lists, key=len)  # type: ignore[arg-type]
-                    others = [set(x) for x in lists if x is not smallest and x]  # type: ignore[arg-type]
+                    others = [set(x) for x in lists if x is not smallest and x]
                     candidates.update(i for i in smallest if all(i in o for o in others))  # type: ignore[union-attr]
         except TypeError:   # an unhashable value: fall back to testing every kept row of this table, as before
             candidates = set(range(len(kept)))
