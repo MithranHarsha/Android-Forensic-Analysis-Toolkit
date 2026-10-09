@@ -248,9 +248,9 @@ match their digest; a carved row is still, in the database, exactly `CARVED CAND
 ## Testing
 
 ```bash
-pytest                                          # 1,644 tests (2 platform-dependent skips); `--ignore=tests/e2e` without Playwright
+pytest                                          # 1,664 tests (2 platform-dependent skips); `--ignore=tests/e2e` without Playwright
 HYPOTHESIS_PROFILE=ci pytest tests/security     # a longer fuzzing campaign (soak = 5,000 examples per property)
-coverage run -m pytest && coverage report       # 94.0% line coverage of src/android_forensics (docs/coverage.txt)
+coverage run -m pytest && coverage report       # 94.1% line coverage of src/android_forensics (docs/coverage.txt)
 scripts/test_linux_matrix.sh                    # the suite in Linux containers on Python 3.11 / 3.12 / 3.13 (needs Docker)
 python experiments/b1_scaling.py                # scaling + peak memory → docs/performance.md
 python experiments/v2_cross_tool.py             # recovery vs other tools on the deletion matrix → docs/validation.md

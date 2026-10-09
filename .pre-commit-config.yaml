@@ -1,0 +1,15 @@
+# Install once with `pre-commit install`; the same checks CI runs (lint job), so a failing push is caught locally.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff
+        entry: ruff check
+        language: system
+        types: [python]
+      - id: mypy
+        name: mypy (whole package)
+        entry: mypy
+        language: system
+        pass_filenames: false
+        types: [python]

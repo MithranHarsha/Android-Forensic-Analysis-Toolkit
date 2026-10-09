@@ -7,6 +7,8 @@ pip install -e ".[dev]"
 ```
 
 ## Before you open a pull request
+Optional: `pip install pre-commit && pre-commit install` runs ruff and mypy on every commit (`.pre-commit-config.yaml`).
+
 ```bash
 ruff check src tests          # lint
 mypy                          # types (the whole package is checked; there is no exemption list)

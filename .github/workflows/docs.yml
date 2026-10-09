@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -27,7 +27,7 @@ jobs:
   deploy:
     needs: build
     if: vars.PAGES_ENABLED == 'true'   # set this repo variable after enabling Pages (Settings -> Pages -> Source: GitHub Actions)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

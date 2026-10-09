@@ -106,8 +106,8 @@ inspection. It says nothing about coverage of real applications' schemas.
 
 ## Other verification
 
-*(Updated for release 0.3.)* The suite is 1,644 tests, all passing (two are skipped on this platform: one on file systems that reject non-UTF-8 names, such as APFS, and the Linux-only memory-limit test; the browser end-to-end test needs Playwright). Line
-coverage of `src/android_forensics` (`coverage run -m pytest && coverage report`, config in `.coveragerc`) is **94.0%**
+*(Updated for release 0.3.)* The suite is 1,664 tests, all passing (two are skipped on this platform: one on file systems that reject non-UTF-8 names, such as APFS, and the Linux-only memory-limit test; the browser end-to-end test needs Playwright). Line
+coverage of `src/android_forensics` (`coverage run -m pytest && coverage report`, config in `.coveragerc`) is **94.1%**
 (13,517 statements, 810 missed); the full per-file report is `docs/coverage.txt`. Review 1 (evidence integrity through
 reporting) and Review 2 (recovery, carving, correlation, confidence, the dashboard, PDF reports, the synthetic labs) are
 both exercised: 239 unit tests of the data models, 27 of the ingestion building blocks, 61 end-to-end ingestion tests,
