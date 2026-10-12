@@ -83,6 +83,8 @@ and [docs/pipeline_stages.md](docs/pipeline_stages.md).
 
 ## Installation
 
+**macOS app.** `packaging/macos/build_app.sh` builds `~/Applications/Android Forensics.app` (a native AppleScript app, not an Automator workflow: it needs no Automator runtime and can take drops). Drop an evidence folder, `.zip`/`.tar` or disk image on it, or double-click to choose one. It opens a Terminal window with live progress, writes the case to `~/Documents/AndroidForensicsCases/` and opens the HTML report. The app points at this checkout and its `.venv`, so rebuild it if you move the repository.
+
 Requires Python 3.11+ (CI runs the suite on Linux, macOS and Windows with 3.11–3.13; Windows lacks the server's job sandbox). No cloud services.
 
 ```bash
