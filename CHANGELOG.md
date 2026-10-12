@@ -37,6 +37,7 @@ the format follows [Keep a Changelog](https://keepachangelog.com/).
 - Runtime `requirements.txt` no longer lists test tooling (moved to the `dev` extra).
 
 ### Added (post-release hardening)
+- Native desktop application (`android_forensics.gui`, `android-forensics-gui`, extra `gui`, macOS bundle builder in `packaging/macos/`): case library, drag-and-drop analysis with progress, filterable result tables.
 - Single sign-on through a trusted reverse proxy (`--sso-*`), passphrase-from-file for signing keys, HTTP fuzzing of the server, `reconstruct` commits in batches and recovery de-duplication is indexed (the two hot spots GitHub's Windows runners exposed).
 
 ### Fixed

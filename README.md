@@ -83,7 +83,7 @@ and [docs/pipeline_stages.md](docs/pipeline_stages.md).
 
 ## Installation
 
-**macOS app.** `packaging/macos/build_app.sh` builds `~/Desktop/Android Forensics.app` (a native AppleScript app, which is what an Automator application wraps anyway, and it can take drops). Drop an evidence folder, `.zip`/`.tar` or disk image on it, or double-click to choose one. No Terminal: a progress bar shows the current stage, a notification appears when done, and the HTML report opens in the browser. Cases are written to `~/Documents/AndroidForensicsCases/`; a failed run shows the last log lines in a dialog. The app points at this checkout and its `.venv`, so rebuild it if you move the repository.
+**Desktop app (macOS).** `packaging/macos/build_app.sh` builds `~/Desktop/Android Forensics.app`: a native window (Qt, via `pip install -e ".[gui]"`) with a case library on the left, drag-and-drop or "Choose folder/file" to start an analysis with live progress, and tabs for the overview, active data, recovered (deleted) records, carved candidates, timeline, validation and chain of custody, each sortable and filterable. No Terminal and no browser. It runs the same `analyze` pipeline as the CLI in a child process and reads the finished case read-only, and cases are stored in `~/Documents/AndroidForensicsCases/`. The app launches from this checkout's `.venv`, so rebuild it if you move the repository. On non-macOS systems run `android-forensics-gui`. The menu bar shows "Python" because the app runs as a Python process; a frozen standalone build would show its own name.
 
 Requires Python 3.11+ (CI runs the suite on Linux, macOS and Windows with 3.11–3.13; Windows lacks the server's job sandbox). No cloud services.
 
