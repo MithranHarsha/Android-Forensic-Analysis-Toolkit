@@ -1,29 +1,21 @@
 #!/bin/bash
-# Runs the full analysis on one piece of evidence and opens the HTML report. Called by the macOS app (Terminal window, so progress is visible).
-# usage: analyze_evidence.sh <evidence path> <repo root>
+# Runs the full analysis on one piece of evidence with no terminal. Called by the macOS app; progress goes to a log file.
+# usage: analyze_evidence.sh <evidence path> <repo root> <case name> <log file> <result file>
+# Writes the report path to <result file> on success, or "FAILED" if the analysis did not complete.
 set -u
-EVIDENCE="$1"
-REPO="$2"
+EVIDENCE="$1"; REPO="$2"; NAME="$3"; LOG="$4"; RESULT="$5"
 CASES="$HOME/Documents/AndroidForensicsCases"
 TOOL="$REPO/.venv/bin/android-forensics"
 [ -x "$TOOL" ] || TOOL="$(command -v android-forensics || true)"
-if [ -z "$TOOL" ]; then
-  echo "android-forensics is not installed. In $REPO run:  python3 -m venv .venv && .venv/bin/pip install -e ."
-  read -r -p "Press Return to close"; exit 1
-fi
 mkdir -p "$CASES"
-NAME="$(basename "$EVIDENCE" | sed 's/[^A-Za-z0-9._-]/_/g')-$(date +%Y%m%d-%H%M%S)"
-echo "Evidence : $EVIDENCE   (opened read-only; the original is never modified)"
-echo "Case     : $CASES/$NAME"
-echo
-caffeinate -i "$TOOL" analyze "$EVIDENCE" --cases-dir "$CASES" --name "$NAME" --workers auto
-STATUS=$?
-REPORT="$(ls -td "$CASES/$NAME"/reports/*/report.html 2>/dev/null | head -1)"
-echo
-if [ $STATUS -eq 0 ] && [ -n "$REPORT" ]; then
-  echo "Report: $REPORT"
-  open "$REPORT"
-else
-  echo "Analysis did not complete (exit $STATUS) — see the messages above."
+if [ -z "$TOOL" ]; then
+  echo "android-forensics is not installed in $REPO/.venv (run: python3 -m venv .venv && .venv/bin/pip install -e .)" > "$LOG"
+  echo FAILED > "$RESULT"; exit 1
 fi
-read -r -p "Press Return to close"
+rm -f "$RESULT"
+if NO_COLOR=1 TERM=dumb caffeinate -i "$TOOL" analyze "$EVIDENCE" --cases-dir "$CASES" --name "$NAME" --workers auto > "$LOG" 2>&1; then
+  REPORT="$(ls -td "$CASES/$NAME"/reports/*/report.html 2>/dev/null | head -1)"
+  [ -n "$REPORT" ] && echo "$REPORT" > "$RESULT" || echo FAILED > "$RESULT"
+else
+  echo FAILED > "$RESULT"
+fi
