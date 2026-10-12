@@ -1,9 +1,10 @@
 [run]
+# gui/ is the optional Qt front-end: tested when PySide6 is installed (tests/integration/test_gui.py), not part of the CI coverage gate.
 source = src/android_forensics
 omit =
     */reporting/templates/*
     */__main__.py
-    */gui/*   # optional Qt front-end: tested when PySide6 is installed (tests/integration/test_gui.py), not part of the CI coverage gate
+    */gui/*
 
 [report]
 exclude_lines =
