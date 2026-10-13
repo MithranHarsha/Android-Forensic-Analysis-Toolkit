@@ -320,6 +320,21 @@ class MainWindow(QMainWindow):
         if self.proc is not None:
             QMessageBox.information(self, "Busy", "An analysis is already running.")
             return
+        chosen = Path(path).expanduser().resolve()
+        if (chosen / "case.db").is_file():  # a saved case, not evidence: show it rather than re-running the pipeline inside it
+            self.refresh(select=chosen.name)
+            if chosen.parent == CASES_DIR.resolve():
+                self._selected(self.library.currentItem())
+            else:
+                self.case_view.show_case(chosen)
+                self.pages.setCurrentWidget(self.case_view)
+            return
+        cases_root = CASES_DIR.resolve()
+        if chosen == cases_root or cases_root in chosen.parents:
+            QMessageBox.warning(self, "That is the case library",
+                                "This folder holds your saved cases, not evidence. Choose the Android data folder, archive or "
+                                "disk image you want to analyse. Saved cases are listed on the left.")
+            return
         CASES_DIR.mkdir(parents=True, exist_ok=True)
         safe = "".join(c if c.isalnum() or c in "._-" else "_" for c in Path(path).name) or "evidence"
         self.new_case_name = f"{safe}-{time.strftime('%Y%m%d-%H%M%S')}"
@@ -352,7 +367,8 @@ class MainWindow(QMainWindow):
             self.analyse.status.setText("")
             self._selected(self.library.currentItem())
         else:
-            self.analyse.status.setText(f"The analysis did not complete (exit code {code}). The log is above.")
+            why = "the case was not created" if code == 0 else f"exit code {code}"
+            self.analyse.status.setText(f"The analysis did not complete ({why}). The log is above.")
             self.analyse.log.show()
 
 

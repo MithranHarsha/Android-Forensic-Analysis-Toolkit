@@ -43,3 +43,23 @@ def test_filter_narrows_rows(qapp, analyzed):
     total = t.proxy.rowCount()
     t.filter.setText("zzz-no-such-text-zzz")
     assert t.proxy.rowCount() == 0 < total
+
+
+def test_choosing_a_saved_case_opens_it_instead_of_rerunning(qapp, analyzed, monkeypatch):
+    store, *_ = analyzed
+    win = gui.MainWindow()
+    started = []
+    monkeypatch.setattr(gui.QProcess, "start", lambda *a, **k: started.append(a))
+    win.start_analysis(str(store.case_dir))
+    assert not started and win.pages.currentWidget() is win.case_view
+
+
+def test_choosing_the_case_library_is_refused(qapp, tmp_path, monkeypatch):
+    monkeypatch.setattr(gui, "CASES_DIR", tmp_path)
+    win = gui.MainWindow()
+    warned = []
+    monkeypatch.setattr(gui.QMessageBox, "warning", lambda *a, **k: warned.append(a))
+    started = []
+    monkeypatch.setattr(gui.QProcess, "start", lambda *a, **k: started.append(a))
+    win.start_analysis(str(tmp_path))
+    assert warned and not started
