@@ -52,7 +52,7 @@ Things to look at before you trust a result:
 | Command | Why |
 |---|---|
 | `android-forensics info CASE` | evidence sources, hashes, **scan issues** (encrypted directories, skipped symlinks, unsupported file systems), custody chain |
-| `android-forensics validate CASE` | 15 automated checks; read every `INVALID` / `PARTIAL` / `UNVERIFIED` |
+| `android-forensics validate CASE` | ten automated checks (14 kinds of result); read every `INVALID` / `PARTIAL` / `UNVERIFIED` |
 | `android-forensics audit-verify CASE` | proves the command history of the case has not been edited |
 | `android-forensics artifacts CASE --status RECOVERED --show 1` | one recovered record with its physical location, raw bytes, confidence and the sentence that justifies it |
 

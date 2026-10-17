@@ -2,7 +2,7 @@
 <span class="badge b-{{ (s or 'none')|lower|replace(' ', '-') }}">{{ s or '—' }}</span>
 {%- endmacro -%}
 {%- macro prov(p) -%}
-<span class="prov" title="File: {{ p.file }}&#10;SHA-256: {{ p.sha256 }}&#10;Table: {{ p.table }}  rowid: {{ p.rowid }}&#10;{{ p.wal }}&#10;Method: {{ p.method }}&#10;Parser: {{ p.parser }} ({{ p.variant }}, schema match {{ p.score }})&#10;Page/offset: {{ 'not recorded (Review 2)' if p.page is none else p.page }}"><code>{{ p.file.rsplit('/',1)[-1] }}</code> › {{ p.table or '—' }}{% if p.rowid is not none %}#{{ p.rowid }}{% endif %}<br><span class="hash">sha256:{{ p.sha256[:12] }}… · {{ p.wal }}</span></span>
+<span class="prov" title="File: {{ p.file }}&#10;SHA-256: {{ p.sha256 }}&#10;Table: {{ p.table }}  rowid: {{ p.rowid }}&#10;{{ p.wal }}&#10;Method: {{ p.method }}&#10;Parser: {{ p.parser }} ({{ p.variant }}, schema match {{ p.score }})&#10;Page/offset: {{ 'not recorded' if p.page is none else p.page }}"><code>{{ p.file.rsplit('/',1)[-1] }}</code> › {{ p.table or '—' }}{% if p.rowid is not none %}#{{ p.rowid }}{% endif %}<br><span class="hash">sha256:{{ p.sha256[:12] }}… · {{ p.wal }}</span></span>
 {%- endmacro -%}
 {%- macro trunc(key) -%}
 {%- set t = r.truncation.get(key) -%}
@@ -76,9 +76,9 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 <p>{{ r.meta.case_name }} · generated {{ r.meta.generated_at }} · {{ r.meta.tool_name }} {{ r.meta.tool_version }}</p>
 </header>
 {% if r.recovery.performed %}
-<div class="banner" style="background:var(--ok-bg);color:var(--ok);border-color:var(--ok)"><strong>Review 1 + Review 2 — deleted-data recovery performed.</strong> {{ r.meta.review_scope }}</div>
+<div class="banner" style="background:var(--ok-bg);color:var(--ok);border-color:var(--ok)"><strong>Full pipeline — deleted-data recovery performed.</strong> {{ r.meta.scope_note }}</div>
 {% else %}
-<div class="banner"><strong>Review 1 — forensic foundation.</strong> {{ r.meta.review_scope }}</div>
+<div class="banner"><strong>Extraction only — deleted-data recovery not performed.</strong> {{ r.meta.scope_note }}</div>
 {% endif %}
 
 <section id="s1"><h2><span class="n">1</span>Case information</h2>
@@ -91,7 +91,7 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 <div class="glance">
 {% for g in r.at_a_glance %}<div class="card {{ g.state }}"><div class="l">{{ g.label }}</div><div class="v">{{ g.value if g.value is string else '{:,}'.format(g.value) }}</div><div class="s">{{ g.note }}</div></div>{% endfor %}
 </div>
-<p class="note">Categories are never merged: active records, recovered deleted records, partial recoveries, carved candidates and unrecoverable data are reported separately.{% if not r.recovery.performed %} Only ACTIVE data exists until Review 2's recovery stages are run.{% endif %}</p>
+<p class="note">Categories are never merged: active records, recovered deleted records, partial recoveries, carved candidates and unrecoverable data are reported separately.{% if not r.recovery.performed %} Only ACTIVE data exists until the recovery stages are run.{% endif %}</p>
 </section>
 
 <section id="s2"><h2><span class="n">2</span>Examiner and tool information</h2>
@@ -167,7 +167,7 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 </tbody></table></div>{{ trunc('recovered') }}
 {% else %}<p class="note">No records were recovered from this evidence.</p>{% endif %}
 {% else %}
-<div class="na-box"><strong>NOT PERFORMED (Review 2).</strong> {{ r.recovery.messages.recovered }}</div>
+<div class="na-box"><strong>NOT PERFORMED.</strong> {{ r.recovery.messages.recovered }}</div>
 {% endif %}
 <h3>Recovery-potential indicators</h3>
 <p class="lead">Facts read from database headers and sidecar files. They indicate where recovery should look; they are <strong>not findings</strong> on their own, and their absence does not prove that nothing was deleted.</p>
@@ -204,7 +204,7 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 {% for row in r.recovery.partial_top %}<tr><td>{{ row.table }}</td><td class="nw">{{ row.method }}</td><td>{{ row.region }}</td><td class="hash">{{ row.unknown_columns|join(', ') }}</td><td>{{ badge(row.confidence) }}</td><td>{{ row.explanation }}</td></tr>{% endfor %}
 </tbody></table></div>{{ trunc('partial') }}
 {% else %}<p class="note">No partial recoveries in this evidence.</p>{% endif %}
-{% else %}<div class="na-box"><strong>NOT PERFORMED (Review 2).</strong> {{ r.recovery.messages.partial }}</div>{% endif %}
+{% else %}<div class="na-box"><strong>NOT PERFORMED.</strong> {{ r.recovery.messages.partial }}</div>{% endif %}
 </section>
 
 <section id="s10"><h2><span class="n">10</span>Carved candidates</h2>
@@ -220,11 +220,11 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 {% for c in r.recovery.carved_top %}<tr><td>{{ badge('CARVED CANDIDATE') }}</td><td>{{ c.kind }}</td><td class="hash">{{ (c.matched or '')[:120] }}</td><td>{{ c.container }}</td><td>{{ badge(c.confidence) }}</td><td>{{ c.explanation|cell }}</td><td>{{ c.corroborated_by|length }}</td></tr>{% endfor %}
 </tbody></table></div>{{ trunc('carved') }}
 {% else %}<p class="note">No carved candidates in this evidence.</p>{% endif %}
-{% else %}<div class="na-box"><strong>NOT PERFORMED (Review 2).</strong> {{ r.recovery.messages.carved }}</div>{% endif %}
+{% else %}<div class="na-box"><strong>NOT PERFORMED.</strong> {{ r.recovery.messages.carved }}</div>{% endif %}
 </section>
 
 <section id="s11"><h2><span class="n">11</span>Timeline</h2>
-<p class="lead">Chronological (UTC). Artifact events carry their state; file events are filesystem metadata, not evidence of user activity. Recovered events will be visually distinct in Review 2.</p>
+<p class="lead">Chronological (UTC). Artifact events carry their state; file events are filesystem metadata, not evidence of user activity. Recovered events are marked as such when the recovery stages have run.</p>
 <input class="filter" placeholder="Filter timeline…" oninput="ftab(this,'t-tl')">
 <div class="scroll"><table id="t-tl"><thead><tr><th>Timestamp (UTC)</th><th>State</th><th>Type</th><th>Event</th><th>Source</th><th>Time basis</th><th>Conf.</th></tr></thead><tbody>
 {% for e in r.timeline[:r.html_row_cap] %}<tr><td class="mono nw">{{ e.ts_utc }}</td><td>{{ badge(e.status or 'FILE') }}</td><td>{{ e.artifact_type or 'file' }}</td><td>{{ e.event }}</td><td class="hash">{{ e.source }}</td><td class="hash">{{ e.time_basis|cell }}</td><td>{{ e.confidence|cell }}</td></tr>{% endfor %}
@@ -239,7 +239,7 @@ ul.tight{margin:6px 0 0;padding-left:20px}ul.tight li{margin:4px 0}
 {% for e in r.recovery.correlations_top %}<tr><td class="hash">{{ e.source }}</td><td>{{ e.relation }}</td><td class="hash">{{ e.target }}</td><td>{{ e.explanation }}</td></tr>{% endfor %}
 </tbody></table></div>{{ trunc('correlations') }}
 {% else %}<p class="note">No correlation edges in this evidence.</p>{% endif %}
-{% else %}<div class="na-box"><strong>NOT PERFORMED (Review 2).</strong> {{ r.recovery.messages.correlation }}</div>{% endif %}
+{% else %}<div class="na-box"><strong>NOT PERFORMED.</strong> {{ r.recovery.messages.correlation }}</div>{% endif %}
 </section>
 
 <section id="s13"><h2><span class="n">13</span>Validation results</h2>

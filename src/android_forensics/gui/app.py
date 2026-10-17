@@ -44,7 +44,7 @@ ROW_CAP = 20_000  # a table view with more rows than this is a report job, not a
 
 # tab title -> (query, column headers). Columns are plain text so any value from hostile evidence is shown, never interpreted.
 TABS: dict[str, tuple[str, list[str]]] = {
-    "Active data": (
+    "Artifacts": (
         "SELECT artifact_type, status, confidence, COALESCE(ts_utc,''), COALESCE(application,''), summary FROM artifacts "
         "WHERE artifact_type!='app_summary' ORDER BY ts_utc, id",
         ["Type", "Status", "Confidence", "Time (UTC)", "App", "Summary"]),
@@ -198,15 +198,17 @@ class CaseView(QWidget):
         det = f"<p>Examiner: {html.escape(clean(case['examiner']))} · created {html.escape(clean(case['created_at']))} · tool {html.escape(clean(case['tool_version']))}</p>" if case else ""
         parts = [
             det,
-            block("Active data by type", self._count(conn, "SELECT artifact_type, COUNT(*) FROM artifacts WHERE artifact_type!='app_summary' GROUP BY 1 ORDER BY 2 DESC")),
+            block("Artifacts by status", self._count(conn, "SELECT status, COUNT(*) FROM artifacts WHERE artifact_type!='app_summary' GROUP BY 1 ORDER BY 2 DESC")),
+            block("Artifacts by type (every status)", self._count(conn, "SELECT artifact_type, COUNT(*) FROM artifacts WHERE artifact_type!='app_summary' GROUP BY 1 ORDER BY 2 DESC")),
             block("Recovered deleted records", self._count(conn, "SELECT status, COUNT(*) FROM recovered_records GROUP BY 1 ORDER BY 2 DESC")),
             block("Carved candidates (unconfirmed)", self._count(conn, "SELECT kind, COUNT(*) FROM carved_candidates GROUP BY 1 ORDER BY 2 DESC")),
             block("Validation checks", self._count(conn, "SELECT status, COUNT(*) FROM validation_results GROUP BY 1 ORDER BY 2 DESC")),
         ]
         if not any(p for p in parts[1:]):
             parts.append("<p>No results in this case yet.</p>")
-        parts.append("<p style='color:gray'>Carved candidates are never confirmed evidence. Recovered PARTIAL/CORRUPTED records had bytes overwritten; "
-                     "see their confidence explanation in the report.</p>")
+        parts.append("<p style='color:gray'>Only artifacts with status ACTIVE were live in the database; every other status was reconstructed from "
+                     "deleted or superseded bytes. Carved candidates are never confirmed evidence. Recovered PARTIAL/CORRUPTED records had bytes "
+                     "overwritten; see their confidence explanation in the report.</p>")
         return "".join(parts)
 
 

@@ -1,6 +1,6 @@
 # Android Deleted Data Recovery and Evidence Reconstruction Framework
 
-**B.Tech Cyber Forensics Capstone — Review 1 (forensic foundation) + Review 2 (deleted-data recovery) + release 0.3 (deployable)**
+**Every finding traced to the bytes it came from, or not reported at all.**
 
 A Python forensic toolkit that takes an Android acquisition — a filesystem dump, ZIP/TAR archive, **raw / sparse disk image (ext4 and
 f2fs) or EnCase E01** — proves the integrity of the evidence, discovers and validates every SQLite database, extracts and normalises
@@ -8,14 +8,14 @@ f2fs) or EnCase E01** — proves the integrity of the evidence, discovers and va
 records** (freelist, unallocated space, WAL and rollback-journal analysis), **carves raw patterns** outside structured records,
 **correlates** evidence across sources, assigns every recovered or carved item a **deterministic, explainable confidence level**,
 validates the result, builds a unified timeline, and produces a provenance-rich, optionally **signed** forensic report (HTML, JSON,
-CSV, PDF). It runs as a CLI, a Docker image, a single-file binary, or an **authenticated multi-case web server** with sandboxed
-background analysis jobs.
+CSV, PDF). It runs as a **native desktop application**, a CLI, a Docker image, a single-file binary, or an **authenticated
+multi-case web server** with sandboxed background analysis jobs.
 
 > **Recovery is opt-in but on by default.** `analyze` runs the full pipeline — scan, extract, recover, carve, correlate,
-> reconstruct, validate, timeline — unless `--no-recover` is given, in which case it behaves exactly as Review 1 always
-> did. A recovered record is never presented as confirmed evidence without its physical location, its raw bytes and a
-> confidence level with the sentence that justifies it; a carved candidate's status is always the literal `CARVED CANDIDATE` and
-> its confidence can never be `HIGH`. See [docs/sqlite_recovery.md](docs/sqlite_recovery.md), [docs/carving.md](docs/carving.md)
+> reconstruct, validate, timeline — unless `--no-recover` is given, in which case it extracts active data only and makes
+> no claim, either way, about what was deleted. A recovered record is never presented as confirmed evidence without its
+> physical location, its raw bytes and a confidence level with the sentence that justifies it; a carved candidate's
+> status is always the literal `CARVED CANDIDATE` and its confidence can never be `HIGH`. See [docs/sqlite_recovery.md](docs/sqlite_recovery.md), [docs/carving.md](docs/carving.md)
 > and [docs/correlation.md](docs/correlation.md).
 
 > **Use only on evidence you are legally authorised to examine.** The tool does not bypass locks, decrypt data, harvest
@@ -26,7 +26,7 @@ background analysis jobs.
 PyInstaller single-file binary, CI (lint, types, security scan, dependency audit, 3-OS × 3-Python tests), an external
 append-only audit log, Ed25519-signed reports, hostile-input hardening verified by fuzzing and adversarial tests, an authenticated
 server with rate limits, strict CSP and sandboxed jobs, and measured performance. It is **not** a certified or accredited product:
-nobody outside the author has reviewed it, real-world validation is limited to the corpora listed in
+nobody outside the authors has reviewed it, real-world validation is limited to the corpora listed in
 [docs/validation.md](docs/validation.md), and the standards mapping in [docs/standards_alignment.md](docs/standards_alignment.md)
 is a self-assessment. Read [Limitations](#limitations) before relying on it in casework.
 
@@ -39,6 +39,7 @@ is a self-assessment. Read [Limitations](#limitations) before relying on it in c
 | **Evidence ingestion** | A reusable, database-independent library ([docs/evidence_ingestion.md](docs/evidence_ingestion.md)): directory, `.zip`, `.tar` / `.tar.gz` / `.tar.bz2` / `.tar.xz` or a single SQLite file; SHA-256 (anchor) + SHA-1 + MD5 in one read-only pass; size and timestamps with their basis; `evidence_manifest.json` with a `.sha256` and a standalone `verify_manifest`; originals opened read-only and never written; change-during-read detection; write-protected (0444) working copies; hash-chained chain-of-custody log |
 | **Disk images** | Raw / Android-sparse / **E01 (multi-segment)** images, GPT and MBR; read-only **ext2/3/4 and f2fs** parsers written for hostile input (bounds-checked, cycle-guarded; f2fs applies the checkpoint's NAT journal and cross-checks every node); encrypted directories are *reported*, never decrypted ([docs/disk_images.md](docs/disk_images.md)) |
 | **Chain of custody & signing** | In-database hash chain **plus** an external append-only audit log (who, host, command, outcome, evidence hash) whose head goes into the report; Ed25519-signed reports with offline `verify-report`; exact build/dependency/plugin stamp in every report ([docs/standards_alignment.md](docs/standards_alignment.md)) |
+| **Desktop app** | A native Qt window ([Desktop app](#desktop-app)): case library, drag-and-drop analysis with live progress, and sortable, filterable tables for artifacts (with each one's status), recovered records, carved candidates, timeline, validation and custody. It runs the CLI's own `analyze` in a child process and opens the finished case read-only, so there is no second analysis path |
 | **Web server** | Token-authenticated roles (viewer / analyst / admin), multi-case registry, streamed hash-while-uploading evidence, **resource-limited child-process jobs**, rate limiting + lockout, strict CSP, server audit log, browser UI ([docs/deployment.md](docs/deployment.md)) |
 | **Parsers** | SMS, call log, contacts, Chromium history/downloads, and **Google Messages** (`bugle_db`, the default messaging app on Pixels; direction rule checked against a real image's author-supplied list); anything else via [plugins](docs/plugins.md) |
 | **Plugins, config, logging** | Parser plugins (`--plugin`, entry points) with SHA-256 attribution in the report ([docs/plugins.md](docs/plugins.md)); TOML config for examiner details; structured JSON logs; court-oriented case details and certification block |
@@ -50,25 +51,27 @@ is a self-assessment. Read [Limitations](#limitations) before relying on it in c
 | **Correlation** | An in-memory evidence graph ([docs/correlation.md](docs/correlation.md)) links a phone number across SMS/calls/contacts, and corroborates a recovered record or carved candidate only with an artifact of another kind in another database |
 | **Confidence scoring** | A fixed, explainable, deterministic calculation (`confidence/scorer.py`) — schema match, structural validity, provenance, corroboration, completeness, timestamp plausibility — never a model; every non-active artifact carries its level and the sentence that justifies it |
 | **Normalisation** | UTC timestamps from *declared* formats with raw value and plausibility retained; conservative phone-matching key; `UNKNOWN` distinct from SQL `NULL` |
-| **Validation** | 15 automated checks (incl. recovery/carving integrity), four outcomes (`VALID` / `PARTIAL` / `INVALID` / `UNVERIFIED`), failures kept and explained |
+| **Validation** | Ten checks emitting 14 kinds of result (incl. recovery/carving integrity), four outcomes (`VALID` / `PARTIAL` / `INVALID` / `UNVERIFIED`), failures kept and explained |
 | **Timeline** | Artifact events (active and recovered) + file-system times, sortable, status-tagged |
 | **Reporting** | Self-contained HTML (16 sections), JSON, CSV and PDF ([docs/reporting.md](docs/reporting.md)); every section shows real recovery/carving/correlation content when those stages ran, or an explicit `NOT PERFORMED` box when they did not — never both |
 | **Dashboard** | A read-only FastAPI REST API + static frontend ([docs/dashboard.md](docs/dashboard.md)) over one case's results; `android-forensics dashboard CASE` (the web server reuses the same router per case) |
 | **Typed data models** | Immutable, validated pydantic models — see [docs/data_models.md](docs/data_models.md) — for every artifact status (`ACTIVE`, `RECOVERED`, `PARTIAL`, `CORRUPTED`, `CARVED CANDIDATE`, `INVALID`), `RecoveredRecord`, `CarvedCandidate`, `CorrelationEdge` and `ConfidenceAssessment` |
-| **Test laboratory** | Deterministic synthetic Android evidence generator with ground truth, now including genuine deletions and physically-derived recovery expectations ([docs/synthetic_lab.md](docs/synthetic_lab.md)); 1,644 automated tests (unit, integration, fuzz, hostile-evidence, sandbox, browser end-to-end); reproducible experiments |
+| **Test laboratory** | Deterministic synthetic Android evidence generator with ground truth, now including genuine deletions and physically-derived recovery expectations ([docs/synthetic_lab.md](docs/synthetic_lab.md)); 1,669 automated tests (unit, integration, fuzz, hostile-evidence, sandbox, desktop-app, browser end-to-end); reproducible experiments |
 
 ## Architecture
 
 ```
-            ┌───────────────────────────── cli (Typer + Rich) ─────────────────────────────┐
-            │  init-case · ingest · hash · discover · inspect · scan · analyze · recover   │
-            │  artifacts · validate · timeline · report · dashboard · info · synth         │
+            ┌── front ends: desktop app (Qt) · cli (Typer + Rich) · web server (FastAPI) ──┐
+            │  cli ▸ init-case · ingest · hash · discover · inspect · scan · analyze       │
+            │        recover · artifacts · validate · timeline · report · dashboard · info │
+            │        synth · keygen · verify-report · audit-verify · case-details · plugins│
+            │        serve · server-token   (authenticated multi-case server)              │
             └────────────────────────────────────┬─────────────────────────────────────────┘
                                                    ▼
         pipeline (stage registry): scan → extract → [recover → carve → correlate → reconstruct] → validate → timeline
    ┌────────────┬────────────┬───────────┬──────────┬──────────┬─────────────┬────────────┬────────────┬────────────┐
    │acquisition │ filesystem │  sqlite   │artifacts │ carving  │ correlation │ confidence │ validation │  timeline  │
-   │ dir/zip/tar│ classifier │ header    │ schema   │ patterns │ evidence    │ deterministic│ 15 checks │ merged     │
+   │ dir/zip/tar│ classifier │ header    │ schema   │ patterns │ evidence    │ deterministic│ 10 checks │ merged     │
    │ hash·manif.│ android    │ sidecars  │ probe +  │ + free-  │ graph       │ scorer     │            │ events     │
    │ safety     │ path·layout│ pages ·   │ parsers ·│ space    │             │            │            │            │
    │            │            │ recovery  │ recovered│ scan     │             │            │            │            │
@@ -76,14 +79,15 @@ is a self-assessment. Read [Limitations](#limitations) before relying on it in c
               models (pydantic) · storage (case.db, migrations, custody log) · reporting (HTML/JSON/CSV/PDF) · dashboard (FastAPI)
 ```
 
-`analyze` runs the full pipeline by default; `--no-recover` restores exactly Review 1's four stages
-(`scan → extract → validate → timeline`), and every existing Review 1 result is unchanged either way. Full description,
-storage schema and how each Review 2 module plugs into the Review 1 seams: [docs/architecture.md](docs/architecture.md)
-and [docs/pipeline_stages.md](docs/pipeline_stages.md).
+`analyze` runs the full pipeline by default; `--no-recover` leaves the four extraction stages
+(`scan → extract → validate → timeline`), and extraction produces the same results either way — the recovery stages only
+add to a case, they never rewrite what extraction found. Full description, storage schema and how the stages fit
+together: [docs/architecture.md](docs/architecture.md) and [docs/pipeline_stages.md](docs/pipeline_stages.md).
 
 ## Installation
 
-**Desktop app (macOS).** `packaging/macos/build_app.sh` builds `~/Desktop/Android Forensics.app`: a native window (Qt, via `pip install -e ".[gui]"`) with a case library on the left, drag-and-drop or "Choose folder/file" to start an analysis with live progress, and tabs for the overview, active data, recovered (deleted) records, carved candidates, timeline, validation and chain of custody, each sortable and filterable. No Terminal and no browser. It runs the same `analyze` pipeline as the CLI in a child process and reads the finished case read-only, and cases are stored in `~/Documents/AndroidForensicsCases/`. The app launches from this checkout's `.venv`, so rebuild it if you move the repository. On non-macOS systems run `android-forensics-gui`. The menu bar shows "Python" because the app runs as a Python process; a frozen standalone build would show its own name.
+Everything below installs the Python package and its CLI; for the window-and-mouse front end see
+[Desktop app](#desktop-app).
 
 Requires Python 3.11+ (CI runs the suite on Linux, macOS and Windows with 3.11–3.13; Windows lacks the server's job sandbox). No cloud services.
 
@@ -105,7 +109,8 @@ docker run --rm --network none --read-only --tmpfs /tmp -v "$PWD/evidence:/evide
 pip install ".[binary]" && python packaging/build_binary.py && ./dist/android-forensics --version
 ```
 
-Optional extras: `.[docs]` (MkDocs), `.[e2e]` (Playwright browser tests), `.[binary]` (PyInstaller).
+Optional extras: `.[gui]` (the desktop app's Qt dependency), `.[docs]` (MkDocs), `.[e2e]` (Playwright browser tests),
+`.[binary]` (PyInstaller).
 
 ## Quick start (synthetic evidence)
 
@@ -116,6 +121,31 @@ android-forensics analyze synthetic_evidence/android_dump --name demo
 android-forensics dashboard demo                       # → http://127.0.0.1:8765/
 ```
 
+## Desktop app
+
+A native window — no Terminal, no browser — for examiners who do not work from a shell. On macOS,
+`packaging/macos/build_app.sh` builds `~/Desktop/Android Forensics.app` (installing the Qt dependency into this
+checkout's `.venv` if it is missing); elsewhere, `pip install -e ".[gui]"` and run `android-forensics-gui`.
+
+* A **case library** down the left side: every case under `~/Documents/AndroidForensicsCases/`, most recently updated first.
+* **Drag an evidence folder, archive or disk image onto the window** — or use *Choose folder…* / *Choose file…* — and
+  the analysis starts, with a progress bar and the pipeline's own log. Choose a folder that is already a case and it
+  opens instead of being analysed again; choose the case library itself and the app says what that folder is rather
+  than treating your finished cases as fresh evidence.
+* **Tabs** for the overview and for the artifacts — each carrying its own status, `ACTIVE` or recovered — the
+  recovered records themselves, carved candidates, the timeline, validation and the chain of custody; each sortable,
+  each with a filter box, each showing its row count and capped at
+  20,000 rows (past that, the report is the right tool). *Open report folder* and *Show case in Finder* are one click.
+* Values from evidence are shown as **plain text, never interpreted**, and the overview repeats in plain words that a
+  carved candidate is not confirmed evidence and that a `PARTIAL` record had bytes overwritten.
+* It adds **no second analysis path**: it runs the same `android-forensics analyze` in a child process, then opens the
+  finished `case.db` read-only. What it shows is what the CLI produced.
+
+Rough edges worth knowing: the bundle runs from the `.venv` of the checkout it was built from, so rebuild it if you move
+the repository; the macOS menu bar reads "Python" because the app is a Python process (a frozen build would carry its
+own name); and the GUI sits outside the CI coverage gate — `tests/integration/test_gui.py` covers it whenever PySide6
+is installed, and skips when it is not.
+
 ## CLI usage
 
 ```bash
@@ -124,8 +154,8 @@ android-forensics ingest    case001 ./evidence            # dir | .zip | .tar | 
 android-forensics scan      case001                        # filesystem analysis + SQLite discovery
 android-forensics analyze   case001 --workers auto        # use several cores for recovery/carving; identical results
 android-forensics analyze   case001                        # scan → extract → recover → carve → correlate → reconstruct → validate → timeline → report
-android-forensics analyze   case001 --no-recover            # exactly the Review 1 pipeline
-android-forensics recover   case001                         # just the four Review 2 stages, on a case already scanned+extracted
+android-forensics analyze   case001 --no-recover            # active data only: scan → extract → validate → timeline
+android-forensics recover   case001                         # just the four recovery stages, on a case already scanned+extracted
 android-forensics artifacts case001 --type sms --status RECOVERED
 android-forensics artifacts case001 --show 42               # full provenance for one artifact
 android-forensics validate  case001 --all
@@ -159,7 +189,7 @@ Example output of `analyze` on the committed synthetic dataset (`synthetic_evide
 
 ```
 Files discovered: 16      SQLite databases: 8 (6 readable, 1 encrypted suspect, 1 unreadable)
-Artifacts (ACTIVE): 346   (SMS 108 · calls 60 · contacts 30 · browser visits 137 · downloads 4 · app summaries 6 …)
+Artifacts (ACTIVE): 346   (SMS 108 · calls 60 · contacts 30 · browser visits 138 · downloads 4 · app summaries 6 …)
 Deleted-data recovery
   Deleted/superseded records found: 8,244   reconstructed → RECOVERED: 8,218   → PARTIAL: 26
   Corroborated by another source: 10        Unrecoverable regions (proven): 4       Carved candidates: 177
@@ -173,11 +203,17 @@ them in their own category, separate from active data. [docs/FINAL_SUMMARY.md](d
 
 ## Screenshots
 
-The web UI (`android-forensics serve`) on that dataset — [more in docs/images/](docs/images/):
+The desktop app on that dataset: the case library, and an overview that names every status for what it is.
+
+![the desktop app showing a finished case](docs/images/desktop.png)
+
+The web UI (`android-forensics serve`) on the same case — [more in docs/images/](docs/images/):
 
 | Cases | Recovery | Validation |
 |---|---|---|
 | ![cases](docs/images/cases.png) | ![recovery](docs/images/recovery.png) | ![validation](docs/images/validation.png) |
+
+Both are captured from the running interfaces, not drawn: `python scripts/make_screenshots.py [web|desktop]` regenerates them.
 
 ## Ingestion as a library
 
@@ -250,35 +286,36 @@ match their digest; a carved row is still, in the database, exactly `CARVED CAND
 ## Testing
 
 ```bash
-pytest                                          # 1,664 tests (2 platform-dependent skips); `--ignore=tests/e2e` without Playwright
+pytest                                          # 1,669 tests (2 platform-dependent skips; the 5 desktop-app tests
+                                                #   skip without the `gui` extra); `--ignore=tests/e2e` without Playwright
 HYPOTHESIS_PROFILE=ci pytest tests/security     # a longer fuzzing campaign (soak = 5,000 examples per property)
 coverage run -m pytest && coverage report       # 94.1% line coverage of src/android_forensics (docs/coverage.txt)
 scripts/test_linux_matrix.sh                    # the suite in Linux containers on Python 3.11 / 3.12 / 3.13 (needs Docker)
 python experiments/b1_scaling.py                # scaling + peak memory → docs/performance.md
 python experiments/v2_cross_tool.py             # recovery vs other tools on the deletion matrix → docs/validation.md
 python experiments/v1_real_corpus.py FILE --name android9   # a real public acquisition (see docs/validation.md)
-python experiments/r1_extraction_accuracy.py    # Review 1: measured accuracy + scaling → experiments/results/
-python experiments/r1_inspection.py             # Review 1: inspector throughput/memory + fidelity fuzz
-python experiments/r2_recovery.py               # Review 2: recovery matrix + confidence calibration + timing
+python experiments/r1_extraction_accuracy.py    # extraction accuracy + scaling → experiments/results/
+python experiments/r1_inspection.py             # inspector throughput/memory + fidelity fuzz
+python experiments/r2_recovery.py               # recovery matrix + confidence calibration + timing
 python experiments/r2_charts.py                 # → experiments/results/*.png
 ```
 
-The suite also fuzzes every parser (property-based, found a real DDL-parser crash), mutates ext4/f2fs/E01/sparse images, feeds archive bombs, injection, control-character and XSS payloads, tests the job sandbox's CPU / memory / file-size / wall-clock limits, and drives the real web UI in headless Chromium.
+The suite also fuzzes every parser (property-based, found a real DDL-parser crash), mutates ext4/f2fs/E01/sparse images, feeds archive bombs, injection, control-character and XSS payloads, tests the job sandbox's CPU / memory / file-size / wall-clock limits, and drives the real web UI in headless Chromium and the desktop window off-screen.
 
 The suite covers hashing, archive attacks, filesystem discovery, SQLite header/sidecar/reader behaviour, pure-row
 parsers, ground-truth extraction accuracy, the page-level recovery engine (untouched cells, freeblocks, WAL, journals,
 the 28-condition deletion matrix), raw carving (a planted-string fixture, SQLite free-space carving with exclusions),
 the correlation graph, the confidence scorer, storage round-trips, the four recovery pipeline stages, the FastAPI
 dashboard, the report in every format with and without recovery having run, the full synthetic lab end to end, tamper
-detection, idempotence, injection defences and the CLI.
+detection, idempotence, injection defences, the desktop app's read-only views and the CLI.
 
 ## Evaluation
 
-**Review 1** (15 synthetic datasets, 5 seeds × 3 sizes, scored field-by-field against independently-computed ground
-truth): 9,210/9,210 active records extracted and correct — precision = recall = F1 = 1.000. Scaling: 1k→250k SMS rows at
+**Active extraction** (15 synthetic datasets, 5 seeds × 3 sizes, scored field-by-field against independently-computed
+ground truth): 9,210/9,210 active records extracted and correct — precision = recall = F1 = 1.000. Scaling: 1k→250k SMS rows at
 ≈16–17.5k rows/s, ≈6 MiB flat peak memory. Ingestion: ≈230–380 MiB/s hashing 301 MiB.
 
-**Review 2** (28-condition deletion matrix + the full synthetic lab, three seeds): **507/511 (99.22%) recall, 0 false
+**Deleted-record recovery** (28-condition deletion matrix + the full synthetic lab, three seeds): **507/511 (99.22%) recall, 0 false
 positives** recovering deleted records; three documented layout limits account for every miss. Confidence calibration on
 this run: 29 HIGH and 64 MEDIUM recovered artifacts, both **100%** matching the real deleted values. Recovery is the
 dominant cost (≈41s of a ≈60s full-pipeline run on the synthetic lab; ≈147 MB peak memory) because it scans every page
@@ -315,7 +352,7 @@ confirmed evidence; confidence calibration was measured on a small synthetic sam
 
 ```
 .
-├── README.md · LICENSE · pyproject.toml · requirements.txt
+├── README.md · CHANGELOG.md · CONTRIBUTING.md · SECURITY.md · LICENSE · pyproject.toml · requirements.txt
 ├── src/android_forensics/
 │   ├── acquisition/   hashing, safety, dir/zip/tar/single-file acquirers, IngestionSession, manifest (+ verify), ingest
 │   │   └── image/     sources (raw/sparse/E01), partitions (GPT/MBR), ext4, f2fs, acquirer
@@ -335,6 +372,7 @@ confirmed evidence; confidence calibration was measured on a small synthetic sam
 │   ├── timeline/      builder
 │   ├── reporting/     model, generate, text, pdf, templates/report.html.j2
 │   ├── dashboard/      FastAPI app (api.py), security headers, web/ (index.html, app.js, style.css)
+│   ├── gui/           desktop app (Qt): case library, drag-and-drop analysis, read-only result tables
 │   ├── storage/       schema (migrations), case_store, artifact_writer, recovery_store
 │   ├── pipeline/      stage registry + runner, recovery_stages (recover/carve/correlate/reconstruct)
 │   ├── models/        types, enums, provenance, case, evidence, artifacts, recovery (RecoveredRecord/CarvedCandidate/
@@ -343,16 +381,30 @@ confirmed evidence; confidence calibration was measured on a small synthetic sam
 │   │                  matrix scorer · hot-journal builder
 │   └── cli/           Typer app + Rich helpers
 ├── tests/             unit/ · integration/ · security/ (fuzz, hostile evidence, sandbox) · e2e/ (browser) · fixtures/ · tools/
-├── deploy/            docker-compose + Caddy/nginx/systemd · packaging/ (PyInstaller) · examples/plugins/
+├── deploy/            docker-compose · Caddyfile · nginx.conf · systemd unit · .env.example
+├── packaging/         build_binary.py (PyInstaller) · macos/ (app bundle builder + icon)
+├── examples/          plugins/ (a working parser plugin, and one that crashes on purpose)
+├── scripts/           test_linux_matrix.sh (the suite in Linux containers) · make_screenshots.py
 ├── synthetic_evidence/  generated dataset (dir, .zip, .tar.gz, ground_truth.json — with genuine deletions)
 ├── experiments/       r1_*.py, r2_*.py · results/ (CSV, JSON, PNG charts)
-├── reports/           acceptance/ (Phase 17 end-to-end run on synthetic_evidence/, full pipeline, every format)
+├── reports/           acceptance/ (end-to-end run on synthetic_evidence/, full pipeline, every format)
 └── docs/              architecture · evidence_ingestion · filesystem_discovery · sqlite_inspection · sqlite_recovery ·
-                       carving · correlation · dashboard · reporting · pipeline_stages · synthetic_lab · data_models ·
-                       forensic_methodology · artifact_formats · evaluation · limitations · decisions · coverage.txt ·
-                       user_guide · disk_images · plugins · deployment · performance · validation · standards_alignment
-                       (browse with `mkdocs serve`)
+                       carving · correlation · dashboard · dashboard_walkthrough · reporting · pipeline_stages ·
+                       synthetic_lab · data_models · forensic_methodology · artifact_formats · evaluation · limitations ·
+                       decisions · coverage.txt · user_guide · disk_images · plugins · deployment · releasing ·
+                       performance · validation · standards_alignment · FINAL_SUMMARY · images/
+                       (browse the Markdown as a site with `mkdocs serve`)
 ```
+
+## Where to read next
+
+| If you want | Read |
+|---|---|
+| To use it as an examiner | [docs/user_guide.md](docs/user_guide.md), then [docs/limitations.md](docs/limitations.md) |
+| To know how it works | [docs/architecture.md](docs/architecture.md) · [docs/pipeline_stages.md](docs/pipeline_stages.md) · [docs/forensic_methodology.md](docs/forensic_methodology.md) |
+| To decide whether to trust it | [docs/validation.md](docs/validation.md) · [docs/evaluation.md](docs/evaluation.md) · [docs/standards_alignment.md](docs/standards_alignment.md) (a self-assessment) · [SECURITY.md](SECURITY.md) (threat model and the control for each concern) · [docs/FINAL_SUMMARY.md](docs/FINAL_SUMMARY.md) (one end-to-end run, start to finish) |
+| To know why something is built the way it is | [docs/decisions.md](docs/decisions.md) — 46 numbered decisions (D-001…D-046), each with its reasoning |
+| What changed, and how to contribute or release | [CHANGELOG.md](CHANGELOG.md) · [CONTRIBUTING.md](CONTRIBUTING.md) · [docs/releasing.md](docs/releasing.md) |
 
 ## Legal and ethical considerations
 

@@ -5,6 +5,27 @@ the format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- The test suite segfaulted at interpreter shutdown (PySide6/Shiboken, exit code 139 *after* every test had passed) whenever the
+  desktop-app tests ran before another test module, which is the default collection order. The windows those tests build were left
+  for Python's garbage collector to free at an arbitrary later moment; they are now destroyed while the application is still alive.
+
+### Changed
+- The desktop app's first tab listed *every* artifact — 8,584 of them on the synthetic lab — under the heading "Active data", when only
+  340 of those were active and the other 8,244 had been recovered from deleted or superseded bytes. The tab is now "Artifacts", the
+  overview leads with a breakdown by status, and a footnote says plainly which statuses were never live in the database.
+- `scripts/make_screenshots.py` also captures the desktop window (off-screen, from the real widgets): `… desktop`, `… web`, or both.
+
+### Documentation
+- README: the desktop app is described in its own section instead of a paragraph under *Installation*, and is listed among the ways
+  the toolkit runs; the architecture diagram shows all three front ends and the commands 0.3 added; `gui/`, `packaging/macos/`,
+  `scripts/` and the root documents appear in the project tree; a *Where to read next* table points at the changelog, the threat
+  model and the design decisions. Corrected: the number of validation checks (ten, emitting 14 kinds of result — not 15),
+  the browser-visit count in the sample `analyze` output (138), and the test and coverage figures.
+- The review-stage framing ("Review 1", "Review 2", "Phase 17") is gone from the README and from everything the tool prints: the
+  `analyze` panels, `--help` text, and the report banners, which now name what ran — *Full pipeline* or *Extraction only* — rather
+  than which review it belonged to. `docs/`, the two PDFs and the committed acceptance report still use the old wording.
+
 ## [0.3.0] — deployable release
 
 0.2.0 was never published; everything since 0.1.0 is described here.

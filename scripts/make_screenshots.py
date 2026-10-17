@@ -1,11 +1,15 @@
-"""Regenerate docs/images/*.png from the real UI running against the synthetic lab (needs: pip install ".[e2e]" && playwright install chromium).
+"""Regenerate docs/images/*.png from the real interfaces running against the synthetic lab.
 
-    python scripts/make_screenshots.py
+    python scripts/make_screenshots.py            # web UI and desktop app
+    python scripts/make_screenshots.py web        # only the web UI  (needs: pip install ".[e2e]" && playwright install chromium)
+    python scripts/make_screenshots.py desktop    # only the desktop app  (needs: pip install ".[gui]")
 """
 
 from __future__ import annotations
 
+import os
 import shutil
+import sys
 import tempfile
 import threading
 import time
@@ -25,7 +29,29 @@ from android_forensics.storage.case_store import CaseStore
 OUT = Path(__file__).resolve().parents[1] / "docs" / "images"
 
 
+def desktop_shot(cases_dir: Path) -> None:
+    """Grab the desktop window off-screen, so the picture comes from the real widgets rather than a mock-up."""
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication
+
+    from android_forensics.gui import app as gui
+
+    gui.CASES_DIR = cases_dir
+    qapp = QApplication.instance() or QApplication([])
+    window = gui.MainWindow()
+    window.resize(1440, 900)
+    window.refresh()
+    window.library.setCurrentRow(0)
+    window._selected(window.library.currentItem())
+    qapp.processEvents()
+    window.grab().save(str(OUT / "desktop.png"))
+    window.close()                 # destroyed here, while the application is still alive
+    window.deleteLater()
+    qapp.processEvents()
+
+
 def main() -> None:
+    wanted = set(sys.argv[1:]) or {"web", "desktop"}
     OUT.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)
@@ -44,6 +70,11 @@ def main() -> None:
         run_pipeline(store, names=list(FULL_PIPELINE_NAMES))
         store.close()
         db.add_case("demo-case", "demo-case", "Synthetic Android lab", "Dr. Jane Doe", "examiner")
+        if "desktop" in wanted:
+            desktop_shot(settings.cases_dir)
+        if "web" not in wanted:
+            print("wrote", OUT / "desktop.png")
+            return
         server = uvicorn.Server(uvicorn.Config(create_server_app(settings), host="127.0.0.1", port=0, log_level="error"))
         threading.Thread(target=server.run, daemon=True).start()
         while not server.started:

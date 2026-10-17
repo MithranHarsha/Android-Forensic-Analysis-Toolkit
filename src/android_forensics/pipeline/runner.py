@@ -114,7 +114,7 @@ BY_NAME = {s.name: s for s in ALL_STAGES}
 # includes ``recover``/``carve``/``correlate``/``reconstruct`` unless ``--no-recover`` is given). This is what keeps every
 # Review 1 result unchanged when nothing asks for recovery (D-007).
 PIPELINE: list[Stage] = [s for s in ALL_STAGES if s.name in ("scan", "extract", "validate", "timeline")]
-REVIEW2_STAGE_NAMES: tuple[str, ...] = ("recover", "carve", "correlate", "reconstruct")
+RECOVERY_STAGE_NAMES: tuple[str, ...] = ("recover", "carve", "correlate", "reconstruct")
 FULL_PIPELINE_NAMES: tuple[str, ...] = ("scan", "extract", "recover", "carve", "correlate", "reconstruct", "validate", "timeline")
 
 

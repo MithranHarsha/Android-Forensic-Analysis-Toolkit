@@ -1,4 +1,4 @@
-"""android-forensics command line interface (Review 1: acquisition → active artifacts → report)."""
+"""android-forensics command line interface: acquisition → active artifacts → recovery → report."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from android_forensics.acquisition.ingest import ingest_source
 from android_forensics.cli.console import RichProgress, SafeTable, console, err_console, escape, plain_panel, stats_panel, styled
 from android_forensics.errors import CaseError, ForensicsError
 from android_forensics.fmt import fmt_bytes
-from android_forensics.pipeline.runner import FULL_PIPELINE_NAMES, REVIEW2_STAGE_NAMES, StageOptions, run_pipeline, run_stage
+from android_forensics.pipeline.runner import FULL_PIPELINE_NAMES, RECOVERY_STAGE_NAMES, StageOptions, run_pipeline, run_stage
 from android_forensics.storage.case_store import CaseStore
 
 app = typer.Typer(
@@ -342,7 +342,7 @@ def inspect_cmd(
 ) -> None:
     """Inspect one SQLite database: header, version, sidecars, tables, columns, keys, indexes and the active records.
 
-    Normal inspection only — the rows SQLite itself returns. Deleted rows are absent; recovering them is Review 2. The
+    Normal inspection only — the rows SQLite itself returns. Deleted rows are absent; `recover` is what reads them off the pages. The
     database is only ever read (a private scratch copy is what SQLite opens), so the evidence file is never modified."""
     from android_forensics.sqlite.inspector import InspectionOptions, SQLiteInspector
 
@@ -448,7 +448,7 @@ def _print_inspection(r, show_rows: bool) -> None:
         console.print(Text.assemble(("• ", "yellow"), f"{issue.kind}" + (f" [{issue.table}]" if issue.table else "") + f": {issue.detail}"))
     for note in r.notes + e.notes:
         console.print(Text(f"  {note}", style="dim"))
-    console.print(Text("Normal inspection only: rows deleted from this database are absent. Deleted-data recovery is Review 2.", style="dim"))
+    console.print(Text("Normal inspection only: rows deleted from this database are absent. Use `recover` to read them off the pages.", style="dim"))
 
 
 def styled_sqlite(status: str) -> Text:
@@ -487,7 +487,7 @@ def _print_scan(store: CaseStore, s: dict) -> None:
 def _print_recovery(rec: dict, carve: dict, correlate: dict, reconstruct: dict) -> None:
     recovered = sum(v for k, v in rec.items() if k.startswith("recovered_"))
     reconstructed = {k[len("reconstructed_"):]: v for k, v in reconstruct.items() if k.startswith("reconstructed_")}
-    console.print(stats_panel("Deleted-data recovery (Review 2)", [
+    console.print(stats_panel("Deleted-data recovery", [
         ("Deleted/superseded records found", recovered),
         ("  reconstructed → RECOVERED", reconstructed.get("recovered", 0)),
         ("  reconstructed → PARTIAL", reconstructed.get("partial", 0)),
@@ -512,7 +512,7 @@ def analyze(
     name: Annotated[str | None, typer.Option(help="Case name when TARGET is a path.")] = None,
     timeline_files: Annotated[str, typer.Option("--timeline-files", help="File-time events in the timeline: key | all | none.")] = "key",
     no_rehash: Annotated[bool, typer.Option("--no-rehash", help="Skip re-hashing originals during validation (faster, less assurance).")] = False,
-    recover: Annotated[bool, typer.Option("--recover/--no-recover", help="Recover deleted/superseded records and carve raw bytes (Review 2). On by default.")] = True,
+    recover: Annotated[bool, typer.Option("--recover/--no-recover", help="Recover deleted/superseded records and carve raw bytes. On by default.")] = True,
     report: Annotated[bool, typer.Option("--report/--no-report", help="Generate the report at the end.")] = True,
     mount_point: Annotated[str | None, typer.Option("--mount-point", help="For disk images: the Android path the image is mounted at (e.g. 'data'). Default: detected.")] = None,
     workers: Workers = "1",
@@ -535,7 +535,7 @@ def analyze(
         console.print(f"[green]✓[/] ingested {r.files:,} files ({fmt_bytes(r.total_bytes)}), manifest SHA-256 {r.manifest_sha256[:16]}…")
 
     opts = _options(no_rehash, timeline_files, workers)
-    names = list(FULL_PIPELINE_NAMES) if recover else [n for n in FULL_PIPELINE_NAMES if n not in REVIEW2_STAGE_NAMES]
+    names = list(FULL_PIPELINE_NAMES) if recover else [n for n in FULL_PIPELINE_NAMES if n not in RECOVERY_STAGE_NAMES]
     results = run_pipeline(store, names=names, options=opts, on_stage=lambda n, s: console.print(f"[green]✓[/] {n:<11} {s['seconds']}s"))
     _print_scan(store, results["scan"])
     ex, va, tl = results["extract"], results["validate"], results["timeline"]
@@ -606,7 +606,7 @@ def _show_artifact(store: CaseStore, aid: int) -> None:
     ev = store.get_file(prov.evidence_file_id)
     ts = art.timestamp
     wal = {True: "yes", False: "no", None: "n/a"}[prov.view_includes_wal]
-    where = "not recorded (active row read through SQLite; page-level provenance is Review 2)"
+    where = "not recorded (active row read through SQLite; page-level provenance belongs to recovered records)"
     if prov.physical:
         ph = prov.physical
         where = f"page {ph.page_number}, cell {ph.cell_index}, byte offset {ph.byte_offset} ({ph.region or ph.page_type or 'unspecified'})"
@@ -616,7 +616,7 @@ def _show_artifact(store: CaseStore, aid: int) -> None:
     for k, v in [
         ("Artifact", f"#{aid} {art.artifact_type.value} ({type(art).__name__})"), ("Status", styled(art.status.value)),
         ("Extraction method", art.extraction_method.value),
-        ("Confidence", art.confidence.value if art.confidence else "n/a (Review 2 scores recovered data)"),
+        ("Confidence", art.confidence.value if art.confidence else "n/a (confidence is scored for recovered data)"),
         ("Source file", prov.source_file), ("Source database", prov.source_database or "-"),
         ("Source table / rowid", f"{prov.source_table or '-'} / {prov.source_rowid if prov.source_rowid is not None else '-'}"),
         ("Android path", ev.logical_path or "-"), ("Application", art.application or "-"),
@@ -639,7 +639,7 @@ def recover(
     cases_dir: CasesDir = Path("cases"),
     workers: Workers = "1",
 ) -> None:
-    """Recover deleted/superseded SQLite records, carve raw bytes, correlate and score (Review 2).
+    """Recover deleted/superseded SQLite records, carve raw bytes, correlate and score.
 
     Requires 'scan' and 'extract' to have already run (android-forensics analyze --no-recover, or analyze/scan/... in
     sequence). Re-running this recovers the same evidence again: recovery is deterministic."""
@@ -649,7 +649,7 @@ def recover(
             raise CaseError(f"Run '{TOOL_NAME} analyze --no-recover {case}' (or 'scan'/'extract') first — no completed '{stage}' stage")
     opts = StageOptions(progress=RichProgress(), workers=_workers(workers))
     results = {}
-    for name in REVIEW2_STAGE_NAMES:
+    for name in RECOVERY_STAGE_NAMES:
         results[name] = run_stage(store, name, opts)
         console.print(f"[green]✓[/] {name:<11} {results[name]['seconds']}s")
     _print_recovery(results["recover"], results["carve"], results["correlate"], results["reconstruct"])
@@ -841,7 +841,7 @@ def info(
 def synth(
     out: Annotated[Path, typer.Argument(help="Output directory for the synthetic acquisition.")] = Path("synthetic_evidence"),
     seed: int = 1337,
-    with_deletions: Annotated[bool, typer.Option("--with-deletions/--no-deletions", help="Genuinely delete rows from mmssms.db and History, with physical ground truth (Review 2).")] = True,
+    with_deletions: Annotated[bool, typer.Option("--with-deletions/--no-deletions", help="Genuinely delete rows from mmssms.db and History, with physical ground truth.")] = True,
 ) -> None:
     """Generate the deterministic synthetic Android evidence set (with ground truth) used for testing."""
     from android_forensics.lab.synth import SynthSpec, generate

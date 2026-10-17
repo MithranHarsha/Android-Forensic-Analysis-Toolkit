@@ -3,7 +3,8 @@
 A Python toolkit that takes an Android acquisition — a filesystem dump, ZIP/TAR archive, raw/sparse disk image (ext4 or f2fs) or
 EnCase E01 — proves the integrity of the evidence, extracts active artifacts, **recovers deleted SQLite records**, carves raw
 patterns, correlates evidence, scores every recovered item with an *explained* confidence, and produces a signed, provenance-rich
-report. It ships as a CLI, a Docker image, a single-file binary and an authenticated multi-case web server.
+report. It ships as a native desktop application, a CLI, a Docker image, a single-file binary and an authenticated
+multi-case web server.
 
 * New here? Start with the [Examiner's guide](user_guide.md).
 * Putting it on a server? [Deploying the server](deployment.md).

@@ -10,13 +10,13 @@ DISCLAIMER = (
     "evidence you are legally authorised to examine."
 )
 
-REVIEW_SCOPE = (
+SCOPE_EXTRACTION_ONLY = (
     "Evidence integrity, filesystem analysis, SQLite discovery, extraction of ACTIVE "
     "artifacts, normalisation, validation, timeline and reporting. Deleted-data recovery, carving, correlation and "
-    "confidence scoring of recovered records are Review 2 and have NOT been performed."
+    "confidence scoring of recovered records were NOT performed for this report."
 )
 
-REVIEW2_SCOPE = (
+SCOPE_FULL = (
     "Evidence integrity, filesystem analysis, SQLite discovery, extraction of ACTIVE artifacts, recovery of deleted "
     "and superseded SQLite records (freelist, unallocated space, WAL and rollback-journal analysis), raw pattern "
     "carving, cross-artifact correlation, deterministic confidence scoring, validation, timeline and reporting."
@@ -43,11 +43,11 @@ RECOVERY_PERFORMED_LIMITATION = (
 )
 
 NOT_PERFORMED = {
-    "recovered": "Deleted-record recovery (freelist, unallocated space, WAL and rollback-journal analysis, raw page scanning) was NOT performed in Review 1. No claim is made, either way, about whether deleted data exists in this evidence.",
-    "partial": "No partial recoveries exist because record recovery was not performed (Review 2).",
-    "carved": "Raw binary carving was not performed (Review 2). When it is, hits will be labelled CARVED CANDIDATE and never presented as confirmed evidence until validated and corroborated.",
-    "correlation": "Cross-artifact correlation is a Review 2 capability. Review 1 validation only checks consistency between artifacts (for example call-log cached names against contacts).",
-    "unrecoverable": "Records that could not be reconstructed are reported by the Review 2 recovery engine; none are classified in Review 1.",
+    "recovered": "Deleted-record recovery (freelist, unallocated space, WAL and rollback-journal analysis, raw page scanning) was NOT performed for this report. No claim is made, either way, about whether deleted data exists in this evidence.",
+    "partial": "No partial recoveries exist because record recovery was not performed.",
+    "carved": "Raw binary carving was not performed. When it is, hits will be labelled CARVED CANDIDATE and never presented as confirmed evidence until validated and corroborated.",
+    "correlation": "Cross-artifact correlation runs with the recovery stages, which were not run for this report. Validation still checks consistency between artifacts (for example call-log cached names against contacts).",
+    "unrecoverable": "Records that could not be reconstructed are reported by the recovery engine, which was not run for this report.",
 }
 
 METHODOLOGY = [
@@ -57,13 +57,13 @@ METHODOLOGY = [
     ("Active artifact extraction", "Tables are identified by schema similarity, not file name. Parsers score how many of the columns they understand are present; that score is stored with every artifact. Fields absent from a schema variant are marked UNKNOWN rather than guessed, and are distinct from stored NULLs."),
     ("Normalisation", "Timestamps are converted from their declared storage format (Unix ms, WebKit µs, …) to UTC with the raw value and a plausibility verdict retained. Phone numbers keep their original text and receive a conservative matching key (trailing ten digits of a genuine phone number; short codes and alphanumeric senders receive none)."),
     ("Validation", "Automated checks cover hash consistency, custody chain, SQLite integrity, schema agreement, record structure and datatypes, timestamp plausibility, duplicate detection, cross-artifact consistency and provenance completeness. Failed checks are kept and explained."),
-    ("Recovery status (this review)", "Recovery of deleted data is not attempted. Freelist page counts and WAL/journal presence are reported as indicators of recovery potential only."),
+    ("Recovery status (this run)", "Recovery of deleted data is not attempted. Freelist page counts and WAL/journal presence are reported as indicators of recovery potential only."),
 ]
 
 LIMITATIONS = [
-    "No deleted-data recovery, carving, correlation or recovery-confidence scoring was performed (Review 2).",
+    "No deleted-data recovery, carving, correlation or recovery-confidence scoring was performed.",
     "'Active' means present in the database as SQLite itself presents it: main file plus committed WAL frames, with any hot rollback journal rolled back on a scratch copy. Rows flagged deleted by an application (for example Android contacts with deleted=1) are shown as active with a marked-deleted flag.",
-    "Databases that SQLite refuses to open (truncated, malformed, encrypted) yield no artifacts in Review 1. Salvage of damaged databases belongs to the Review 2 page-level engine.",
+    "Databases that SQLite refuses to open (truncated, malformed, encrypted) yield no active artifacts. Salvage of damaged databases is the page-level recovery engine's job.",
     "Encrypted databases are detected and reported but never decrypted; no credential recovery or lock bypass is attempted.",
     "MMS attachments, messaging apps other than the AOSP SMS provider, and app-specific schemas are catalogued generically (schema, row counts, column hints) but not interpreted.",
     "Android Binary XML (ABX, Android 12+) files are detected but not decoded. SharedPreferences XML contributes key names only; values are deliberately not extracted.",
@@ -74,7 +74,7 @@ LIMITATIONS = [
 
 STATUS_GLOSSARY = [
     ("ACTIVE", "Record present in the live database view. Read through the SQLite engine on a scratch copy."),
-    ("RECOVERED / PARTIAL / CARVED / CORRUPTED / UNRECOVERABLE / INVALID", "Artifact statuses reserved for the Review 2 recovery engine; none are produced in Review 1. A CARVED artifact is a candidate, never confirmed evidence."),
+    ("RECOVERED / PARTIAL / CARVED / CORRUPTED / UNRECOVERABLE / INVALID", "Artifact statuses reserved for the recovery engine; none are produced by extraction alone. A CARVED artifact is a candidate, never confirmed evidence."),
     ("VALID", "The check passed."),
     ("PARTIAL", "The check passed with reservations that are explained in the result."),
     ("INVALID", "The check failed. Failures are kept and explained, never discarded."),

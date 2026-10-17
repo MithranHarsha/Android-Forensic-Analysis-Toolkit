@@ -133,8 +133,8 @@ def render_pdf(model: ReportModel, path: Path) -> None:
         pdf.set_font("helvetica", "B", 11)
         pdf.multi_cell(0, 6, _txt(r.details["classification"]), align="C", new_x="LMARGIN", new_y="NEXT")
         pdf.set_font("helvetica", "I", 9)
-    banner = "Review 1 + Review 2 - deleted-data recovery performed." if r.recovery["performed"] else "Review 1 - forensic foundation."
-    pdf.multi_cell(0, 6, _txt(f"{banner} {r.meta['review_scope']}"), align="C", new_x="LMARGIN", new_y="NEXT")
+    banner = "Full pipeline - deleted-data recovery performed." if r.recovery["performed"] else "Extraction only - deleted-data recovery not performed."
+    pdf.multi_cell(0, 6, _txt(f"{banner} {r.meta['scope_note']}"), align="C", new_x="LMARGIN", new_y="NEXT")
 
     # 1. Case information
     _section(pdf, 1, "Case information")
@@ -197,7 +197,7 @@ def render_pdf(model: ReportModel, path: Path) -> None:
               [[row["status"], row["table"], row["rowid"] if row["rowid"] is not None else "unknown", row["method"],
                 row["confidence"] or "-", row["explanation"]] for row in recon])
     else:
-        _para(pdf, f"NOT PERFORMED (Review 2). {r.recovery['messages']['recovered']}", style="I")
+        _para(pdf, f"NOT PERFORMED. {r.recovery['messages']['recovered']}", style="I")
     _para(pdf, "Recovery-potential indicators:", style="B")
     _table(pdf, [("Database", 60), ("Freelist pages", 25), ("WAL frame slots", 25), ("Notes", 80)],
           [[i["path"], i["freelist_pages"], i["wal_frame_slots"], "; ".join(i["notes"])[:300]] for i in r.recovery["indicators"]])
@@ -225,7 +225,7 @@ def render_pdf(model: ReportModel, path: Path) -> None:
               [[row["table"], row["method"], ", ".join(row["unknown_columns"]), row["confidence"] or "-", row["explanation"]]
                for row in r.recovery["partial"]])
     else:
-        _para(pdf, f"NOT PERFORMED (Review 2). {r.recovery['messages']['partial']}", style="I")
+        _para(pdf, f"NOT PERFORMED. {r.recovery['messages']['partial']}", style="I")
 
     # 10. Carved candidates
     _section(pdf, 10, "Carved candidates")
@@ -234,7 +234,7 @@ def render_pdf(model: ReportModel, path: Path) -> None:
         _table(pdf, [("Kind", 25), ("Matched", 55), ("Container", 25), ("Confidence", 20), ("Explanation", 65)],
               [[c["kind"], (c["matched"] or "")[:80], c["container"], c["confidence"] or "-", c["explanation"]] for c in r.recovery["carved"]])
     else:
-        _para(pdf, f"NOT PERFORMED (Review 2). {r.recovery['messages']['carved']}", style="I")
+        _para(pdf, f"NOT PERFORMED. {r.recovery['messages']['carved']}", style="I")
 
     # 11. Timeline
     _section(pdf, 11, "Timeline")
@@ -249,7 +249,7 @@ def render_pdf(model: ReportModel, path: Path) -> None:
         _table(pdf, [("Source", 55), ("Relation", 25), ("Target", 55), ("Explanation", 55)],
               [[e["source"], e["relation"], e["target"], e["explanation"]] for e in r.recovery["correlations"]])
     else:
-        _para(pdf, f"NOT PERFORMED (Review 2). {r.recovery['messages']['correlation']}", style="I")
+        _para(pdf, f"NOT PERFORMED. {r.recovery['messages']['correlation']}", style="I")
 
     # 13. Validation results
     _section(pdf, 13, "Validation results")

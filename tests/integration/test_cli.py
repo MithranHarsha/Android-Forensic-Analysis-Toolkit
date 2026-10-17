@@ -56,7 +56,7 @@ def test_analyze_runs_recovery_by_default_and_reports_real_numbers(synth, tmp_pa
     run("scan", "case-r2", cases=cases)
     r = run("analyze", "case-r2", "--no-report", cases=cases)
     assert r.exit_code == 0
-    assert "Deleted-data recovery (Review 2)" in r.stdout and "Deleted/superseded records found" in r.stdout
+    assert "Deleted-data recovery" in r.stdout and "Deleted/superseded records found" in r.stdout
     assert "Deleted-data recovery was not run" not in r.stdout
     r = run("info", "case-r2", cases=cases)
     assert r.exit_code == 0 and "Recovered/partial/corrupted records" in r.stdout and "Carved candidates" in r.stdout
@@ -74,7 +74,7 @@ def test_the_standalone_recover_command_requires_scan_and_extract_first(synth, t
     assert r.exit_code != 0 and "extract" in r.output.lower()
     run("analyze", "case-r3", "--no-report", "--no-recover", cases=cases)
     r = run("recover", "case-r3", cases=cases)
-    assert r.exit_code == 0 and "Deleted-data recovery (Review 2)" in r.stdout
+    assert r.exit_code == 0 and "Deleted-data recovery" in r.stdout
     r2 = run("recover", "case-r3", cases=cases)  # recovering the same evidence twice gives the same counts
     assert r2.exit_code == 0 and "Deleted/superseded records found" in r2.stdout
 

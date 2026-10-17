@@ -36,7 +36,7 @@ def test_the_text_view_shows_metadata_schema_and_rows(db):
     out = run(db).stdout
     for expected in ("SQLite database", "SHA-256", "VALID", "Page size", "4,096 B", "Last written by", "SQLite 3.", "Schema format",
                      "Tables (3)", "people", "id INTEGER", "name TEXT NOT NULL", "AUTOINCREMENT", "rowid = id", "idx_name",
-                     "WITHOUT ROWID", "NULL", "<blob 3 B 00ff10>", "Deleted-data recovery is Review 2"):
+                     "WITHOUT ROWID", "NULL", "<blob 3 B 00ff10>", "Use `recover` to read them off the pages"):
         assert expected in out, expected
     assert "Ann" in out and "Bob" in out and "2024-03-01 08:00:00" in out
 

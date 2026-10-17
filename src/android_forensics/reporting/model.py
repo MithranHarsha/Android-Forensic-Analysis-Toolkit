@@ -206,7 +206,7 @@ def build_report_model(store: CaseStore, html_row_cap: int | None = None) -> Rep
         elif jr.get("size", 0) > 0:
             notes.append("journal file present but header not valid/zeroed — stale pages may remain")
         if info["open_status"] != "ok":
-            notes.append("database not readable by SQLite — a candidate for Review 2 salvage")
+            notes.append("database not readable by SQLite — a candidate for page-level salvage")
         indicators.append({"path": info["path"], "freelist_pages": info["freelist_pages"], "page_count": info["page_count"],
                            "wal_frame_slots": wal.get("frame_slots") if wal else None, "journal_bytes": jr.get("size") if jr else None,
                            "notes": notes or ["no indicator present in header or sidecars (this does not prove nothing was deleted)"]})
@@ -274,27 +274,27 @@ def build_report_model(store: CaseStore, html_row_cap: int | None = None) -> Rep
     at_a_glance: list[dict[str, Any]] = [
         {"label": "ACTIVE DATA", "value": counts["active_artifacts"], "note": "records present in live databases", "state": "ok"},
         {"label": "RECOVERED DELETED DATA", "value": (len(recovered_rows) + len(corrupted_rows)) if recovery_performed else "not performed",
-         "note": (f"{len(corrupted_rows)} corrupted" if corrupted_rows else "reconstructed with a confidence explanation") if recovery_performed else "Review 2",
+         "note": (f"{len(corrupted_rows)} corrupted" if corrupted_rows else "reconstructed with a confidence explanation") if recovery_performed else "not run",
          "state": "ok" if recovery_performed else "na"},
         {"label": "PARTIAL RECOVERIES", "value": len(partial_rows) if recovery_performed else "not performed",
-         "note": "reconstructed; missing fields are UNKNOWN, never guessed" if recovery_performed else "Review 2",
+         "note": "reconstructed; missing fields are UNKNOWN, never guessed" if recovery_performed else "not run",
          "state": "ok" if recovery_performed else "na"},
         {"label": "CARVED CANDIDATES", "value": len(carved_rows) if stages_run["carve"] else "not performed",
-         "note": "unconfirmed pattern hits, never ACTIVE" if stages_run["carve"] else "Review 2", "state": "ok" if stages_run["carve"] else "na"},
+         "note": "unconfirmed pattern hits, never ACTIVE" if stages_run["carve"] else "not run", "state": "ok" if stages_run["carve"] else "na"},
         {"label": "UNRECOVERABLE DATA", "value": len(unrecovered_rows) if recovery_performed else "not classified",
-         "note": "proven deleted, content lost" if recovery_performed else "Review 2", "state": "ok" if recovery_performed else "na"},
+         "note": "proven deleted, content lost" if recovery_performed else "not run", "state": "ok" if recovery_performed else "na"},
     ]
     methodology = list(text.METHODOLOGY)
     limitations = list(text.LIMITATIONS)
     if recovery_performed:
-        methodology[-1] = ("Recovery, carving and correlation (this review)", text.RECOVERY_PERFORMED_METHODOLOGY)
+        methodology[-1] = ("Recovery, carving and correlation (this run)", text.RECOVERY_PERFORMED_METHODOLOGY)
         limitations[0] = text.RECOVERY_PERFORMED_LIMITATION
     model = ReportModel(
         meta={
             "case_id": case.id, "case_name": case.name, "examiner": case.examiner, "description": case.description,
             "created_at": case.created_at, "generated_at": utcnow(), "tool_name": TOOL_NAME, "tool_version": __version__,
             "python": sys.version.split()[0], "sqlite_library": sqlite3.sqlite_version, "platform": platform.platform(),
-            "review_scope": text.REVIEW2_SCOPE if recovery_performed else text.REVIEW_SCOPE,
+            "scope_note": text.SCOPE_FULL if recovery_performed else text.SCOPE_EXTRACTION_ONLY,
         },
         at_a_glance=at_a_glance,
         sources=sources,

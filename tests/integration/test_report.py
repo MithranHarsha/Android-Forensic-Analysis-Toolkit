@@ -20,11 +20,11 @@ def report(analyzed, tmp_path_factory):
     return generate_report(store, ["html", "json", "csv"], tmp_path_factory.mktemp("rep"))
 
 
-def test_all_16_sections_and_review_scope(report):
+def test_all_16_sections_and_scope_note(report):
     html = report.html.read_text()
     for n in range(1, 17):
         assert f'id="s{n}"' in html
-    assert html.count("NOT PERFORMED (Review 2)") >= 4
+    assert html.count("NOT PERFORMED.") >= 4
     for label in ("ACTIVE DATA", "RECOVERED DELETED DATA", "PARTIAL RECOVERIES", "CARVED CANDIDATES", "UNRECOVERABLE DATA"):
         assert label in html
     assert "not a finding" in html.lower() or "not findings" in html.lower()
@@ -97,8 +97,8 @@ def recovered_report(tmp_path_factory):
 def test_recovery_sections_show_real_content_instead_of_not_performed(recovered_report):
     _, res = recovered_report
     html = res.html.read_text()
-    assert "Review 1 + Review 2" in html
-    assert html.count("NOT PERFORMED (Review 2)") == 0, "every Review 2 stage ran for this case"
+    assert "Full pipeline — deleted-data recovery performed." in html
+    assert html.count("NOT PERFORMED.") == 0, "every recovery stage ran for this case"
     assert 'id="t-rec"' in html and 'id="t-carved"' in html and 'id="t-corr"' in html
     assert "CARVED CANDIDATE" in html
     assert "reconstructed with a confidence explanation" in html or "corrupted" in html
@@ -150,7 +150,7 @@ def test_pdf_report_has_all_16_sections_and_real_recovery_content(recovered_repo
         "15. Limitations", "16. Appendix",
     ):
         assert heading in text, heading
-    assert "Review 1 + Review 2" in text
+    assert "Full pipeline - deleted-data recovery performed." in text
     assert "CARVED CANDIDATE" in text
     assert "NOT PERFORMED" not in text
 
@@ -161,7 +161,7 @@ def test_pdf_report_shows_not_performed_when_recovery_did_not_run(report, analyz
     res = generate_report(store, ["pdf"], tmp_path)
     reader = PdfReader(str(res.pdf))
     text = "\n".join((p.extract_text() or "") for p in reader.pages)
-    assert text.count("NOT PERFORMED (Review 2)") >= 4
+    assert text.count("NOT PERFORMED.") >= 4
 
 
 def test_hostile_evidence_cannot_inject_html_or_formulas(tmp_path):
