@@ -56,7 +56,7 @@ is a self-assessment. Read [Limitations](#limitations) before relying on it in c
 | **Reporting** | Self-contained HTML (16 sections), JSON, CSV and PDF ([docs/reporting.md](docs/reporting.md)); every section shows real recovery/carving/correlation content when those stages ran, or an explicit `NOT PERFORMED` box when they did not — never both |
 | **Dashboard** | A read-only FastAPI REST API + static frontend ([docs/dashboard.md](docs/dashboard.md)) over one case's results; `android-forensics dashboard CASE` (the web server reuses the same router per case) |
 | **Typed data models** | Immutable, validated pydantic models — see [docs/data_models.md](docs/data_models.md) — for every artifact status (`ACTIVE`, `RECOVERED`, `PARTIAL`, `CORRUPTED`, `CARVED CANDIDATE`, `INVALID`), `RecoveredRecord`, `CarvedCandidate`, `CorrelationEdge` and `ConfidenceAssessment` |
-| **Test laboratory** | Deterministic synthetic Android evidence generator with ground truth, now including genuine deletions and physically-derived recovery expectations ([docs/synthetic_lab.md](docs/synthetic_lab.md)); 1,669 automated tests (unit, integration, fuzz, hostile-evidence, sandbox, desktop-app, browser end-to-end); reproducible experiments |
+| **Test laboratory** | Deterministic synthetic Android evidence generator with ground truth, now including genuine deletions and physically-derived recovery expectations ([docs/synthetic_lab.md](docs/synthetic_lab.md)); 1,670 automated tests (unit, integration, fuzz, hostile-evidence, sandbox, desktop-app, browser end-to-end); reproducible experiments |
 
 ## Architecture
 
@@ -286,7 +286,7 @@ match their digest; a carved row is still, in the database, exactly `CARVED CAND
 ## Testing
 
 ```bash
-pytest                                          # 1,669 tests (2 platform-dependent skips; the 5 desktop-app tests
+pytest                                          # 1,670 tests (2 platform-dependent skips; the 5 desktop-app tests
                                                 #   skip without the `gui` extra); `--ignore=tests/e2e` without Playwright
 HYPOTHESIS_PROFILE=ci pytest tests/security     # a longer fuzzing campaign (soak = 5,000 examples per property)
 coverage run -m pytest && coverage report       # 94.1% line coverage of src/android_forensics (docs/coverage.txt)

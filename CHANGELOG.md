@@ -6,11 +6,19 @@ the format follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **A database whose schema text is not valid UTF-8 crashed the reader instead of being reported as unreadable.** SQLite quotes the
+  damaged schema back inside its own error message, so that message can carry bytes no UTF-8 decoder accepts; the `UnicodeDecodeError`
+  escaped `SQLiteSession` past every caller's `except SQLiteOpenError`, taking `recover_database` down with it and leaving the scratch
+  copy behind. The session now decodes evidence text leniently from its first query and reports the open as refused, so page-level
+  recovery still gets its turn. Found by the nightly fuzz run; covered now by a deterministic test.
 - The test suite segfaulted at interpreter shutdown (PySide6/Shiboken, exit code 139 *after* every test had passed) whenever the
   desktop-app tests ran before another test module, which is the default collection order. The windows those tests build were left
   for Python's garbage collector to free at an arbitrary later moment; they are now destroyed while the application is still alive.
 
 ### Changed
+- CI's lint job installs the hash-pinned `requirements-dev.lock` instead of resolving `.[dev]` fresh on every run: a new mypy or
+  pydantic release was enough to fail a push that changed nothing (pydantic 2.14 retyped `TypeAdapter`'s first argument, which the
+  artifact adapter tripped over).
 - The desktop app's first tab listed *every* artifact — 8,584 of them on the synthetic lab — under the heading "Active data", when only
   340 of those were active and the other 8,244 had been recovered from deleted or superseded bytes. The tab is now "Artifacts", the
   overview leads with a breakdown by status, and a footnote says plainly which statuses were never live in the database.

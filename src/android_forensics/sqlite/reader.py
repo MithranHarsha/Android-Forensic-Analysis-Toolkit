@@ -168,25 +168,35 @@ class SQLiteSession:
         uri = f"file:{quote(str(work))}"
         try:
             try:
-                self.conn = sqlite3.connect(f"{uri}?mode=ro", uri=True)
-                self.conn.execute("SELECT count(*) FROM sqlite_master").fetchone()
+                self.conn = self._connect(f"{uri}?mode=ro")
             except sqlite3.OperationalError as exc:
                 if "readonly" not in str(exc).lower() and "unable to open" not in str(exc).lower():
                     raise
                 if self.conn:
                     self.conn.close()
                 self.notes.append("read-only open refused (hot journal / WAL recovery); reopened on scratch copy read-write")
-                self.conn = sqlite3.connect(f"{uri}?mode=rw", uri=True)
-                self.conn.execute("SELECT count(*) FROM sqlite_master").fetchone()
-            self.conn.text_factory = self._decode
+                self.conn = self._connect(f"{uri}?mode=rw")
             for name in _ANDROID_COLLATIONS:
                 self.conn.create_collation(name, lambda a, b: (a > b) - (a < b))
             self.conn.execute("PRAGMA query_only=ON")
             self._harden()
-        except sqlite3.DatabaseError as exc:
+        except (sqlite3.DatabaseError, UnicodeDecodeError) as exc:
+            # A damaged schema is quoted back verbatim in SQLite's error text, so the message itself need not be UTF-8:
+            # that is an unreadable database like any other, not a crash (page-level recovery still gets its turn).
             self.close()
             raise SQLiteOpenError(f"{type(exc).__name__}: {exc}") from exc
         return self
+
+    def _connect(self, uri: str) -> sqlite3.Connection:
+        """Open the scratch copy and prove the schema can be read, with evidence text decoded leniently from the first query."""
+        conn = sqlite3.connect(uri, uri=True)
+        conn.text_factory = self._decode
+        try:
+            conn.execute("SELECT count(*) FROM sqlite_master").fetchone()
+        except BaseException:
+            conn.close()
+            raise
+        return conn
 
     def _harden(self) -> None:
         assert self.conn is not None

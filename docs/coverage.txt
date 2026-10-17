@@ -10,7 +10,7 @@ src/android_forensics/acquisition/hashing.py               49      4  91.8%
 src/android_forensics/acquisition/image/__init__.py         3      0 100.0%
 src/android_forensics/acquisition/image/acquirer.py       140     40  71.4%
 src/android_forensics/acquisition/image/ewf.py            208     17  91.8%
-src/android_forensics/acquisition/image/ext4.py           364     43  88.2%
+src/android_forensics/acquisition/image/ext4.py           364     42  88.5%
 src/android_forensics/acquisition/image/f2fs.py           401     53  86.8%
 src/android_forensics/acquisition/image/partitions.py      73      5  93.2%
 src/android_forensics/acquisition/image/source.py         133      7  94.7%
@@ -72,7 +72,7 @@ src/android_forensics/lab/journal.py                       41      2  95.1%
 src/android_forensics/lab/synth.py                        334      4  98.8%
 src/android_forensics/logs.py                              33      6  81.8%
 src/android_forensics/models/__init__.py                   13      0 100.0%
-src/android_forensics/models/artifacts.py                 234      0 100.0%
+src/android_forensics/models/artifacts.py                 235      0 100.0%
 src/android_forensics/models/case.py                       27      0 100.0%
 src/android_forensics/models/discovery.py                 129      1  99.2%
 src/android_forensics/models/enums.py                     304      0 100.0%
@@ -117,9 +117,9 @@ src/android_forensics/sqlite/header.py                     96      4  95.8%
 src/android_forensics/sqlite/inspection.py                295      0 100.0%
 src/android_forensics/sqlite/inspector.py                 434     25  94.2%
 src/android_forensics/sqlite/journal.py                   119      4  96.6%
-src/android_forensics/sqlite/pages.py                     231     22  90.5%
-src/android_forensics/sqlite/parser.py                    227     16  93.0%
-src/android_forensics/sqlite/reader.py                    202     10  95.0%
+src/android_forensics/sqlite/pages.py                     231     29  87.4%
+src/android_forensics/sqlite/parser.py                    227     13  94.3%
+src/android_forensics/sqlite/reader.py                    208     11  94.7%
 src/android_forensics/sqlite/records.py                   187     14  92.5%
 src/android_forensics/sqlite/recover_db.py                157     10  93.6%
 src/android_forensics/sqlite/recovery.py                  582     15  97.4%
@@ -139,4 +139,4 @@ src/android_forensics/validation/checks.py                259      8  96.9%
 src/android_forensics/validation/runner.py                 24      0 100.0%
 src/android_forensics/workspace.py                         47      0 100.0%
 ---------------------------------------------------------------------------
-TOTAL                                                   13812    815  94.1%
+TOTAL                                                   13819    819  94.1%

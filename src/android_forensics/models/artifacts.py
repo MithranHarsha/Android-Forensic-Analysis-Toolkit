@@ -358,7 +358,8 @@ _ARTIFACT_CLASSES: dict[ArtifactType, type[Artifact]] = {}
 def artifact_adapter() -> TypeAdapter[Any]:
     """Discriminated-union adapter over every registered artifact class (selects the subclass by ``artifact_type``)."""
     union = Union[tuple(_ARTIFACT_CLASSES.values())]  # type: ignore[valid-type]
-    return TypeAdapter(Annotated[union, Field(discriminator="artifact_type")])
+    discriminated: Any = Annotated[union, Field(discriminator="artifact_type")]  # built at runtime; no static type to give
+    return TypeAdapter(discriminated)
 
 
 def register_artifact(cls: type[Artifact]) -> type[Artifact]:

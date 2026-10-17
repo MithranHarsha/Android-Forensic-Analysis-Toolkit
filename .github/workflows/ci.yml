@@ -23,7 +23,10 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -e ".[dev]"
+      # Pinned, hash-verified tools: a new ruff or mypy release must not fail a push that changed nothing.
+      # Refresh deliberately with the command at the top of requirements-dev.lock.
+      - run: pip install --require-hashes -r requirements-dev.lock
+      - run: pip install -e . --no-deps
       - run: ruff check src tests experiments
       - run: mypy
       - run: bandit -q -c pyproject.toml -r src

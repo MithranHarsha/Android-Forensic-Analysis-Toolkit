@@ -19,7 +19,8 @@ from android_forensics.acquisition.safety import ExtractionBudget
 from android_forensics.cli.app import app
 from android_forensics.pipeline.runner import FULL_PIPELINE_NAMES, run_pipeline
 from android_forensics.reporting.generate import generate_report
-from android_forensics.sqlite.reader import SQLiteSession
+from android_forensics.sqlite.reader import SQLiteOpenError, SQLiteSession
+from android_forensics.sqlite.recover_db import recover_database
 from android_forensics.storage.case_store import CaseStore
 
 TEL = "data/data/com.android.providers.telephony/databases"
@@ -114,6 +115,26 @@ def test_session_refuses_everything_but_reading(tmp_path):
             with pytest.raises(sqlite3.DatabaseError):
                 s.conn.execute(stmt)
         assert s.conn.execute("SELECT COUNT(*) FROM t").fetchone()[0] == 1
+
+
+def test_schema_bytes_that_are_not_utf8_are_an_unreadable_database_not_a_crash(tmp_path):
+    """SQLite quotes a damaged schema back in its error message, so that message can hold bytes no UTF-8 decoder accepts.
+
+    Found by the nightly fuzz run: one flipped byte inside the stored ``CREATE TABLE`` text raised ``UnicodeDecodeError``
+    out of the session, past every caller's ``except SQLiteOpenError``.
+    """
+    db = _hostile_db(tmp_path / "e.db", "CREATE TABLE sms(_id INTEGER PRIMARY KEY, address TEXT, body TEXT);")
+    raw = bytearray(db.read_bytes())
+    raw[raw.find(b"CREATE TABLE sms(") + 2] = 0x80          # 'CR\x80ATE TABLE sms(...)'
+    db.write_bytes(bytes(raw))
+
+    with pytest.raises(SQLiteOpenError):
+        with SQLiteSession(db, None, tmp_path / "scratch"):
+            pass
+    assert not list((tmp_path / "scratch").iterdir()), "a refused open must not leave its scratch copy behind"
+
+    report = recover_database(db, None, scratch=tmp_path / "scratch")   # page-level recovery still gets its turn
+    assert report is not None
 
 
 def test_malicious_view_and_trigger_cannot_run_unsafe_functions(tmp_path):
