@@ -1,5 +1,8 @@
-# Generated evidence, reports and experiment results are byte-exact artifacts (their hashes are recorded): never normalise line endings.
+# Generated evidence, reports and experiment results are byte-exact artifacts (their hashes are recorded): never normalise
+# line endings. They are also output rather than source, so keep them out of the repository's language statistics — one
+# 5.9 MB generated report otherwise counts for more than the whole Python package.
 *.csv -text
-reports/** -text
-experiments/results/** -text
-synthetic_evidence/** -text
+reports/** -text linguist-generated=true
+experiments/results/** -text linguist-generated=true
+synthetic_evidence/** -text linguist-generated=true
+docs/coverage.txt linguist-generated=true
